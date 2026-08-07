@@ -162,72 +162,76 @@ public struct DiffScopeScreen: Widget, Sendable {
         .render(in: content, into: &frame)
       return
     }
-    let viewport = fileViewport(capacity: content.height)
-    for (row, index) in viewport.range.enumerated() {
-      let file = files[index]
-      let y = (content.y + row)
-      let isSelected = file.id == selectedFileID
-      if !showsHelp {
-        frame.addInteraction(
-          InteractionRegion(
-            control: ControlID("diffscope-file-\(file.id)"),
-            area: Rect(x: content.x, y: y, width: content.width, height: 1),
-            action: ActionID("file:\(file.id)"),
-            isFocusable: false))
+    let selectedIndex = selectedFileID.flatMap { id in files.firstIndex { $0.id == id } } ?? 0
+    let rows = SelectableRows(
+      itemCount: files.count,
+      selectedIndex: selectedIndex,
+      placement: .trailing,
+      selectedFillStyle: Style(background: DiffScopeTheme.selection),
+      interaction: { index in
+        guard !showsHelp else { return nil }
+        let file = files[index]
+        return RowInteraction(
+          control: ControlID("diffscope-file-\(file.id)"),
+          action: ActionID("file:\(file.id)")
+        )
+      },
+      row: { visibleRow, frame in
+        let file = files[visibleRow.index]
+        let isSelected = visibleRow.isSelected
+        let marker = isSelected ? "›" : " "
+        let status = file.kind.rawValue
+        let stats = "+\(file.additions) -\(file.deletions)"
+        let prefixWidth = 5
+        let statsWidth =
+          repository.aggregateStatsAvailable
+          ? min(15, max(0, visibleRow.area.width - prefixWidth)) : 0
+        let pathWidth = max(0, visibleRow.area.width - prefixWidth - statsWidth)
+        Line([
+          Span(
+            "\(marker) ",
+            style: Style(
+              foreground: DiffScopeTheme.accent,
+              modifiers: isSelected ? [.bold] : []
+            )),
+          Span(
+            "\(status) ",
+            style: Style(foreground: DiffScopeTheme.change(file.kind), modifiers: [.bold])),
+          Span(
+            file.path,
+            style: Style(foreground: isSelected ? DiffScopeTheme.foreground : DiffScopeTheme.pale)),
+        ]).render(
+          in: Rect(
+            x: visibleRow.area.x,
+            y: visibleRow.area.y,
+            width: prefixWidth + pathWidth,
+            height: 1
+          ),
+          into: &frame
+        )
+        if statsWidth > 0 {
+          Line(stats, style: Style(foreground: DiffScopeTheme.dim), alignment: .trailing)
+            .render(
+              in: Rect(
+                x: visibleRow.area.right - statsWidth,
+                y: visibleRow.area.y,
+                width: statsWidth,
+                height: 1
+              ),
+              into: &frame
+            )
+        }
       }
-      if isSelected {
-        frame.buffer.fill(
-          Rect(x: content.x, y: y, width: content.width, height: 1),
-          with: Cell(symbol: " ", style: Style(background: DiffScopeTheme.selection)))
-      }
-      let marker = isSelected ? "›" : " "
-      let status = file.kind.rawValue
-      let stats = "+\(file.additions) -\(file.deletions)"
-      let prefixWidth = 5
-      let statsWidth =
-        repository.aggregateStatsAvailable
-        ? min(15, max(0, content.width - prefixWidth)) : 0
-      let pathWidth = max(0, content.width - prefixWidth - statsWidth)
-      Line([
-        Span(
-          "\(marker) ",
-          style: Style(foreground: DiffScopeTheme.accent, modifiers: isSelected ? [.bold] : [])),
-        Span(
-          "\(status) ",
-          style: Style(foreground: DiffScopeTheme.change(file.kind), modifiers: [.bold])),
-        Span(
-          file.path,
-          style: Style(foreground: isSelected ? DiffScopeTheme.foreground : DiffScopeTheme.pale)),
-      ]).render(
-        in: Rect(x: content.x, y: y, width: (prefixWidth + pathWidth), height: 1),
-        into: &frame)
-      if statsWidth > 0 {
-        Line(stats, style: Style(foreground: DiffScopeTheme.dim), alignment: .trailing)
-          .render(
-            in: Rect(
-              x: (content.right - statsWidth),
-              y: y,
-              width: statsWidth,
-              height: 1),
-            into: &frame)
-      }
-    }
+    )
+    rows.render(in: content, into: &frame)
     Scrollbar(
       contentLength: files.count,
       viewportLength: content.height,
-      position: viewport.range.lowerBound,
+      position: rows.viewport(in: content).range.lowerBound,
       orientation: .verticalRight,
       style: Style(foreground: DiffScopeTheme.border),
       thumbStyle: Style(foreground: DiffScopeTheme.accent)
     ).render(in: content, into: &frame)
-  }
-
-  private func fileViewport(capacity: Int) -> SelectionViewport {
-    let selected = selectedFileID.flatMap { id in files.firstIndex { $0.id == id } } ?? 0
-    return SelectionViewport.fitting(
-      itemHeights: Array(repeating: 1, count: files.count),
-      selectedIndex: selected,
-      capacity: capacity)
   }
 
   private func renderDiff(

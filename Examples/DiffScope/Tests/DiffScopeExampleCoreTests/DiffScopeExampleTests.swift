@@ -40,6 +40,61 @@ private actor DiffLoadCounter {
     #expect(output.contains("FILES"))
   }
 
+  @Test func fileRowsEmitOnlyVisibleSamePassInteractionsAndHelpMasksThem() {
+    let files = (0..<100).map {
+      ChangedFile(
+        id: $0,
+        path: "Sources/File\($0).swift",
+        kind: .modified,
+        additions: $0,
+        deletions: 0
+      )
+    }
+    let repository = RepositorySnapshot(
+      title: "Fixture",
+      subtitle: "many files",
+      branch: "main",
+      files: files,
+      additions: 4_950,
+      deletions: 0
+    )
+    var screen = DiffScopeScreen(
+      repository: repository,
+      files: files,
+      selectedFileID: 50,
+      diffLines: [],
+      diffScroll: 0,
+      horizontalScroll: 0,
+      focus: .files,
+      query: TextFieldState(),
+      isFiltering: false,
+      isLoadingDiff: false,
+      errorMessage: nil,
+      showsHelp: false
+    )
+    var frame = Frame(buffer: Buffer(area: Rect(x: 0, y: 0, width: 80, height: 20)))
+
+    screen.render(in: frame.area, into: &frame)
+
+    let fileRegions = frame.interactions.regions.filter {
+      $0.action?.rawValue.hasPrefix("file:") == true
+    }
+    #expect(!fileRegions.isEmpty)
+    #expect(fileRegions.count < files.count)
+    #expect(fileRegions.last?.action == ActionID("file:50"))
+    #expect(fileRegions.allSatisfy { $0.area.height == 1 && !$0.isFocusable })
+    #expect(Set(fileRegions.map(\.area)).count == fileRegions.count)
+
+    screen.showsHelp = true
+    frame = Frame(buffer: Buffer(area: frame.area))
+    screen.render(in: frame.area, into: &frame)
+    #expect(
+      !frame.interactions.regions.contains {
+        $0.action?.rawValue.hasPrefix("file:") == true
+      }
+    )
+  }
+
   @Test func keyboardNavigationFilteringAndDiffScrollingRemainApplicationPolicy() async {
     let repository = RepositorySnapshot(
       title: "Fixture",

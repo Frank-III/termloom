@@ -3562,6 +3562,65 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui13SelectableRowV",
+      "kind": "swift.struct",
+      "path": [
+        "SelectableRow"
+      ],
+      "title": "SelectableRow",
+      "declaration": "struct SelectableRow",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13SelectableRowV10isSelectedSbvp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRow",
+        "isSelected"
+      ],
+      "title": "isSelected",
+      "declaration": "var isSelected: Bool",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13SelectableRowV4areaAA4RectVvp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRow",
+        "area"
+      ],
+      "title": "area",
+      "declaration": "var area: Rect",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13SelectableRowV5index4area10isSelectedACSi_AA4RectVSbtcfc",
+      "kind": "swift.init",
+      "path": [
+        "SelectableRow",
+        "init(index:area:isSelected:)"
+      ],
+      "title": "init(index:area:isSelected:)",
+      "declaration": "init(index: Int, area: Rect, isSelected: Bool)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13SelectableRowV5indexSivp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRow",
+        "index"
+      ],
+      "title": "index",
+      "declaration": "var index: Int",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui13TerminalEventO",
       "kind": "swift.enum",
       "path": [
@@ -4344,6 +4403,65 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui14RowInteractionV",
+      "kind": "swift.struct",
+      "path": [
+        "RowInteraction"
+      ],
+      "title": "RowInteraction",
+      "declaration": "struct RowInteraction",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14RowInteractionV11isFocusableSbvp",
+      "kind": "swift.property",
+      "path": [
+        "RowInteraction",
+        "isFocusable"
+      ],
+      "title": "isFocusable",
+      "declaration": "var isFocusable: Bool",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14RowInteractionV6actionAA8ActionIDVSgvp",
+      "kind": "swift.property",
+      "path": [
+        "RowInteraction",
+        "action"
+      ],
+      "title": "action",
+      "declaration": "var action: ActionID?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14RowInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
+      "kind": "swift.init",
+      "path": [
+        "RowInteraction",
+        "init(control:action:isFocusable:)"
+      ],
+      "title": "init(control:action:isFocusable:)",
+      "declaration": "init(control: ControlID, action: ActionID? = nil, isFocusable: Bool = false)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14RowInteractionV7controlAA9ControlIDVvp",
+      "kind": "swift.property",
+      "path": [
+        "RowInteraction",
+        "control"
+      ],
+      "title": "control",
+      "declaration": "var control: ControlID",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui14ScrollViewportV",
       "kind": "swift.struct",
       "path": [
@@ -4566,6 +4684,113 @@
       ],
       "title": "position",
       "declaration": "var position: Int",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV",
+      "kind": "swift.struct",
+      "path": [
+        "SelectableRows"
+      ],
+      "title": "SelectableRows",
+      "declaration": "struct SelectableRows",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV13selectedIndexSiSgvp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRows",
+        "selectedIndex"
+      ],
+      "title": "selectedIndex",
+      "declaration": "var selectedIndex: Int?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV17selectedFillStyleAA0F0VSgvp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRows",
+        "selectedFillStyle"
+      ],
+      "title": "selectedFillStyle",
+      "declaration": "var selectedFillStyle: Style?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV6render2in4intoyAA4RectV_AA5FrameVztF",
+      "kind": "swift.method",
+      "path": [
+        "SelectableRows",
+        "render(in:into:)"
+      ],
+      "title": "render(in:into:)",
+      "declaration": "func render(in area: Rect, into frame: inout Frame)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV8viewport2inAA17SelectionViewportVAA4RectV_tF",
+      "kind": "swift.method",
+      "path": [
+        "SelectableRows",
+        "viewport(in:)"
+      ],
+      "title": "viewport(in:)",
+      "declaration": "func viewport(in area: Rect) -> SelectionViewport",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV9itemCount13selectedIndex9rowHeight9placement0F9FillStyle11interaction0H0ACSi_SiSgSiAA18SelectionPlacementOAA0L0VSgAA14RowInteractionVSgSicyAA0bP0V_AA5FrameVztctcfc",
+      "kind": "swift.init",
+      "path": [
+        "SelectableRows",
+        "init(itemCount:selectedIndex:rowHeight:placement:selectedFillStyle:interaction:row:)"
+      ],
+      "title": "init(itemCount:selectedIndex:rowHeight:placement:selectedFillStyle:interaction:row:)",
+      "declaration": "init(itemCount: Int, selectedIndex: Int? = nil, rowHeight: Int = 1, placement: SelectionPlacement = .center, selectedFillStyle: Style? = nil, interaction: @escaping (Int) -> RowInteraction? = { _ in nil }, row: @escaping (SelectableRow, inout Frame) -> Void)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV9itemCountSivp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRows",
+        "itemCount"
+      ],
+      "title": "itemCount",
+      "declaration": "var itemCount: Int",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV9placementAA18SelectionPlacementOvp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRows",
+        "placement"
+      ],
+      "title": "placement",
+      "declaration": "var placement: SelectionPlacement",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14SelectableRowsV9rowHeightSivp",
+      "kind": "swift.property",
+      "path": [
+        "SelectableRows",
+        "rowHeight"
+      ],
+      "title": "rowHeight",
+      "declaration": "var rowHeight: Int",
       "accessLevel": "public",
       "availability": []
     },
@@ -5990,6 +6215,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui17SelectionViewportV5fixed9itemCount13selectedIndex8capacity9placementACSi_SiSgSiAA0B9PlacementOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "SelectionViewport",
+        "fixed(itemCount:selectedIndex:capacity:placement:)"
+      ],
+      "title": "fixed(itemCount:selectedIndex:capacity:placement:)",
+      "declaration": "static func fixed(itemCount: Int, selectedIndex: Int?, capacity: Int, placement: SelectionPlacement = .center) -> SelectionViewport",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui17SelectionViewportV5range14hasItemsBefore0eF5AfterACSnySiG_S2btcfc",
       "kind": "swift.init",
       "path": [
@@ -6199,6 +6436,53 @@
       ],
       "title": "buildExpression(_:)",
       "declaration": "static func buildExpression(_ expression: CanvasLayer) -> [CanvasLayer]",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18SelectionPlacementO",
+      "kind": "swift.enum",
+      "path": [
+        "SelectionPlacement"
+      ],
+      "title": "SelectionPlacement",
+      "declaration": "enum SelectionPlacement",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18SelectionPlacementO6centeryA2CmF",
+      "kind": "swift.enum.case",
+      "path": [
+        "SelectionPlacement",
+        "center"
+      ],
+      "title": "SelectionPlacement.center",
+      "declaration": "case center",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18SelectionPlacementO7leadingyA2CmF",
+      "kind": "swift.enum.case",
+      "path": [
+        "SelectionPlacement",
+        "leading"
+      ],
+      "title": "SelectionPlacement.leading",
+      "declaration": "case leading",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18SelectionPlacementO8trailingyA2CmF",
+      "kind": "swift.enum.case",
+      "path": [
+        "SelectionPlacement",
+        "trailing"
+      ],
+      "title": "SelectionPlacement.trailing",
+      "declaration": "case trailing",
       "accessLevel": "public",
       "availability": []
     },
@@ -18728,6 +19012,30 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui13SelectableRowV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui13SelectableRowV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui13SelectableRowV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui13SelectableRowV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui13TerminalEventO",
       "target": "s:SH",
       "targetFallback": "Swift.Hashable"
@@ -18896,6 +19204,30 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui14RowInteractionV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14RowInteractionV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14RowInteractionV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14RowInteractionV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui14ScrollViewportV",
       "target": "s:SH",
       "targetFallback": "Swift.Hashable"
@@ -18941,6 +19273,11 @@
       "source": "s:7Ratatui14ScrollbarStateV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14SelectableRowsV",
+      "target": "s:7Ratatui6WidgetP"
     },
     {
       "kind": "conformsTo",
@@ -19412,6 +19749,30 @@
     {
       "kind": "conformsTo",
       "source": "s:7Ratatui18CalendarEventStoreV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18SelectionPlacementO",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18SelectionPlacementO",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18SelectionPlacementO",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18SelectionPlacementO",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -23111,6 +23472,26 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui13SelectableRowV10isSelectedSbvp",
+      "target": "s:7Ratatui13SelectableRowV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13SelectableRowV4areaAA4RectVvp",
+      "target": "s:7Ratatui13SelectableRowV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13SelectableRowV5index4area10isSelectedACSi_AA4RectVSbtcfc",
+      "target": "s:7Ratatui13SelectableRowV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13SelectableRowV5indexSivp",
+      "target": "s:7Ratatui13SelectableRowV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui13TerminalEventO10endOfInputyA2CmF",
       "target": "s:7Ratatui13TerminalEventO"
     },
@@ -23391,6 +23772,26 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui14RowInteractionV11isFocusableSbvp",
+      "target": "s:7Ratatui14RowInteractionV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14RowInteractionV6actionAA8ActionIDVSgvp",
+      "target": "s:7Ratatui14RowInteractionV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14RowInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
+      "target": "s:7Ratatui14RowInteractionV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14RowInteractionV7controlAA9ControlIDVvp",
+      "target": "s:7Ratatui14RowInteractionV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui14ScrollViewportV03rowC0AA03RowC0Vvp",
       "target": "s:7Ratatui14ScrollViewportV"
     },
@@ -23473,6 +23874,46 @@
       "kind": "memberOf",
       "source": "s:7Ratatui14ScrollbarStateV8positionSivp",
       "target": "s:7Ratatui14ScrollbarStateV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV13selectedIndexSiSgvp",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV17selectedFillStyleAA0F0VSgvp",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV6render2in4intoyAA4RectV_AA5FrameVztF",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV8viewport2inAA17SelectionViewportVAA4RectV_tF",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV9itemCount13selectedIndex9rowHeight9placement0F9FillStyle11interaction0H0ACSi_SiSgSiAA18SelectionPlacementOAA0L0VSgAA14RowInteractionVSgSicyAA0bP0V_AA5FrameVztctcfc",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV9itemCountSivp",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV9placementAA18SelectionPlacementOvp",
+      "target": "s:7Ratatui14SelectableRowsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14SelectableRowsV9rowHeightSivp",
+      "target": "s:7Ratatui14SelectableRowsV"
     },
     {
       "kind": "memberOf",
@@ -23966,6 +24407,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui17SelectionViewportV5fixed9itemCount13selectedIndex8capacity9placementACSi_SiSgSiAA0B9PlacementOtFZ",
+      "target": "s:7Ratatui17SelectionViewportV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui17SelectionViewportV5range14hasItemsBefore0eF5AfterACSnySiG_S2btcfc",
       "target": "s:7Ratatui17SelectionViewportV"
     },
@@ -24038,6 +24484,21 @@
       "kind": "memberOf",
       "source": "s:7Ratatui18CanvasLayerBuilderO15buildExpressionySayAA0bC0VGAFFZ",
       "target": "s:7Ratatui18CanvasLayerBuilderO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18SelectionPlacementO6centeryA2CmF",
+      "target": "s:7Ratatui18SelectionPlacementO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18SelectionPlacementO7leadingyA2CmF",
+      "target": "s:7Ratatui18SelectionPlacementO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18SelectionPlacementO8trailingyA2CmF",
+      "target": "s:7Ratatui18SelectionPlacementO"
     },
     {
       "kind": "memberOf",

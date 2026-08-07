@@ -5,6 +5,19 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Lazy interactive selectable rows
+
+- **Additive:** `SelectionViewport.fixed` projects fixed-height selections with leading, centered, or trailing
+  placement without materializing row content. `SelectableRows` invokes application row and interaction closures only for
+  visible indices and supplies exact same-pass `SelectableRow` geometry.
+- **Ownership:** applications retain stable row identity, selection, navigation, filtering, and action meaning.
+  `RowInteraction` supplies only control/action metadata; the widget retains no collection state.
+- **Migration:** replace fixed-height selected-range calculations, row rectangles, selection fills, and per-row
+  `InteractionRegion` construction with `SelectableRows`. Keep domain cell rendering in the row closure.
+- **Evidence:** projection and rendering regressions cover boundary clamping, visible-only evaluation, multi-line row
+  geometry, selection painting, and exact interaction rectangles. DiffScope file rows and Motel trace/waterfall rows
+  validate large-list, domain-rendering, and modal-suppression behavior.
+
 ### Terminal-column fitting and top-origin row viewports
 
 - **Additive:** `TerminalWidth` now clips prefixes and suffixes, truncates with an optional ellipsis, pads by alignment,

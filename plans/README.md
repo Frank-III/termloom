@@ -17,6 +17,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 007 | Remove proven text and block construction workarounds | P1 | S–M | 006 | DONE |
 | 008 | Migrate public terminal geometry to Swift-native `Int` | P0 | XL | 006, 007 | DONE |
 | 009 | Add terminal-column fitting and top-origin row viewport geometry | P0 | M | 008 | DONE |
+| 010 | Add lazy, action-aware fixed-height selectable rows | P1 | M | 008, 009 | DONE |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
@@ -30,6 +31,7 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reas
 - 007 follows 006 so its consumer matrix validates on the corrected runtime baseline.
 - 008 is the dedicated source-breaking geometry milestone after the lower-risk correctness and ergonomics work.
 - 009 adds additive Unicode-safe fitting and viewport projection before larger interactive collection work.
+- 010 uses those foundations for visible-only row rendering and exact same-pass interactions.
 
 ## Required final matrix
 
