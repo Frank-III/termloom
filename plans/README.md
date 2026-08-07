@@ -13,6 +13,8 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 003 | Recover terminal modes after transaction commit failure | P1 | M | 001, 002 | DONE |
 | 004 | Enforce native-scrollback backend semantics | P1 | S | 001–003 | DONE |
 | 005 | Honor mapped buffer origins in ANSI history output | P1 | S | 004 | DONE |
+| 006 | Preserve fragmented input and suppress stale semantic events | P1 | S | 001–005 | DONE (`85319e1`) |
+| 007 | Remove proven text and block construction workarounds | P1 | S–M | 006 | TODO |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
@@ -22,6 +24,8 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reas
 - 002 establishes one cleanup/error-precedence policy used by 003.
 - 003 hardens the host-level write transaction before backend behavior changes.
 - 004 and 005 then tighten the provisional history backend without mixing lifecycle and backend failures in one change.
+- 006 is an independent correctness pass over input routing and Observation wakeups.
+- 007 follows 006 so its consumer matrix validates on the corrected runtime baseline.
 
 ## Required final matrix
 
@@ -52,7 +56,8 @@ Expected hashes:
 
 These are not part of plans 001–005:
 
-- synchronize `Terminal.resize(to:)` with a caller-owned `TerminalSession` fixed viewport;
+- migrate public geometry from `UInt16` to Swift-native `Int` after a dedicated design/review gate;
+- slim `TerminalApplication` into core requirements plus explicit inline-history and suspended-operation capabilities;
 - lazy/full-row-styled large collections exposed by DiffScope;
 - fixed-height/top-offset viewport convenience APIs;
 - input queue and indexed-color micro-optimizations;
