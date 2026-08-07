@@ -74,6 +74,22 @@ import Testing
     #expect(frame.buffer.cell(at: Position(x: 15, y: 5))?.style.background == .blue)
   }
 
+  @Test func mutatingRowHeightCannotCreateAnInvalidViewportDivisor() {
+    var rendered: [SelectableRow] = []
+    var rows = SelectableRows(
+      itemCount: 3,
+      rowHeight: 2,
+      row: { row, _ in rendered.append(row) }
+    )
+    rows.rowHeight = 0
+    var frame = Frame(buffer: Buffer(area: Rect(x: 0, y: 0, width: 4, height: 2)))
+
+    rows.render(in: frame.area, into: &frame)
+
+    #expect(rows.rowHeight == 1)
+    #expect(rendered.map(\.index) == [0, 1])
+  }
+
   @Test func clampedSelectionDoesNotMutateApplicationInputAndEmptyInputsDoNothing() {
     var rendered: [SelectableRow] = []
     let rows = SelectableRows(

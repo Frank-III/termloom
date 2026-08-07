@@ -36,7 +36,9 @@ public struct SelectableRow: Hashable, Sendable {
 public struct SelectableRows: Widget {
   public var itemCount: Int
   public var selectedIndex: Int?
-  public var rowHeight: Int
+  public var rowHeight: Int {
+    didSet { rowHeight = max(1, rowHeight) }
+  }
   public var placement: SelectionPlacement
   public var selectedFillStyle: Style?
 

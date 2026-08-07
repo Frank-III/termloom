@@ -19,6 +19,12 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 009 | Add terminal-column fitting and top-origin row viewport geometry | P0 | M | 008 | DONE |
 | 010 | Add lazy, action-aware fixed-height selectable rows | P1 | M | 008, 009 | DONE |
 | 011 | Add overflow-aware interactive tabs | P1 | M | 009, 010 | DONE |
+| 012 | Pre-0.2 correctness freeze | P0 | M | 008–011 | DONE |
+| 013 | Consolidate collection interaction descriptors | P1 | M | 012 | TODO |
+| 014 | Adopt stabilized collections in Herdr | P1 | M | 012, 013 | TODO |
+| 015 | Bound fitting and viewport work | P1 | M | 012 | TODO |
+| 016 | Gate a smaller `TerminalApplication` protocol | P2 | M spike | 012–015 | TODO |
+| 017 | Prepare the 0.2 release candidate | P1 | M | 012–016 | TODO |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
@@ -34,6 +40,12 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reas
 - 009 adds additive Unicode-safe fitting and viewport projection before larger interactive collection work.
 - 010 uses those foundations for visible-only row rendering and exact same-pass interactions.
 - 011 applies the same immediate-mode interaction boundary to variable-width horizontal tabs.
+- 012 freezes correctness across the recent framework and consumer migrations before further API changes.
+- 013 removes duplicate provisional interaction vocabulary rather than adding another abstraction.
+- 014 makes Herdr the independent fullscreen adoption proof for the stabilized collection APIs.
+- 015 optimizes only measured internal work after semantics are fixed.
+- 016 is a design gate, not an assumed implementation; rejection is an acceptable result.
+- 017 reconciles documentation and evidence before a 0.2 candidate is tagged.
 
 ## Required final matrix
 

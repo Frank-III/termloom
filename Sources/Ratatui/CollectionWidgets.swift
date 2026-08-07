@@ -523,16 +523,12 @@ public struct Tabs: Widget, Hashable, Sendable {
         )
       }
 
-      let activeStyle =
-        placement.index == projectedSelectedIndex ? style.patching(selectedStyle) : style
+      let isSelected = placement.index == projectedSelectedIndex
+      let activeStyle = isSelected ? style.patching(selectedStyle) : style
       frame.buffer.fill(placement.area, with: Cell(symbol: " ", style: activeStyle))
       if placement.area.width > 2 {
         var renderedTitle = titles[placement.index]
-        renderedTitle.spans = renderedTitle.spans.map { span in
-          var span = span
-          span.style = activeStyle.patching(span.style)
-          return span
-        }
+        renderedTitle.style = activeStyle.patching(renderedTitle.style)
         Paragraph(wrap: .none) { renderedTitle }.render(
           in: Rect(
             x: placement.area.x + 1,

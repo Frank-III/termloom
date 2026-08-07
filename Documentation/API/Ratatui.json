@@ -4908,7 +4908,7 @@
         "rowHeight"
       ],
       "title": "rowHeight",
-      "declaration": "var rowHeight: Int",
+      "declaration": "var rowHeight: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },

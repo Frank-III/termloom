@@ -223,6 +223,27 @@ import Testing
     #expect(buffer.cell(at: Position(x: 16, y: 0))?.style.modifiers.contains(.reversed) == true)
   }
 
+  @Test func tabsPreserveTitleLevelStyleOverWidgetFallbackStyle() {
+    let title = Line("service", style: Style(foreground: .green))
+    let buffer = assertWidget(
+      Tabs(
+        [title],
+        selectedIndex: 0,
+        style: Style(foreground: .red),
+        selectedStyle: Style(modifiers: [.reversed])
+      ),
+      size: Size(width: 11, height: 1)
+    ) {
+      """
+      │ service   │
+      """
+    }
+
+    let cell = buffer.cell(at: Position(x: 1, y: 0))
+    #expect(cell?.style.foreground == .green)
+    #expect(cell?.style.modifiers.contains(.reversed) == true)
+  }
+
   @Test func metricWidgetsRenderDeterministically() {
     assertWidget(
       VStack {

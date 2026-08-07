@@ -5,6 +5,18 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Pre-0.2 correctness freeze
+
+- **Behavioral correction:** every assignment to mutable `SelectableRows.rowHeight` is normalized to at least one,
+  preventing post-initialization mutation from creating an invalid viewport divisor. Its symbol graph now explicitly
+  records the existing public getter and setter.
+- **Behavioral correction:** `Tabs` applies widget and selection styles as fallbacks beneath each rich title's `Line.style`
+  and `Span.style`, preserving application colors while retaining selection modifiers.
+- **Consumer corrections:** Codex transcript paging now saturates at integer bounds; Herdr validates remote-frame geometry
+  before arithmetic/rendering and measures human-visible cursor, menu, and tab geometry in terminal columns.
+- **Evidence:** focused mutation, rich-style, pager-overflow, malformed-frame, and wide-query tests plus the full framework
+  and consumer matrices.
+
 ### Overflow-aware interactive tabs
 
 - **Additive:** `TabViewport` projects contiguous variable-width tabs while keeping the selected index represented and
