@@ -1,0 +1,13 @@
+.build/
+.swiftpm/
+target/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Local agent state and generated delegation artifacts
+.pi/
+.pi-subagents/
+
+# Local reference checkouts used during development and parity research
+guided/

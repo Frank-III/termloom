@@ -1,0 +1,15 @@
+{
+  "originHash" : "a2c783a8608cba3a50685f85d7070aa7ed28e5710e2fc7c2445d57b452c8e2f1",
+  "pins" : [
+    {
+      "identity" : "swift-highlight",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/danelyan/swift-highlight",
+      "state" : {
+        "revision" : "f1a9b709f99a0d30d50358bb184890dc8f6e3a8e",
+        "version" : "1.0.1"
+      }
+    }
+  ],
+  "version" : 3
+}

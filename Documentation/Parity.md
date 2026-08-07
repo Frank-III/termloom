@@ -1,0 +1,48 @@
+# Ratatui capability map
+
+This is a living implementation map against the checked-in `guided/ratatui` reference. It tracks
+behavioral capability, not Rust API spelling: the public surface should remain idiomatic Swift.
+
+| Area | Status | Swift evidence | Remaining work |
+| --- | --- | --- | --- |
+| Geometry and rectangular buffers | Complete | clamped arithmetic, insets, set operations, lazy row/column/position sequences, resize/merge/style regions | Continue upstream edge-case tests |
+| Unicode cell width and continuations | Complete | exact generated Unicode 17 scalar tables from upstream's `unicode-width` 0.2.2, explicit standard/CJK policy, presentation selectors, emoji modifiers and valid/invalid ZWJ chains, Arabic/Hebrew/Buginese/Tifinagh/Old Turkic/Lisu/Khmer/Kirat Rai ligatures, exceptional width-3 scalars, all 3,953 Unicode 17 qualified emoji/component fixtures, zero-width composition, wide-cell invariants, halfwidth sound-mark rules, and explicit VS16 trailing-cell diff cleanup | future Unicode-version refreshes remain mechanical |
+| Style, colors, modifiers | Complete | 16-byte packed styles, complete ANSI color range, aliases/hex/indexed parsing, explicit add/remove modifier layering, explicit true-color/256-color/ANSI-16 profiles, deterministic fallback, conditional underline color and synchronized output | broader terminal-specific color calibration can be added without changing the model |
+| Diffed double-buffer rendering | Complete | `Terminal.swift`, `Buffer.diff` | measurement and optimization remain continuous |
+| Layout constraints | Complete | constraints, margins, exact positive/overlap spacer geometry, legacy priorities, every flex mode, `Fill(0)` and weighted-fill semantics, nearest cumulative rounding, tiny over-constraint fixtures, and a configurable 500-entry bounded LRU cache for nontrivial flex solves with concurrent access; cheaper start-aligned arithmetic bypasses cache overhead | broader property-test corpus |
+| Flex justification | Complete | `Flex`, `Layout.split` | broader property tests |
+| Text, spans, lines, alignment | Complete | rich multi-line `Text`, inherited Text → Line → Span styles, complete fluent colors/modifiers/reset, mutation and measurement APIs, parent/per-line alignment, and exact left/center/right truncation including partially clipped wide graphemes | broader rendering fixture corpus; ambiguous-width policy is tracked under Unicode width |
+| Paragraph wrapping and scrolling | Complete | upstream default truncation, styled character/word reflow, word-boundary and double-width fixtures, distinct over-wide truncation/wrapping policy, whole-area base styles, two-axis scrolling, per-line alignment, `lineCount(width:)` and Swift `Block` composition | broader reflow fixtures and cached composition |
+| Block and borders | Complete | selective borders, every canonical border family, upstream `Padding` factories/space accounting/saturation, intrinsic child sizing, multi-title `Block`, shadows, exact/fuzzy collapsed borders | exhaustive mixed-weight merge fixtures |
+| List | Complete | rich and multi-line rows, directions, highlight spacing, stable scroll padding, `ListState` | broader inconsistent-height fixtures |
+| Table | Complete | whole-area base-style inheritance, typed `TableColumn` records plus row-owned `TableRow` cell sequences, rich cell lines/styles/spans, zero-span skipping, varying row counts, typed row/header/footer style and margin geometry, independent header/footer cell-area styles, multi-line rich header/footer cells, automatic widths, exact upstream homogeneous and mixed constraint priorities, configurable column flex, rich multi-line highlight symbols, upstream partial-row/tiny-area/selection-span/offset fixtures, line alignment, Swift `Block` composition, fast string/key-path conveniences, Rust-order row/column/cell selection layers, prioritized highlight-symbol spacing, full `TableState` navigation | broader rendering fixture corpus |
+| Tabs | Complete | rich `Line` titles, styled spans and alignment | broader clipping fixtures |
+| Gauge and line gauge | Complete | `Gauge`, `LineGauge` | broader style fixtures |
+| Sparkline | Complete | multi-row `Sparkline`, direction, absent values, per-value style patching, canonical/custom symbol sets | broader clipping fixtures |
+| Bar chart | Complete | grouped bars, value labels, vertical/horizontal directions, eighth-cell symbols | broader clipping fixtures |
+| Scrollbar | Complete | four edge orientations, endpoint symbols, independent thumb/track styles, `ScrollbarState` | broader tiny-area fixtures |
+| Canvas | Complete | exact upstream Bresenham tie-breaking across every marker grid, deterministic 360-degree circle rasterization, clipped and filled lines, independent half-block colors, backgrounds, low/high maps, rich labels, sextant/octant pixels, ordered layers, rectangle/circle/line/point shapes | broader clipping and color-layer fixtures |
+| Chart | Complete | upstream dot/scatter defaults, whole-area base styles, rich aligned axis labels/titles, label gutters and title geometry, collision-aware bordered legends with eight positions and hide constraints, unnamed/empty-name semantics, exact scatter/line/bar/continuous-area fixtures, marker-layer style composition, minimal and tiny-area safety | broader dataset and axis-style fixtures |
+| Calendar | Complete | `Monthly`, `CalendarDay`, `CalendarEventStore`, explicit localized labels and first-weekday ordering, intrinsic sizing through padded blocks | — |
+| Clear and Fill | Complete | `Clear`, `Fill` | — |
+| Logo, mascot, masked text | Complete | exact canonical logos/mascot colors; grapheme-aware non-leaking `Masked` | — |
+| Stateful rendering | Complete | `StatefulWidget`, state-derived hardware cursors, full list/table selection navigation, `Frame.render(state:)` | Observation ergonomics are tracked as a Swift extension below |
+| Backend protocol | Complete | explicit capabilities, window/cell/pixel size, scoped clears, draw and backend flush boundaries, cursor visibility/placement, append-lines, region scrolling, capped scrollback, and overflow blank-row semantics | broader backend implementation matrix |
+| Inline viewport | Complete | physical-origin backend and `Terminal.insertBefore`, push-down without clearing, bottom-anchored scrolling, and full-screen insertion directly into scrollback | broader terminal-specific shell coexistence fixtures |
+| Fullscreen viewport | Complete | `TerminalSession.swift` | terminal matrix testing |
+| Input decoding | Complete | legacy CSI, Kitty CSI-u events/modifiers/text, typed enhancement-flag negotiation, F1–F35, lock/keypad/media keys, focus reports, primary/secondary device attributes, cursor-position reports, and private/standard terminal-mode status reports | broader terminal protocol corpus |
+| Mouse, paste, resize | Complete | `Input.swift`, `TerminalSession.swift` | terminal matrix testing |
+| Focus and semantic controls | Swift extension | buttons, checkboxes, radios, editable `TextField`, identified atomic elements, focus routing | validation controls and accessibility-like semantics |
+| Async application runtime | Swift extension | `Application.swift` | effects/tasks, structured cancellation policies, clocks |
+| Observation integration | Swift extension | presentation and complete widget-render reads tracked by `Application.swift`; coalesced pipe wakeup; public `ObservationInvalidationTracker` for offscreen/remote render loops; real-run-loop PTY regressions and README examples | optional public wakeup source for non-observable producers |
+| Syntax highlighting | Swift extension | optional `RatatuiSyntaxHighlighting` product, pure-Swift highlight.js-compatible engine with 192 languages, terminal-span output, path/language mapping, 32 Codex themes, and custom TextMate `.tmTheme` parsing | expand language aliases and theme-scope fidelity as real applications require |
+| Test backend and snapshots | Complete | public `RatatuiTestSupport`, inline buffer/ANSI snapshots, stateful `assertWidget`, composite dashboard, and checked-in exhaustive Unicode 17 emoji fixtures | fixture growth continues with upstream changes |
+| PTY integration coverage | Partial | automated `openpty` raw-mode/origin/resize/viewport-size/protocol/restoration plus real application-loop Observation, focus/effect, burst-input reset, mouse-origin, overflow-sizing and keyboard-push balance tests; live counter and Canvas gallery smokes | broader terminal/emulator matrix |
+| Benchmarks | Partial | contextual Unicode retained an ASCII hot path and measured 12,627–12,727 frames/s across three stabilized 10,000-frame release runs at 120×40; plain key-path cells preserve rich-text clipping without allocating `Line`/`Span` storage and start-aligned layouts bypass cache synchronization | tracked allocation and terminal-output benchmarks |
+
+## Design boundary
+
+Ratatui is the behavioral reference for terminal correctness and widget capability. It is not the
+generic API template. Swift keeps domain types, key paths, result builders, Observation, async
+updates, and explicit dependency boundaries until a coarse render boundary; cells and buffers stay
+compact and dependency-free.

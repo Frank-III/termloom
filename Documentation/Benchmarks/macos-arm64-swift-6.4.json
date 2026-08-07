@@ -1,0 +1,196 @@
+[
+  {
+    "cellUpdatesPerIteration" : 236.637,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 12393.774968731435,
+    "name" : "frame\/dashboard-diff",
+    "nanosecondsPerIteration" : 80685.667,
+    "peakResidentBytes" : 8306688,
+    "retainedBytesDelta" : 16000,
+    "seconds" : 0.080685667
+  },
+  {
+    "cellUpdatesPerIteration" : 236.637,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 12604.062289275835,
+    "name" : "frame\/dashboard-observation",
+    "nanosecondsPerIteration" : 79339.5,
+    "peakResidentBytes" : 8929280,
+    "retainedBytesDelta" : 19248,
+    "seconds" : 0.0793395
+  },
+  {
+    "cellUpdatesPerIteration" : 0,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 18425.537795384404,
+    "name" : "frame\/static",
+    "nanosecondsPerIteration" : 54272.5,
+    "peakResidentBytes" : 9420800,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.0542725
+  },
+  {
+    "cellUpdatesPerIteration" : 1,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 39147.94497756333,
+    "name" : "frame\/one-cell",
+    "nanosecondsPerIteration" : 25544.125,
+    "peakResidentBytes" : 9912320,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.025544125
+  },
+  {
+    "cellUpdatesPerIteration" : 4800,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 12059.659182213043,
+    "name" : "frame\/full-churn",
+    "nanosecondsPerIteration" : 82921.083,
+    "peakResidentBytes" : 10797056,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.082921083
+  },
+  {
+    "cellUpdatesPerIteration" : 0,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 18454.298925243776,
+    "name" : "frame\/cursor-only",
+    "nanosecondsPerIteration" : 54187.916,
+    "peakResidentBytes" : 11091968,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.054187916
+  },
+  {
+    "cellUpdatesPerIteration" : 0.015,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 38545.54848446034,
+    "name" : "frame\/0-interactions",
+    "nanosecondsPerIteration" : 25943.333,
+    "peakResidentBytes" : 11583488,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.025943333
+  },
+  {
+    "cellUpdatesPerIteration" : 0.015,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 33633.3710307367,
+    "name" : "frame\/100-interactions",
+    "nanosecondsPerIteration" : 29732.375,
+    "peakResidentBytes" : 12025856,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.029732375
+  },
+  {
+    "iterations" : 1000,
+    "iterationsPerSecond" : 1513718.070009461,
+    "name" : "buffer\/empty\/16x16",
+    "nanosecondsPerIteration" : 660.625,
+    "peakResidentBytes" : 12042240,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.000660625
+  },
+  {
+    "iterations" : 250,
+    "iterationsPerSecond" : 101306.85847431871,
+    "name" : "buffer\/empty\/64x64",
+    "nanosecondsPerIteration" : 9871,
+    "peakResidentBytes" : 12042240,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.00246775
+  },
+  {
+    "iterations" : 66,
+    "iterationsPerSecond" : 6704.67676600932,
+    "name" : "buffer\/empty\/255x255",
+    "nanosecondsPerIteration" : 149149.62121212122,
+    "peakResidentBytes" : 13156352,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.009843875
+  },
+  {
+    "iterations" : 1000,
+    "iterationsPerSecond" : 5799892.12200653,
+    "name" : "layout\/10-fill",
+    "nanosecondsPerIteration" : 172.417,
+    "peakResidentBytes" : 13156352,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.000172417
+  },
+  {
+    "iterations" : 1000,
+    "iterationsPerSecond" : 1979.5536848773233,
+    "name" : "paragraph\/wrap\/64-lines",
+    "nanosecondsPerIteration" : 505164.375,
+    "peakResidentBytes" : 13369344,
+    "retainedBytesDelta" : 65440,
+    "seconds" : 0.505164375
+  },
+  {
+    "iterations" : 31,
+    "iterationsPerSecond" : 1931.3739233369158,
+    "name" : "paragraph\/wrap\/2048-lines",
+    "nanosecondsPerIteration" : 517766.129032258,
+    "peakResidentBytes" : 13729792,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.01605075
+  },
+  {
+    "iterations" : 31,
+    "iterationsPerSecond" : 143.27792569503245,
+    "name" : "paragraph\/wrap\/2048-lines\/scrolled-1024",
+    "nanosecondsPerIteration" : 6979442.193548387,
+    "peakResidentBytes" : 13729792,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.216362708
+  },
+  {
+    "iterations" : 1000,
+    "iterationsPerSecond" : 22720.473625540286,
+    "name" : "table\/render\/64x2",
+    "nanosecondsPerIteration" : 44013.167,
+    "peakResidentBytes" : 13729792,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.044013167
+  },
+  {
+    "iterations" : 31,
+    "iterationsPerSecond" : 20839.747718047627,
+    "name" : "table\/render\/2048x2",
+    "nanosecondsPerIteration" : 47985.22580645161,
+    "peakResidentBytes" : 13729792,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.001487542
+  },
+  {
+    "cellUpdatesPerIteration" : 0,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 16421.889373515267,
+    "name" : "ansi\/static",
+    "nanosecondsPerIteration" : 60894.333,
+    "outputBytesPerIteration" : 11,
+    "peakResidentBytes" : 14270464,
+    "retainedBytesDelta" : 1648,
+    "seconds" : 0.060894333
+  },
+  {
+    "cellUpdatesPerIteration" : 1,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 30056.80676364716,
+    "name" : "ansi\/one-cell",
+    "nanosecondsPerIteration" : 33270.334,
+    "outputBytesPerIteration" : 42,
+    "peakResidentBytes" : 14336000,
+    "retainedBytesDelta" : 96,
+    "seconds" : 0.033270334
+  },
+  {
+    "cellUpdatesPerIteration" : 4800,
+    "iterations" : 1000,
+    "iterationsPerSecond" : 8117.423927074622,
+    "name" : "ansi\/full-churn",
+    "nanosecondsPerIteration" : 123191.792,
+    "outputBytesPerIteration" : 5109,
+    "peakResidentBytes" : 14385152,
+    "retainedBytesDelta" : 0,
+    "seconds" : 0.123191792
+  }
+]
