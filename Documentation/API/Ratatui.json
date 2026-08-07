@@ -2566,6 +2566,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui11TestBackendV28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "kind": "swift.method",
+      "path": [
+        "TestBackend",
+        "scrollRegionUpIntoScrollback(_:by:)"
+      ],
+      "title": "scrollRegionUpIntoScrollback(_:by:)",
+      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui11TestBackendV4drawyySayAA10CellUpdateVGKF",
       "kind": "swift.method",
       "path": [
@@ -22360,6 +22372,11 @@
     {
       "kind": "memberOf",
       "source": "s:7Ratatui11TestBackendV17setViewportOriginyyAA8PositionVKF",
+      "target": "s:7Ratatui11TestBackendV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11TestBackendV28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
       "target": "s:7Ratatui11TestBackendV"
     },
     {

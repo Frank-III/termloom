@@ -3,6 +3,23 @@ import Testing
 
 @testable import Ratatui
 
+private struct VisualOnlyHistoryBackend: InlineHistoryBackend {
+  var visualScrollCount = 0
+  private var origin = Position(x: 0, y: 0)
+
+  var capabilities: BackendCapabilities { [.inlineViewport] }
+  var viewportOrigin: Position { origin }
+
+  mutating func setViewportOrigin(_ origin: Position) throws { self.origin = origin }
+  mutating func size() throws -> Size { Size(width: 4, height: 1) }
+  mutating func draw(_ updates: [CellUpdate]) throws {}
+  mutating func clear() throws {}
+  mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws {
+    visualScrollCount += 1
+  }
+  mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws {}
+}
+
 @Suite struct InlineInsertionTests {
   @Test func insertsRowsAboveBottomAnchoredViewportWithoutRedrawingIt() throws {
     var backend = TestBackend(
@@ -109,6 +126,23 @@ import Testing
       │PORT│
       """
     }
+  }
+
+  @Test func visualScrollingDoesNotSilentlySubstituteForNativeScrollback() throws {
+    var terminal = try Terminal(backend: VisualOnlyHistoryBackend())
+
+    do {
+      try terminal.insertBefore(height: 1) { buffer in
+        buffer.setString("LOG", at: Position(x: 0, y: 0))
+      }
+      Issue.record("Expected unsupported native scrollback insertion")
+    } catch let error as BackendOperationError {
+      #expect(error == .unsupported("native scrollback insertion"))
+    } catch {
+      Issue.record("Unexpected error: \(error)")
+    }
+
+    #expect(terminal.backend.visualScrollCount == 0)
   }
 
   @Test func inlineDocumentEmitsAppendOnlyRowsAndWaitsAtMutableBoundaries() {

@@ -138,7 +138,8 @@ application.
 
 Inline rendering keeps widget coordinates local `(0, 0)` while the backend stores an explicit
 physical viewport origin. `Terminal.insertBefore(height:_:)` uses scrolling regions to insert log
-or history rows above the live viewport without clearing it; unsupported backends safely no-op.
+or history rows above the live viewport without clearing it. Its generic fallback still requires a genuine
+native-scrollback operation; a conformer that supplies only visual region scrolling fails explicitly as unsupported.
 Mouse localization is rebased whenever insertion or dynamic sizing moves that physical origin. Large
 canonical replays are grouped into bounded buffers and carry batch positions; whole-terminal history
 backends clear the live pane once, stream continuation chunks, and reserve composer rows only after the
@@ -146,7 +147,10 @@ last chunk. This avoids thousands of blank-row reservations during a resumed ses
 memory. During an ordinary application frame, dynamic viewport mutation, history insertion, and the final
 draw are buffered into one terminal write. This follows Codex Rust's host-level synchronized draw boundary
 without putting native-scrollback line feeds inside synchronized-output mode, which Ghostty-family hosts may
-otherwise omit from scrollback. A scrollback reset already leaves the cursor at the known home position, so
+otherwise omit from scrollback. If the coalesced physical write fails, an unbuffered defensive epilogue closes
+synchronized output and resets margins, styles, wrapping, and cursor visibility. Session viewport state,
+terminal diff/backend state, and inline-document reconciliation roll back to their pre-frame snapshots so a
+caller-driven retry emits a complete update. A scrollback reset already leaves the cursor at the known home position, so
 Ratatui rebuilds the inline reservation from row zero instead of issuing a competing cursor-position query
 while the asynchronous input pump is active. Terminal protocol setup is session-scoped: resets do not stack
 extra Kitty keyboard pushes, so final restoration balances the original push exactly once.

@@ -84,11 +84,11 @@ Expected: zero pending additions; any intentional default-implementation relatio
 
 ## Done criteria
 
-- [ ] No default maps native-scrollback semantics to visual scrolling.
-- [ ] Unsupported conformers fail explicitly.
-- [ ] ANSIBackend and TestBackend keep their intended behavior.
-- [ ] Batch and insertion tests pass.
-- [ ] API migration is documented.
+- [x] No default maps native-scrollback semantics to visual scrolling.
+- [x] Unsupported conformers fail explicitly.
+- [x] ANSIBackend and TestBackend keep their intended behavior.
+- [x] Batch and insertion tests pass.
+- [x] API migration is documented.
 
 ## STOP conditions
 

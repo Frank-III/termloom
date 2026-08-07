@@ -39,6 +39,17 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Evidence:** deterministic partial-write tests verify the unbuffered epilogue, dual-failure reporting, and retry;
   backend and real-PTY tests preserve successful byte ordering, history restoration, and lifecycle balance.
 
+### Native-scrollback capability semantics
+
+- **Provisional correctness fix:** the default `InlineHistoryBackend.scrollRegionUpIntoScrollback` implementation now
+  throws `BackendOperationError.unsupported("native scrollback insertion")`. It no longer substitutes visual region
+  scrolling, which can discard displaced rows instead of retaining native terminal history. Backends returning `false`
+  from `insertHistory` must implement the semantic native-scrollback operation for the generic fallback to succeed.
+- **Migration:** custom inline-history backends that relied on the old forwarding default must implement genuine native
+  scrollback insertion or allow the explicit unsupported error to propagate.
+- **Evidence:** a visual-only backend fails explicitly without invoking its visual-scroll operation; explicit ANSI and
+  test backends preserve their native-history behavior.
+
 ### One-pass widget presentation and fixed viewports
 
 - **Supported breaking redesign:** `Widget` now has one presentation requirement,

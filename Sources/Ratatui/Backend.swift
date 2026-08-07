@@ -75,7 +75,8 @@ public protocol LineAppendingBackend: Backend {
 /// Optional backend facet required by inline native-history insertion.
 ///
 /// Conforming backends provide region movement. `insertHistory` is an optional native-scrollback fast path;
-/// returning `false` selects `Terminal`'s generic region-scrolling algorithm.
+/// returning `false` selects `Terminal`'s generic fallback, which still requires the backend to implement
+/// native-scrollback insertion. Visual region scrolling alone cannot preserve displaced terminal history.
 public protocol InlineHistoryBackend: Backend {
   mutating func insertHistory(_ buffer: Buffer) throws -> Bool
   mutating func insertHistory(
@@ -151,7 +152,7 @@ extension InlineHistoryBackend {
   public mutating func scrollRegionUpIntoScrollback(
     _ rows: Range<UInt16>, by count: UInt16
   ) throws {
-    try scrollRegionUp(rows, by: count)
+    throw BackendOperationError.unsupported("native scrollback insertion")
   }
 }
 
@@ -311,6 +312,12 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     for (offset, destination) in range.enumerated() {
       writeRow(offset + amount < original.count ? original[offset + amount] : nil, to: destination)
     }
+  }
+
+  public mutating func scrollRegionUpIntoScrollback(
+    _ rows: Range<UInt16>, by count: UInt16
+  ) throws {
+    try scrollRegionUp(rows, by: count)
   }
 
   public mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws {

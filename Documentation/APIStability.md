@@ -37,7 +37,8 @@ must include migration notes.
 Current provisional areas are:
 
 - `InlineHistoryBackend`, `HistoryInsertionBatchPosition`, native-history batching, and source-backed inline
-  document reconciliation;
+  document reconciliation. Conformance does not promise that every optional fast path succeeds, but any generic
+  fallback must implement real native-scrollback retention rather than substituting visual region scrolling;
 - terminal capability probing and low-level session/reconstruction controls;
 - interaction routing, focus metadata, scroll/selection viewport policies, and public wakeup mechanics;
 - specialized collection, metric, calendar, canvas, and branded widgets;
