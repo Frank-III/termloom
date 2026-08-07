@@ -6,6 +6,22 @@
 
   @testable import Ratatui
 
+  private enum InjectedTransactionError: Error {
+    case commit
+  }
+
+  private final class TransactionFailureSink {
+    private(set) var writes: [Data] = []
+
+    func write(_ data: Data) throws {
+      if writes.isEmpty {
+        writes.append(Data(data.prefix(8)))
+        throw InjectedTransactionError.commit
+      }
+      writes.append(data)
+    }
+  }
+
   private final class PTYOutputCapture: @unchecked Sendable {
     private let descriptor: Int32
     private let source: DispatchSourceRead
@@ -239,6 +255,36 @@
       #expect(!restore.contains("\u{1B}[?1049l"))
     }
 
+    @Test func fullscreenSessionUsesAndRestoresTheAlternateScreen() throws {
+      var master: Int32 = -1
+      var slave: Int32 = -1
+      var window = winsize(ws_row: 10, ws_col: 20, ws_xpixel: 0, ws_ypixel: 0)
+      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
+      guard master >= 0, slave >= 0 else { return }
+      defer {
+        close(master)
+        close(slave)
+      }
+      _ = fcntl(master, F_SETFL, fcntl(master, F_GETFL) | O_NONBLOCK)
+
+      let session = try TerminalSession(
+        viewport: .fullscreen, inputDescriptor: slave,
+        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false))
+      #expect(session.configuredViewport == .fullscreen)
+      #expect(!session.supportsInlineHistory)
+      var terminal = try Terminal(
+        backend: session.makeBackend(), viewport: session.configuredViewport)
+      try terminal.draw { frame in
+        frame.render(Paragraph("FULLSCREEN"))
+      }
+      try session.restore()
+
+      let output = String(decoding: drain(master), as: UTF8.self)
+      #expect(output.contains("\u{1B}[?1049h"))
+      #expect(output.contains("FULLSCREEN"))
+      #expect(output.contains("\u{1B}[?1049l"))
+    }
+
     @Test func inlineSessionOwnsAndRestoresARealPseudoTerminal() throws {
       var master: Int32 = -1
       var slave: Int32 = -1
@@ -447,6 +493,62 @@
         #expect(destructiveClear.lowerBound < replacement.lowerBound)
       }
       try session.restore()
+    }
+
+    @Test func failedFrameCommitRollsBackSessionStateAndRetriesCompleteOutput() throws {
+      var master: Int32 = -1
+      var slave: Int32 = -1
+      var window = winsize(ws_row: 24, ws_col: 80, ws_xpixel: 0, ws_ypixel: 0)
+      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
+      guard master >= 0, slave >= 0 else { return }
+      defer {
+        close(master)
+        close(slave)
+      }
+      _ = fcntl(master, F_SETFL, fcntl(master, F_GETFL) | O_NONBLOCK)
+
+      let report = Array("\u{1B}[5;1R".utf8)
+      #expect(report.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == report.count)
+      let session = try TerminalSession(
+        viewport: .inline(height: 1), inputDescriptor: slave,
+        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false))
+      _ = drain(master)
+
+      let originalOutput = session.terminalOutput
+      let sink = TransactionFailureSink()
+      session.terminalOutput = TransactionalTerminalOutput(directWrite: sink.write)
+      defer {
+        session.terminalOutput = originalOutput
+        try? session.restore()
+      }
+
+      #expect(throws: InjectedTransactionError.commit) {
+        try session.withFrameOutputTransaction {
+          let changed = try session.updateInlineViewportHeight(5)
+          #expect(changed)
+          session.synchronizeViewportOrigin(Position(x: 0, y: 7))
+        }
+      }
+      #expect(session.configuredViewport == .inline(height: 1))
+      #expect(session.viewportOrigin == Position(x: 0, y: 4))
+      #expect(sink.writes.count == 2)
+      #expect(sink.writes[1] == TransactionalTerminalOutput.emergencyRecoverySequence)
+
+      try session.withFrameOutputTransaction {
+        let changed = try session.updateInlineViewportHeight(5)
+        #expect(changed)
+        session.synchronizeViewportOrigin(Position(x: 0, y: 7))
+        var terminal = try Terminal(backend: session.makeBackend())
+        try terminal.draw { frame in
+          frame.render(Paragraph("RETRY-FRAME"))
+        }
+      }
+      #expect(session.configuredViewport == .inline(height: 5))
+      #expect(session.viewportOrigin == Position(x: 0, y: 7))
+      #expect(sink.writes.count == 3)
+      let retry = String(decoding: sink.writes[2], as: UTF8.self)
+      #expect(retry.contains("\u{1B}[5;1H\u{1B}[2K"))
+      #expect(retry.contains("RETRY-FRAME"))
     }
 
     @Test func prefetchedInputIsTransferredToOnlyOneInputStream() throws {
