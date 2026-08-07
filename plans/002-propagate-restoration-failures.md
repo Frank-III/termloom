@@ -105,11 +105,11 @@ Expected: both exit 0; zero pending additions.
 
 ## Done criteria
 
-- [ ] Successful bodies cannot conceal failed restoration.
-- [ ] Dual failures retain both errors.
-- [ ] Sync, async, and suspended-action scopes share one policy.
-- [ ] Deinit remains explicitly best-effort.
-- [ ] Tests cover all four body/cleanup outcomes.
+- [x] Successful bodies cannot conceal failed restoration.
+- [x] Dual failures retain both errors.
+- [x] Sync, async, and suspended-action scopes share one policy.
+- [x] Deinit remains explicitly best-effort.
+- [x] Tests cover all four body/cleanup outcomes.
 
 ## STOP conditions
 

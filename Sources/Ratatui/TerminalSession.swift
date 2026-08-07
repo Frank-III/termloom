@@ -31,6 +31,61 @@ public enum TerminalSessionError: Error {
   case cannotReadInput
 }
 
+/// Reports a failed scoped operation whose terminal cleanup also failed.
+public struct TerminalScopeError: Error {
+  public let operationError: any Error
+  public let cleanupError: any Error
+
+  public init(operationError: any Error, cleanupError: any Error) {
+    self.operationError = operationError
+    self.cleanupError = cleanupError
+  }
+}
+
+extension TerminalScopeError: LocalizedError {
+  public var errorDescription: String? {
+    "The terminal operation and its required cleanup both failed."
+  }
+}
+
+func completeTerminalScope<Value>(
+  _ outcome: Result<Value, any Error>,
+  cleanup: () throws -> Void
+) throws -> Value {
+  let cleanupOutcome = Result { try cleanup() }
+  switch (outcome, cleanupOutcome) {
+  case (.success(let value), .success):
+    return value
+  case (.success, .failure(let cleanupError)):
+    throw cleanupError
+  case (.failure(let operationError), .success):
+    throw operationError
+  case (.failure(let operationError), .failure(let cleanupError)):
+    throw TerminalScopeError(operationError: operationError, cleanupError: cleanupError)
+  }
+}
+
+func withTerminalCleanup<Value>(
+  operation: () throws -> Value,
+  cleanup: () throws -> Void
+) throws -> Value {
+  try completeTerminalScope(Result { try operation() }, cleanup: cleanup)
+}
+
+@MainActor
+func withTerminalCleanup<Value>(
+  operation: () async throws -> Value,
+  cleanup: () throws -> Void
+) async throws -> Value {
+  let outcome: Result<Value, any Error>
+  do {
+    outcome = .success(try await operation())
+  } catch {
+    outcome = .failure(error)
+  }
+  return try completeTerminalScope(outcome, cleanup: cleanup)
+}
+
 private final class TransactionalTerminalOutput: @unchecked Sendable {
   private let output: FileHandle
   private let lock = NSLock()
@@ -155,6 +210,7 @@ public final class TerminalSession {
   }
 
   isolated deinit {
+    // Deinitialization cannot report failure; deterministic public scopes use `withTerminalCleanup`.
     try? restore()
   }
 
@@ -376,13 +432,8 @@ public final class TerminalSession {
     _ operation: () async throws -> Result
   ) async throws -> Result {
     try suspend()
-    do {
-      let result = try await operation()
+    return try await withTerminalCleanup(operation: operation) {
       try resume()
-      return result
-    } catch {
-      try? resume()
-      throw error
     }
   }
 
@@ -572,8 +623,11 @@ public func withTerminalSession<Result>(
   _ operation: (TerminalSession) throws -> Result
 ) throws -> Result {
   let session = try TerminalSession(viewport: viewport, capturesMouse: capturesMouse)
-  defer { try? session.restore() }
-  return try operation(session)
+  return try withTerminalCleanup {
+    try operation(session)
+  } cleanup: {
+    try session.restore()
+  }
 }
 
 @MainActor
@@ -583,8 +637,11 @@ public func withTerminalSession<Result>(
   _ operation: (TerminalSession) async throws -> Result
 ) async throws -> Result {
   let session = try TerminalSession(viewport: viewport, capturesMouse: capturesMouse)
-  defer { try? session.restore() }
-  return try await operation(session)
+  return try await withTerminalCleanup {
+    try await operation(session)
+  } cleanup: {
+    try session.restore()
+  }
 }
 
 final class TerminalWakeup: @unchecked Sendable {

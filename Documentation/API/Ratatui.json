@@ -6166,6 +6166,65 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui18TerminalScopeErrorV",
+      "kind": "swift.struct",
+      "path": [
+        "TerminalScopeError"
+      ],
+      "title": "TerminalScopeError",
+      "declaration": "struct TerminalScopeError",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18TerminalScopeErrorV07cleanupD0s0D0_pvp",
+      "kind": "swift.property",
+      "path": [
+        "TerminalScopeError",
+        "cleanupError"
+      ],
+      "title": "cleanupError",
+      "declaration": "let cleanupError: any Error",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18TerminalScopeErrorV09operationD007cleanupD0ACs0D0_p_sAF_ptcfc",
+      "kind": "swift.init",
+      "path": [
+        "TerminalScopeError",
+        "init(operationError:cleanupError:)"
+      ],
+      "title": "init(operationError:cleanupError:)",
+      "declaration": "init(operationError: any Error, cleanupError: any Error)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18TerminalScopeErrorV09operationD0s0D0_pvp",
+      "kind": "swift.property",
+      "path": [
+        "TerminalScopeError",
+        "operationError"
+      ],
+      "title": "operationError",
+      "declaration": "let operationError: any Error",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui18TerminalScopeErrorV16errorDescriptionSSSgvp",
+      "kind": "swift.property",
+      "path": [
+        "TerminalScopeError",
+        "errorDescription"
+      ],
+      "title": "errorDescription",
+      "declaration": "var errorDescription: String? { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui18TextFieldElementIDV",
       "kind": "swift.struct",
       "path": [
@@ -19025,6 +19084,42 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui18TerminalScopeErrorV",
+      "target": "s:10Foundation14LocalizedErrorP",
+      "targetFallback": "Foundation.LocalizedError"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18TerminalScopeErrorV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18TerminalScopeErrorV",
+      "target": "s:s5ErrorP",
+      "targetFallback": "Swift.Error"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18TerminalScopeErrorV",
+      "target": "s:s8CopyableP",
+      "targetFallback": "Swift.Copyable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18TerminalScopeErrorV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui18TerminalScopeErrorV",
+      "target": "s:s9EscapableP",
+      "targetFallback": "Swift.Escapable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui18TextFieldElementIDV",
       "target": "s:SH",
       "targetFallback": "Swift.Hashable"
@@ -23536,6 +23631,26 @@
       "kind": "memberOf",
       "source": "s:7Ratatui18TerminalModeStatusO8rawValueACSgs6UInt16V_tcfc",
       "target": "s:7Ratatui18TerminalModeStatusO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18TerminalScopeErrorV07cleanupD0s0D0_pvp",
+      "target": "s:7Ratatui18TerminalScopeErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18TerminalScopeErrorV09operationD007cleanupD0ACs0D0_p_sAF_ptcfc",
+      "target": "s:7Ratatui18TerminalScopeErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18TerminalScopeErrorV09operationD0s0D0_pvp",
+      "target": "s:7Ratatui18TerminalScopeErrorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui18TerminalScopeErrorV16errorDescriptionSSSgvp",
+      "target": "s:7Ratatui18TerminalScopeErrorV"
     },
     {
       "kind": "memberOf",

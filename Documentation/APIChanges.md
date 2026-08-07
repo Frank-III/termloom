@@ -16,6 +16,16 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Evidence:** the minimal Swift 6 build and real-PTY inline, fullscreen, fixed, resize, suspend/resume, input-transfer,
   and application-loop tests compile and pass without an unchecked session conformance.
 
+### Observable terminal-scope cleanup failures
+
+- **Supported:** synchronous and asynchronous `withTerminalSession` and suspended-action scopes now propagate failed
+  restoration or resume operations. A successful body followed by failed cleanup throws the cleanup error; a failed
+  body followed by successful cleanup preserves the body error.
+- When both phases fail, `TerminalScopeError` retains `operationError` and `cleanupError` without exposing terminal
+  control bytes in its localized description. Session deinitialization remains explicitly best-effort.
+- **Evidence:** deterministic tests cover all four body/cleanup outcomes and the asynchronous path; real-PTY lifecycle
+  tests cover ordinary session restoration and suspend/resume behavior.
+
 ### One-pass widget presentation and fixed viewports
 
 - **Supported breaking redesign:** `Widget` now has one presentation requirement,

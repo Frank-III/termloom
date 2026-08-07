@@ -95,7 +95,9 @@ backend.
 `.ignore`, or `.quit`. Its update function is async, so Dependencies clients and other structured
 concurrency work compose naturally. A detached, lock-isolated input pump is the only blocking
 piece. The runtime owns raw-mode scope, event polling, resize-triggered redraws, cursor state, and
-terminal restoration. Idle applications remain event-driven.
+terminal restoration. Scoped session and suspension helpers run cleanup exactly once: cleanup failure replaces a
+successful body, while `TerminalScopeError` preserves both errors when the body and cleanup fail. Deinitialization
+remains best-effort because it cannot report errors. Idle applications remain event-driven.
 
 Presentation and widget-render reads are wrapped in Swift Observation access tracking. A mutation of an
 `@Observable` model marks the next complete frame dirty and signals an internal nonblocking pipe included in
