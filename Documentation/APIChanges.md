@@ -5,6 +5,17 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Overflow-aware interactive tabs
+
+- **Additive:** `TabViewport` projects contiguous variable-width tabs while keeping the selected index represented and
+  reporting leading/trailing overflow. `Tabs.layout(in:)` returns value-semantic `TabLayout` and `TabPlacement` geometry.
+- **Additive:** `Tabs` supports configurable overflow indicators, selected-tab placement, and optional value-semantic
+  `TabInteraction` metadata. Emitted interactions use the exact visible tab rectangles from the render pass.
+- **Ownership:** Ratatui owns terminal-column projection and geometry. Applications retain tab identity, navigation,
+  labels, colors, switching behavior, and action meaning.
+- **Evidence:** synthetic tests cover Unicode widths, overflow boundaries, oversized selected tabs, narrow areas, and
+  same-pass interaction geometry. Motel service tabs and Postcat response tabs validate unrelated product use cases.
+
 ### Lazy interactive selectable rows
 
 - **Additive:** `SelectionViewport.fixed` projects fixed-height selections with leading, centered, or trailing

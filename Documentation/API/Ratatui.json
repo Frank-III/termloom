@@ -2398,6 +2398,77 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui11TabViewportV",
+      "kind": "swift.struct",
+      "path": [
+        "TabViewport"
+      ],
+      "title": "TabViewport",
+      "declaration": "struct TabViewport",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11TabViewportV12hasTabsAfterSbvp",
+      "kind": "swift.property",
+      "path": [
+        "TabViewport",
+        "hasTabsAfter"
+      ],
+      "title": "hasTabsAfter",
+      "declaration": "var hasTabsAfter: Bool",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11TabViewportV13hasTabsBeforeSbvp",
+      "kind": "swift.property",
+      "path": [
+        "TabViewport",
+        "hasTabsBefore"
+      ],
+      "title": "hasTabsBefore",
+      "declaration": "var hasTabsBefore: Bool",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11TabViewportV5range13hasTabsBefore0eF5AfterACSnySiG_S2btcfc",
+      "kind": "swift.init",
+      "path": [
+        "TabViewport",
+        "init(range:hasTabsBefore:hasTabsAfter:)"
+      ],
+      "title": "init(range:hasTabsBefore:hasTabsAfter:)",
+      "declaration": "init(range: Range<Int>, hasTabsBefore: Bool, hasTabsAfter: Bool)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11TabViewportV5rangeSnySiGvp",
+      "kind": "swift.property",
+      "path": [
+        "TabViewport",
+        "range"
+      ],
+      "title": "range",
+      "declaration": "var range: Range<Int>",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11TabViewportV7fitting6widths13selectedIndex8capacity7spacing20leadingOverflowWidth08trailingkL09placementACSaySiG_SiSgS4iAA18SelectionPlacementOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "TabViewport",
+        "fitting(widths:selectedIndex:capacity:spacing:leadingOverflowWidth:trailingOverflowWidth:placement:)"
+      ],
+      "title": "fitting(widths:selectedIndex:capacity:spacing:leadingOverflowWidth:trailingOverflowWidth:placement:)",
+      "declaration": "static func fitting(widths: [Int], selectedIndex: Int?, capacity: Int, spacing: Int = 0, leadingOverflowWidth: Int = 0, trailingOverflowWidth: Int = 0, placement: SelectionPlacement = .trailing) -> TabViewport",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui11TableColumnV",
       "kind": "swift.struct",
       "path": [
@@ -3453,6 +3524,53 @@
       ],
       "title": "buildExpression(_:)",
       "declaration": "static func buildExpression<W>(_ expression: W) -> [StackItem] where W : Widget",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui12TabPlacementV",
+      "kind": "swift.struct",
+      "path": [
+        "TabPlacement"
+      ],
+      "title": "TabPlacement",
+      "declaration": "struct TabPlacement",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui12TabPlacementV4areaAA4RectVvp",
+      "kind": "swift.property",
+      "path": [
+        "TabPlacement",
+        "area"
+      ],
+      "title": "area",
+      "declaration": "var area: Rect",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui12TabPlacementV5index4areaACSi_AA4RectVtcfc",
+      "kind": "swift.init",
+      "path": [
+        "TabPlacement",
+        "init(index:area:)"
+      ],
+      "title": "init(index:area:)",
+      "declaration": "init(index: Int, area: Rect)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui12TabPlacementV5indexSivp",
+      "kind": "swift.property",
+      "path": [
+        "TabPlacement",
+        "index"
+      ],
+      "title": "index",
+      "declaration": "var index: Int",
       "accessLevel": "public",
       "availability": []
     },
@@ -4933,6 +5051,65 @@
       ],
       "title": "render(in:into:environment:state:)",
       "declaration": "func render(in area: Rect, into buffer: inout Buffer, environment: RenderEnvironment = RenderEnvironment(), state: inout State)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14TabInteractionV",
+      "kind": "swift.struct",
+      "path": [
+        "TabInteraction"
+      ],
+      "title": "TabInteraction",
+      "declaration": "struct TabInteraction",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14TabInteractionV11isFocusableSbvp",
+      "kind": "swift.property",
+      "path": [
+        "TabInteraction",
+        "isFocusable"
+      ],
+      "title": "isFocusable",
+      "declaration": "var isFocusable: Bool",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14TabInteractionV6actionAA8ActionIDVSgvp",
+      "kind": "swift.property",
+      "path": [
+        "TabInteraction",
+        "action"
+      ],
+      "title": "action",
+      "declaration": "var action: ActionID?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14TabInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
+      "kind": "swift.init",
+      "path": [
+        "TabInteraction",
+        "init(control:action:isFocusable:)"
+      ],
+      "title": "init(control:action:isFocusable:)",
+      "declaration": "init(control: ControlID, action: ActionID? = nil, isFocusable: Bool = false)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui14TabInteractionV7controlAA9ControlIDVvp",
+      "kind": "swift.property",
+      "path": [
+        "TabInteraction",
+        "control"
+      ],
+      "title": "control",
+      "declaration": "var control: ControlID",
       "accessLevel": "public",
       "availability": []
     },
@@ -10292,6 +10469,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui4TabsV12interactionsSayAA14TabInteractionVSgGvp",
+      "kind": "swift.property",
+      "path": [
+        "Tabs",
+        "interactions"
+      ],
+      "title": "interactions",
+      "declaration": "var interactions: [TabInteraction?]",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui4TabsV13selectedIndexSivp",
       "kind": "swift.property",
       "path": [
@@ -10316,6 +10505,42 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui4TabsV18selectionPlacementAA09SelectionD0Ovp",
+      "kind": "swift.property",
+      "path": [
+        "Tabs",
+        "selectionPlacement"
+      ],
+      "title": "selectionPlacement",
+      "declaration": "var selectionPlacement: SelectionPlacement",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui4TabsV24leadingOverflowIndicatorSSSgvp",
+      "kind": "swift.property",
+      "path": [
+        "Tabs",
+        "leadingOverflowIndicator"
+      ],
+      "title": "leadingOverflowIndicator",
+      "declaration": "var leadingOverflowIndicator: String?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui4TabsV25trailingOverflowIndicatorSSSgvp",
+      "kind": "swift.property",
+      "path": [
+        "Tabs",
+        "trailingOverflowIndicator"
+      ],
+      "title": "trailingOverflowIndicator",
+      "declaration": "var trailingOverflowIndicator: String?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui4TabsV5styleAA5StyleVvp",
       "kind": "swift.property",
       "path": [
@@ -10324,6 +10549,18 @@
       ],
       "title": "style",
       "declaration": "var style: Style",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui4TabsV6layout2inAA9TabLayoutVAA4RectV_tF",
+      "kind": "swift.method",
+      "path": [
+        "Tabs",
+        "layout(in:)"
+      ],
+      "title": "layout(in:)",
+      "declaration": "func layout(in area: Rect) -> TabLayout",
       "accessLevel": "public",
       "availability": []
     },
@@ -10376,26 +10613,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignmentACSayAA4LineVG_SiSSAA0G0VAmA9AlignmentOtcfc",
+      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSayAA4LineVG_SiSSAA0G0VAqA9AlignmentOAA09SelectionJ0OSSSgAVSayAA14TabInteractionVSgGtcfc",
       "kind": "swift.init",
       "path": [
         "Tabs",
-        "init(_:selectedIndex:divider:style:selectedStyle:alignment:)"
+        "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)"
       ],
-      "title": "init(_:selectedIndex:divider:style:selectedStyle:alignment:)",
-      "declaration": "init(_ titles: [Line], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading)",
+      "title": "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)",
+      "declaration": "init(_ titles: [Line], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading, selectionPlacement: SelectionPlacement = .trailing, leadingOverflowIndicator: String? = \"\u2039 \", trailingOverflowIndicator: String? = \" \u203a\", interactions: [TabInteraction?] = [])",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignmentACSaySSG_SiSSAA0G0VAkA9AlignmentOtcfc",
+      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSaySSG_SiSSAA0G0VAoA9AlignmentOAA09SelectionJ0OSSSgATSayAA14TabInteractionVSgGtcfc",
       "kind": "swift.init",
       "path": [
         "Tabs",
-        "init(_:selectedIndex:divider:style:selectedStyle:alignment:)"
+        "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)"
       ],
-      "title": "init(_:selectedIndex:divider:style:selectedStyle:alignment:)",
-      "declaration": "init(_ titles: [String], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading)",
+      "title": "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)",
+      "declaration": "init(_ titles: [String], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading, selectionPlacement: SelectionPlacement = .trailing, leadingOverflowIndicator: String? = \"\u2039 \", trailingOverflowIndicator: String? = \" \u203a\", interactions: [TabInteraction?] = [])",
       "accessLevel": "public",
       "availability": []
     },
@@ -17795,6 +18032,77 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui9TabLayoutV",
+      "kind": "swift.struct",
+      "path": [
+        "TabLayout"
+      ],
+      "title": "TabLayout",
+      "declaration": "struct TabLayout",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui9TabLayoutV19leadingOverflowAreaAA4RectVSgvp",
+      "kind": "swift.property",
+      "path": [
+        "TabLayout",
+        "leadingOverflowArea"
+      ],
+      "title": "leadingOverflowArea",
+      "declaration": "var leadingOverflowArea: Rect?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui9TabLayoutV20trailingOverflowAreaAA4RectVSgvp",
+      "kind": "swift.property",
+      "path": [
+        "TabLayout",
+        "trailingOverflowArea"
+      ],
+      "title": "trailingOverflowArea",
+      "declaration": "var trailingOverflowArea: Rect?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui9TabLayoutV4tabsSayAA0B9PlacementVGvp",
+      "kind": "swift.property",
+      "path": [
+        "TabLayout",
+        "tabs"
+      ],
+      "title": "tabs",
+      "declaration": "var tabs: [TabPlacement]",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui9TabLayoutV8viewport4tabs19leadingOverflowArea08trailinggH0AcA0B8ViewportV_SayAA0B9PlacementVGAA4RectVSgAOtcfc",
+      "kind": "swift.init",
+      "path": [
+        "TabLayout",
+        "init(viewport:tabs:leadingOverflowArea:trailingOverflowArea:)"
+      ],
+      "title": "init(viewport:tabs:leadingOverflowArea:trailingOverflowArea:)",
+      "declaration": "init(viewport: TabViewport, tabs: [TabPlacement], leadingOverflowArea: Rect? = nil, trailingOverflowArea: Rect? = nil)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui9TabLayoutV8viewportAA0B8ViewportVvp",
+      "kind": "swift.property",
+      "path": [
+        "TabLayout",
+        "viewport"
+      ],
+      "title": "viewport",
+      "declaration": "var viewport: TabViewport",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui9TableCellV",
       "kind": "swift.struct",
       "path": [
@@ -18739,6 +19047,30 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui11TabViewportV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11TabViewportV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11TabViewportV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11TabViewportV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui11TestBackendV",
       "target": "s:7Ratatui20InlineHistoryBackendP"
     },
@@ -18929,6 +19261,30 @@
     {
       "kind": "conformsTo",
       "source": "s:7Ratatui12SparklineBarV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui12TabPlacementV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui12TabPlacementV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui12TabPlacementV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui12TabPlacementV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -19300,6 +19656,30 @@
     {
       "kind": "conformsTo",
       "source": "s:7Ratatui14SelectionStateV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14TabInteractionV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14TabInteractionV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14TabInteractionV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui14TabInteractionV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -22027,6 +22407,30 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui9TabLayoutV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui9TabLayoutV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui9TabLayoutV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui9TabLayoutV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui9TableCellV",
       "target": "s:SH",
       "targetFallback": "Swift.Hashable"
@@ -23042,6 +23446,31 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui11TabViewportV12hasTabsAfterSbvp",
+      "target": "s:7Ratatui11TabViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11TabViewportV13hasTabsBeforeSbvp",
+      "target": "s:7Ratatui11TabViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11TabViewportV5range13hasTabsBefore0eF5AfterACSnySiG_S2btcfc",
+      "target": "s:7Ratatui11TabViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11TabViewportV5rangeSnySiGvp",
+      "target": "s:7Ratatui11TabViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11TabViewportV7fitting6widths13selectedIndex8capacity7spacing20leadingOverflowWidth08trailingkL09placementACSaySiG_SiSgS4iAA18SelectionPlacementOtFZ",
+      "target": "s:7Ratatui11TabViewportV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui11TableColumnV10constraintAA10ConstraintOvp",
       "target": "s:7Ratatui11TableColumnV"
     },
@@ -23439,6 +23868,21 @@
       "kind": "memberOf",
       "source": "s:7Ratatui12StackBuilderO15buildExpressionySayAA0B4ItemVGxAA6WidgetRzlFZ",
       "target": "s:7Ratatui12StackBuilderO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui12TabPlacementV4areaAA4RectVvp",
+      "target": "s:7Ratatui12TabPlacementV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui12TabPlacementV5index4areaACSi_AA4RectVtcfc",
+      "target": "s:7Ratatui12TabPlacementV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui12TabPlacementV5indexSivp",
+      "target": "s:7Ratatui12TabPlacementV"
     },
     {
       "kind": "memberOf",
@@ -23954,6 +24398,26 @@
       "kind": "memberOf",
       "source": "s:7Ratatui14StatefulWidgetPAAE6render2in4into11environment5stateyAA4RectV_AA6BufferVzAA17RenderEnvironmentV5StateQzztF",
       "target": "s:7Ratatui14StatefulWidgetP"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14TabInteractionV11isFocusableSbvp",
+      "target": "s:7Ratatui14TabInteractionV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14TabInteractionV6actionAA8ActionIDVSgvp",
+      "target": "s:7Ratatui14TabInteractionV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14TabInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
+      "target": "s:7Ratatui14TabInteractionV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14TabInteractionV7controlAA9ControlIDVvp",
+      "target": "s:7Ratatui14TabInteractionV"
     },
     {
       "kind": "memberOf",
@@ -25732,6 +26196,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui4TabsV12interactionsSayAA14TabInteractionVSgGvp",
+      "target": "s:7Ratatui4TabsV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui4TabsV13selectedIndexSivp",
       "target": "s:7Ratatui4TabsV"
     },
@@ -25742,7 +26211,27 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui4TabsV18selectionPlacementAA09SelectionD0Ovp",
+      "target": "s:7Ratatui4TabsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui4TabsV24leadingOverflowIndicatorSSSgvp",
+      "target": "s:7Ratatui4TabsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui4TabsV25trailingOverflowIndicatorSSSgvp",
+      "target": "s:7Ratatui4TabsV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui4TabsV5styleAA5StyleVvp",
+      "target": "s:7Ratatui4TabsV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui4TabsV6layout2inAA9TabLayoutVAA4RectV_tF",
       "target": "s:7Ratatui4TabsV"
     },
     {
@@ -25767,12 +26256,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignmentACSayAA4LineVG_SiSSAA0G0VAmA9AlignmentOtcfc",
+      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSayAA4LineVG_SiSSAA0G0VAqA9AlignmentOAA09SelectionJ0OSSSgAVSayAA14TabInteractionVSgGtcfc",
       "target": "s:7Ratatui4TabsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignmentACSaySSG_SiSSAA0G0VAkA9AlignmentOtcfc",
+      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSaySSG_SiSSAA0G0VAoA9AlignmentOAA09SelectionJ0OSSSgATSayAA14TabInteractionVSgGtcfc",
       "target": "s:7Ratatui4TabsV"
     },
     {
@@ -28484,6 +28973,31 @@
       "kind": "memberOf",
       "source": "s:7Ratatui9StackItemV_10constraintACx_AA10ConstraintOtcAA6WidgetRzlufc",
       "target": "s:7Ratatui9StackItemV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui9TabLayoutV19leadingOverflowAreaAA4RectVSgvp",
+      "target": "s:7Ratatui9TabLayoutV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui9TabLayoutV20trailingOverflowAreaAA4RectVSgvp",
+      "target": "s:7Ratatui9TabLayoutV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui9TabLayoutV4tabsSayAA0B9PlacementVGvp",
+      "target": "s:7Ratatui9TabLayoutV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui9TabLayoutV8viewport4tabs19leadingOverflowArea08trailinggH0AcA0B8ViewportV_SayAA0B9PlacementVGAA4RectVSgAOtcfc",
+      "target": "s:7Ratatui9TabLayoutV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui9TabLayoutV8viewportAA0B8ViewportVvp",
+      "target": "s:7Ratatui9TabLayoutV"
     },
     {
       "kind": "memberOf",

@@ -168,24 +168,40 @@ public struct PostcatScreen: Widget, Sendable {
     block.render(in: area, into: &frame)
     let inner = block.inner(area)
     guard inner.height >= 2 else { return }
-    let tabs = Line([
-      Span(
-        " Body ",
-        style: Style(
-          foreground: responseTab == .body ? ExampleTheme.accent : ExampleTheme.dim,
-          modifiers: responseTab == .body ? [.bold, .underlined] : [])),
-      Span(
-        " Headers ",
-        style: Style(
-          foreground: responseTab == .headers ? ExampleTheme.accent : ExampleTheme.dim,
-          modifiers: responseTab == .headers ? [.bold, .underlined] : [])),
-    ])
-    tabs.render(
-      in: Rect(x: inner.x, y: inner.y, width: inner.width, height: 1),
-      into: &frame)
-    if let response {
-      let metadata =
-        "\(response.status) \(response.reason) · \(response.durationMilliseconds) ms · \(humanSize(response.size)) "
+    let metadata = response.map {
+      "\($0.status) \($0.reason) · \($0.durationMilliseconds) ms · \(humanSize($0.size)) "
+    }
+    let metadataWidth = metadata.map { TerminalWidth.of($0) } ?? 0
+    let tabArea = Rect(
+      x: inner.x,
+      y: inner.y,
+      width: max(0, inner.width - min(inner.width, metadataWidth)),
+      height: 1
+    )
+    Tabs(
+      [
+        Line(
+          "Body",
+          style: Style(
+            foreground: responseTab == .body ? ExampleTheme.accent : ExampleTheme.dim,
+            modifiers: responseTab == .body ? [.bold, .underlined] : [])),
+        Line(
+          "Headers",
+          style: Style(
+            foreground: responseTab == .headers ? ExampleTheme.accent : ExampleTheme.dim,
+            modifiers: responseTab == .headers ? [.bold, .underlined] : [])),
+      ],
+      selectedIndex: responseTab == .body ? 0 : 1,
+      divider: "",
+      selectedStyle: .plain,
+      interactions: showsHelp
+        ? []
+        : [
+          TabInteraction(control: "postcat-response-body", action: "postcat.response.body"),
+          TabInteraction(control: "postcat-response-headers", action: "postcat.response.headers"),
+        ]
+    ).render(in: tabArea, into: &frame)
+    if let response, let metadata {
       Line(
         metadata, style: Style(foreground: ExampleTheme.status(response.status)),
         alignment: .trailing

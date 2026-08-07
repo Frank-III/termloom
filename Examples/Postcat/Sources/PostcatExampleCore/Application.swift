@@ -110,6 +110,23 @@ public final class PostcatApplication: TerminalApplication, PeriodicallyRedrawin
       return updateEditor(event)
     }
 
+    if case .action(let action) = event {
+      switch action.rawValue {
+      case "postcat.response.body":
+        focus = .response
+        responseTab = .body
+        rebuildResponseLines()
+        return mutationUpdate
+      case "postcat.response.headers":
+        focus = .response
+        responseTab = .headers
+        rebuildResponseLines()
+        return mutationUpdate
+      default:
+        return .ignore
+      }
+    }
+
     guard case .key(let key) = event, key.kind != .release else { return .ignore }
     switch key.key {
     case .character("q"):

@@ -102,6 +102,17 @@ import Testing
     _ = await app.update(.key(KeyEvent(.character("]"))))
     #expect(app.responseTab == .headers)
     #expect(app.renderedResponse.map(\.content).joined().contains("x-one"))
+
+    var terminal = try! Terminal(backend: TestBackend(width: 80, height: 20))
+    let frame = try! terminal.draw { $0.render(app.body) }
+    let bodyTab = frame.interactions.regions.first {
+      $0.action == ActionID("postcat.response.body")
+    }
+    #expect(bodyTab?.area.height == 1)
+    #expect(bodyTab?.area.width == TerminalWidth.of(" Body "))
+    _ = await app.update(.action("postcat.response.body"))
+    #expect(app.focus == .response)
+    #expect(app.responseTab == .body)
   }
 
   private func render<W: Widget>(_ screen: W, width: Int, height: Int) -> String {
