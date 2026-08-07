@@ -229,6 +229,60 @@ private func terminalOutputBackend() -> ANSIBackend {
     #expect(!output.contains("\u{1B}[1;4r"))
   }
 
+  @Test func terminalOutputHistorySerializesMappedStyledAndWideCells() throws {
+    let output = RecordedOutput()
+    var backend = terminalOutputBackend()
+    backend.outputWriter = output.write
+    var history = Buffer(area: Rect(x: 3, y: 4, width: 8, height: 2))
+    history.setString(
+      "Q界Z", at: Position(x: 4, y: 4),
+      style: Style(foreground: .red, modifiers: [.bold]))
+    history.setString(
+      "R", at: Position(x: 5, y: 5),
+      style: Style(foreground: .cyan, modifiers: [.underlined]))
+
+    #expect(try backend.insertHistory(history))
+    #expect(output.writes.count == 2)
+    let transaction = String(decoding: output.writes.last ?? Data(), as: UTF8.self)
+    #expect(transaction.contains("\u{1B}[0;1;31mQ界Z\u{1B}[0m"))
+    #expect(transaction.contains("\u{1B}[0;4;36mR\u{1B}[0m"))
+    #expect(transaction.components(separatedBy: "Q").count - 1 == 1)
+    #expect(transaction.components(separatedBy: "界").count - 1 == 1)
+    #expect(transaction.components(separatedBy: "Z").count - 1 == 1)
+    #expect(transaction.components(separatedBy: "R").count - 1 == 1)
+  }
+
+  @Test func terminalOutputHistoryRestoresAMappedRetainedViewportAtTheLogicalOrigin() throws {
+    let output = RecordedOutput()
+    var backend = terminalOutputBackend()
+    backend.outputWriter = output.write
+    var history = Buffer(area: Rect(x: 3, y: 4, width: 6, height: 1))
+    history.setString("HIST", at: Position(x: 3, y: 4))
+    var viewport = Buffer(area: Rect(x: 7, y: 9, width: 6, height: 2))
+    viewport.setString("L界VE", at: Position(x: 7, y: 9))
+    viewport.setString("TAIL", at: Position(x: 7, y: 10))
+
+    #expect(
+      try backend.insertHistory(history, batchPosition: .single, restoring: viewport))
+    #expect(output.writes.count == 1)
+    let transaction = String(decoding: output.writes[0], as: UTF8.self)
+    let historyRange = transaction.range(of: "HIST")
+    let synchronizationRange = transaction.range(of: "\u{1B}[?2026h")
+    let liveRange = transaction.range(of: "L界VE")
+    #expect(historyRange != nil)
+    #expect(synchronizationRange != nil)
+    #expect(liveRange != nil)
+    if let historyRange, let synchronizationRange, let liveRange {
+      #expect(historyRange.upperBound <= synchronizationRange.lowerBound)
+      #expect(synchronizationRange.upperBound <= liveRange.lowerBound)
+    }
+    #expect(transaction.contains("\u{1B}[3;1H\u{1B}[2K"))
+    #expect(transaction.contains("\u{1B}[4;1H\u{1B}[2K"))
+    #expect(!transaction.contains("\u{1B}[3;8H"))
+    #expect(transaction.components(separatedBy: "界").count - 1 == 1)
+    #expect(transaction.components(separatedBy: "TAIL").count - 1 == 1)
+  }
+
   @Test func terminalOutputHistoryBatchReservesLiveRowsOnlyAfterFinalChunk() throws {
     let pipe = Pipe()
     var backend = ANSIBackend(

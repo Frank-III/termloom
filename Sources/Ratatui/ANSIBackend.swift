@@ -447,7 +447,10 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private func appendHistoryRow(_ row: Int, from buffer: Buffer, to bytes: inout [UInt8]) {
     let cells = (0..<Int(buffer.area.width)).compactMap { column in
       buffer.cell(
-        at: Position(x: UInt16(clamping: column), y: UInt16(clamping: row)))
+        at: Position(
+          x: UInt16(clamping: Int(buffer.area.x) + column),
+          y: UInt16(clamping: Int(buffer.area.y) + row)
+        ))
     }
     let lastMeaningful = cells.lastIndex {
       !$0.isContinuation && ($0.symbol != " " || $0.style != .plain)

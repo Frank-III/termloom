@@ -50,6 +50,14 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Evidence:** a visual-only backend fails explicitly without invoking its visual-scroll operation; explicit ANSI and
   test backends preserve their native-history behavior.
 
+### Mapped ANSI history buffers
+
+- **Provisional correctness fix:** ANSI history and retained-viewport serialization now read source cells relative to
+  `Buffer.area`. This fixes non-zero-origin buffers without changing destination terminal coordinates or zero-origin
+  output.
+- **Evidence:** mapped multi-row, styled, and wide-cell history and restoration regressions verify source offsets and
+  continuation-cell handling.
+
 ### One-pass widget presentation and fixed viewports
 
 - **Supported breaking redesign:** `Widget` now has one presentation requirement,
