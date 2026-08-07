@@ -258,22 +258,6 @@ public struct List<Row>: Widget, StatefulWidget {
   }
 }
 
-public struct TabInteraction: Hashable, Sendable {
-  public var control: ControlID
-  public var action: ActionID?
-  public var isFocusable: Bool
-
-  public init(
-    control: ControlID,
-    action: ActionID? = nil,
-    isFocusable: Bool = false
-  ) {
-    self.control = control
-    self.action = action
-    self.isFocusable = isFocusable
-  }
-}
-
 public struct TabPlacement: Hashable, Sendable {
   public var index: Int
   public var area: Rect
@@ -313,7 +297,7 @@ public struct Tabs: Widget, Hashable, Sendable {
   public var selectionPlacement: SelectionPlacement
   public var leadingOverflowIndicator: String?
   public var trailingOverflowIndicator: String?
-  public var interactions: [TabInteraction?]
+  public var interactions: [InteractionDescriptor?]
 
   public init(
     _ titles: [String],
@@ -325,7 +309,7 @@ public struct Tabs: Widget, Hashable, Sendable {
     selectionPlacement: SelectionPlacement = .trailing,
     leadingOverflowIndicator: String? = "‹ ",
     trailingOverflowIndicator: String? = " ›",
-    interactions: [TabInteraction?] = []
+    interactions: [InteractionDescriptor?] = []
   ) {
     self.init(
       titles.map(Line.init),
@@ -351,7 +335,7 @@ public struct Tabs: Widget, Hashable, Sendable {
     selectionPlacement: SelectionPlacement = .trailing,
     leadingOverflowIndicator: String? = "‹ ",
     trailingOverflowIndicator: String? = " ›",
-    interactions: [TabInteraction?] = []
+    interactions: [InteractionDescriptor?] = []
   ) {
     self.titles = titles
     self.selectedIndex = selectedIndex

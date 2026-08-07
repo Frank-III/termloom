@@ -43,6 +43,23 @@ public struct RenderEnvironment: Hashable, Sendable {
   }
 }
 
+/// Product-neutral, geometry-free metadata for an interaction generated during rendering.
+public struct InteractionDescriptor: Hashable, Sendable {
+  public var control: ControlID
+  public var action: ActionID?
+  public var isFocusable: Bool
+
+  public init(
+    control: ControlID,
+    action: ActionID? = nil,
+    isFocusable: Bool = false
+  ) {
+    self.control = control
+    self.action = action
+    self.isFocusable = isFocusable
+  }
+}
+
 public struct InteractionRegion: Hashable, Sendable {
   public var control: ControlID
   public var area: Rect

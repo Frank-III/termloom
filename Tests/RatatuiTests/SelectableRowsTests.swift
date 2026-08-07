@@ -43,7 +43,7 @@ import Testing
       selectedFillStyle: Style(background: .blue),
       interaction: { index in
         requestedInteractions.append(index)
-        return RowInteraction(
+        return InteractionDescriptor(
           control: ControlID("row-\(index)"),
           action: ActionID("select:\(index)")
         )

@@ -5,6 +5,16 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Consolidated collection interaction descriptors
+
+- **Supported breaking migration:** `InteractionDescriptor` replaces the provisional `RowInteraction` and
+  `TabInteraction` names with one product-neutral, geometry-free value carrying a `ControlID`, optional `ActionID`, and
+  focusability.
+- **Migration:** use `InteractionDescriptor` in `SelectableRows.interaction` closures and `Tabs.interactions` arrays.
+  Widgets continue to derive exact row and tab rectangles during their render pass.
+- **Clarification:** `SelectionPlacement` describes leading, centered, or trailing placement on either projection axis,
+  not only fixed-height rows.
+
 ### Pre-0.2 correctness freeze
 
 - **Behavioral correction:** every assignment to mutable `SelectableRows.rowHeight` is normalized to at least one,
@@ -22,7 +32,7 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Additive:** `TabViewport` projects contiguous variable-width tabs while keeping the selected index represented and
   reporting leading/trailing overflow. `Tabs.layout(in:)` returns value-semantic `TabLayout` and `TabPlacement` geometry.
 - **Additive:** `Tabs` supports configurable overflow indicators, selected-tab placement, and optional value-semantic
-  `TabInteraction` metadata. Emitted interactions use the exact visible tab rectangles from the render pass.
+  `InteractionDescriptor` metadata. Emitted interactions use the exact visible tab rectangles from the render pass.
 - **Ownership:** Ratatui owns terminal-column projection and geometry. Applications retain tab identity, navigation,
   labels, colors, switching behavior, and action meaning.
 - **Evidence:** synthetic tests cover Unicode widths, overflow boundaries, oversized selected tabs, narrow areas, and
@@ -34,7 +44,7 @@ Entries must identify the stability level, migration path, and validation eviden
   placement without materializing row content. `SelectableRows` invokes application row and interaction closures only for
   visible indices and supplies exact same-pass `SelectableRow` geometry.
 - **Ownership:** applications retain stable row identity, selection, navigation, filtering, and action meaning.
-  `RowInteraction` supplies only control/action metadata; the widget retains no collection state.
+  `InteractionDescriptor` supplies only control/action metadata; the widget retains no collection state.
 - **Migration:** replace fixed-height selected-range calculations, row rectangles, selection fills, and per-row
   `InteractionRegion` construction with `SelectableRows`. Keep domain cell rendering in the row closure.
 - **Evidence:** projection and rendering regressions cover boundary clamping, visible-only evaluation, multi-line row

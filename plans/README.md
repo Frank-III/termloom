@@ -20,7 +20,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 010 | Add lazy, action-aware fixed-height selectable rows | P1 | M | 008, 009 | DONE |
 | 011 | Add overflow-aware interactive tabs | P1 | M | 009, 010 | DONE |
 | 012 | Pre-0.2 correctness freeze | P0 | M | 008–011 | DONE |
-| 013 | Consolidate collection interaction descriptors | P1 | M | 012 | TODO |
+| 013 | Consolidate collection interaction descriptors | P1 | M | 012 | DONE |
 | 014 | Adopt stabilized collections in Herdr | P1 | M | 012, 013 | TODO |
 | 015 | Bound fitting and viewport work | P1 | M | 012 | TODO |
 | 016 | Gate a smaller `TerminalApplication` protocol | P2 | M spike | 012–015 | TODO |

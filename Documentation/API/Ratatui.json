@@ -4521,65 +4521,6 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui14RowInteractionV",
-      "kind": "swift.struct",
-      "path": [
-        "RowInteraction"
-      ],
-      "title": "RowInteraction",
-      "declaration": "struct RowInteraction",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14RowInteractionV11isFocusableSbvp",
-      "kind": "swift.property",
-      "path": [
-        "RowInteraction",
-        "isFocusable"
-      ],
-      "title": "isFocusable",
-      "declaration": "var isFocusable: Bool",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14RowInteractionV6actionAA8ActionIDVSgvp",
-      "kind": "swift.property",
-      "path": [
-        "RowInteraction",
-        "action"
-      ],
-      "title": "action",
-      "declaration": "var action: ActionID?",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14RowInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
-      "kind": "swift.init",
-      "path": [
-        "RowInteraction",
-        "init(control:action:isFocusable:)"
-      ],
-      "title": "init(control:action:isFocusable:)",
-      "declaration": "init(control: ControlID, action: ActionID? = nil, isFocusable: Bool = false)",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14RowInteractionV7controlAA9ControlIDVvp",
-      "kind": "swift.property",
-      "path": [
-        "RowInteraction",
-        "control"
-      ],
-      "title": "control",
-      "declaration": "var control: ControlID",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
       "id": "s:7Ratatui14ScrollViewportV",
       "kind": "swift.struct",
       "path": [
@@ -4865,14 +4806,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui14SelectableRowsV9itemCount13selectedIndex9rowHeight9placement0F9FillStyle11interaction0H0ACSi_SiSgSiAA18SelectionPlacementOAA0L0VSgAA14RowInteractionVSgSicyAA0bP0V_AA5FrameVztctcfc",
+      "id": "s:7Ratatui14SelectableRowsV9itemCount13selectedIndex9rowHeight9placement0F9FillStyle11interaction0H0ACSi_SiSgSiAA18SelectionPlacementOAA0L0VSgAA21InteractionDescriptorVSgSicyAA0B3RowV_AA5FrameVztctcfc",
       "kind": "swift.init",
       "path": [
         "SelectableRows",
         "init(itemCount:selectedIndex:rowHeight:placement:selectedFillStyle:interaction:row:)"
       ],
       "title": "init(itemCount:selectedIndex:rowHeight:placement:selectedFillStyle:interaction:row:)",
-      "declaration": "init(itemCount: Int, selectedIndex: Int? = nil, rowHeight: Int = 1, placement: SelectionPlacement = .center, selectedFillStyle: Style? = nil, interaction: @escaping (Int) -> RowInteraction? = { _ in nil }, row: @escaping (SelectableRow, inout Frame) -> Void)",
+      "declaration": "init(itemCount: Int, selectedIndex: Int? = nil, rowHeight: Int = 1, placement: SelectionPlacement = .center, selectedFillStyle: Style? = nil, interaction: @escaping (Int) -> InteractionDescriptor? = { _ in nil }, row: @escaping (SelectableRow, inout Frame) -> Void)",
       "accessLevel": "public",
       "availability": []
     },
@@ -5051,65 +4992,6 @@
       ],
       "title": "render(in:into:environment:state:)",
       "declaration": "func render(in area: Rect, into buffer: inout Buffer, environment: RenderEnvironment = RenderEnvironment(), state: inout State)",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14TabInteractionV",
-      "kind": "swift.struct",
-      "path": [
-        "TabInteraction"
-      ],
-      "title": "TabInteraction",
-      "declaration": "struct TabInteraction",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14TabInteractionV11isFocusableSbvp",
-      "kind": "swift.property",
-      "path": [
-        "TabInteraction",
-        "isFocusable"
-      ],
-      "title": "isFocusable",
-      "declaration": "var isFocusable: Bool",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14TabInteractionV6actionAA8ActionIDVSgvp",
-      "kind": "swift.property",
-      "path": [
-        "TabInteraction",
-        "action"
-      ],
-      "title": "action",
-      "declaration": "var action: ActionID?",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14TabInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
-      "kind": "swift.init",
-      "path": [
-        "TabInteraction",
-        "init(control:action:isFocusable:)"
-      ],
-      "title": "init(control:action:isFocusable:)",
-      "declaration": "init(control: ControlID, action: ActionID? = nil, isFocusable: Bool = false)",
-      "accessLevel": "public",
-      "availability": []
-    },
-    {
-      "id": "s:7Ratatui14TabInteractionV7controlAA9ControlIDVvp",
-      "kind": "swift.property",
-      "path": [
-        "TabInteraction",
-        "control"
-      ],
-      "title": "control",
-      "declaration": "var control: ControlID",
       "accessLevel": "public",
       "availability": []
     },
@@ -8082,6 +7964,65 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui21InteractionDescriptorV",
+      "kind": "swift.struct",
+      "path": [
+        "InteractionDescriptor"
+      ],
+      "title": "InteractionDescriptor",
+      "declaration": "struct InteractionDescriptor",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui21InteractionDescriptorV11isFocusableSbvp",
+      "kind": "swift.property",
+      "path": [
+        "InteractionDescriptor",
+        "isFocusable"
+      ],
+      "title": "isFocusable",
+      "declaration": "var isFocusable: Bool",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui21InteractionDescriptorV6actionAA8ActionIDVSgvp",
+      "kind": "swift.property",
+      "path": [
+        "InteractionDescriptor",
+        "action"
+      ],
+      "title": "action",
+      "declaration": "var action: ActionID?",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui21InteractionDescriptorV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
+      "kind": "swift.init",
+      "path": [
+        "InteractionDescriptor",
+        "init(control:action:isFocusable:)"
+      ],
+      "title": "init(control:action:isFocusable:)",
+      "declaration": "init(control: ControlID, action: ActionID? = nil, isFocusable: Bool = false)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui21InteractionDescriptorV7controlAA9ControlIDVvp",
+      "kind": "swift.property",
+      "path": [
+        "InteractionDescriptor",
+        "control"
+      ],
+      "title": "control",
+      "declaration": "var control: ControlID",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui21TableRowConfigurationV",
       "kind": "swift.struct",
       "path": [
@@ -10469,14 +10410,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4TabsV12interactionsSayAA14TabInteractionVSgGvp",
+      "id": "s:7Ratatui4TabsV12interactionsSayAA21InteractionDescriptorVSgGvp",
       "kind": "swift.property",
       "path": [
         "Tabs",
         "interactions"
       ],
       "title": "interactions",
-      "declaration": "var interactions: [TabInteraction?]",
+      "declaration": "var interactions: [InteractionDescriptor?]",
       "accessLevel": "public",
       "availability": []
     },
@@ -10613,26 +10554,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSayAA4LineVG_SiSSAA0G0VAqA9AlignmentOAA09SelectionJ0OSSSgAVSayAA14TabInteractionVSgGtcfc",
+      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSayAA4LineVG_SiSSAA0G0VAqA9AlignmentOAA09SelectionJ0OSSSgAVSayAA21InteractionDescriptorVSgGtcfc",
       "kind": "swift.init",
       "path": [
         "Tabs",
         "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)"
       ],
       "title": "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)",
-      "declaration": "init(_ titles: [Line], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading, selectionPlacement: SelectionPlacement = .trailing, leadingOverflowIndicator: String? = \"\u2039 \", trailingOverflowIndicator: String? = \" \u203a\", interactions: [TabInteraction?] = [])",
+      "declaration": "init(_ titles: [Line], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading, selectionPlacement: SelectionPlacement = .trailing, leadingOverflowIndicator: String? = \"\u2039 \", trailingOverflowIndicator: String? = \" \u203a\", interactions: [InteractionDescriptor?] = [])",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSaySSG_SiSSAA0G0VAoA9AlignmentOAA09SelectionJ0OSSSgATSayAA14TabInteractionVSgGtcfc",
+      "id": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSaySSG_SiSSAA0G0VAoA9AlignmentOAA09SelectionJ0OSSSgATSayAA21InteractionDescriptorVSgGtcfc",
       "kind": "swift.init",
       "path": [
         "Tabs",
         "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)"
       ],
       "title": "init(_:selectedIndex:divider:style:selectedStyle:alignment:selectionPlacement:leadingOverflowIndicator:trailingOverflowIndicator:interactions:)",
-      "declaration": "init(_ titles: [String], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading, selectionPlacement: SelectionPlacement = .trailing, leadingOverflowIndicator: String? = \"\u2039 \", trailingOverflowIndicator: String? = \" \u203a\", interactions: [TabInteraction?] = [])",
+      "declaration": "init(_ titles: [String], selectedIndex: Int = 0, divider: String = \" \u2502 \", style: Style = .plain, selectedStyle: Style = Style(modifiers: [.bold, .reversed]), alignment: Alignment = .leading, selectionPlacement: SelectionPlacement = .trailing, leadingOverflowIndicator: String? = \"\u2039 \", trailingOverflowIndicator: String? = \" \u203a\", interactions: [InteractionDescriptor?] = [])",
       "accessLevel": "public",
       "availability": []
     },
@@ -19560,30 +19501,6 @@
     },
     {
       "kind": "conformsTo",
-      "source": "s:7Ratatui14RowInteractionV",
-      "target": "s:SH",
-      "targetFallback": "Swift.Hashable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14RowInteractionV",
-      "target": "s:SQ",
-      "targetFallback": "Swift.Equatable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14RowInteractionV",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14RowInteractionV",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
       "source": "s:7Ratatui14ScrollViewportV",
       "target": "s:SH",
       "targetFallback": "Swift.Hashable"
@@ -19656,30 +19573,6 @@
     {
       "kind": "conformsTo",
       "source": "s:7Ratatui14SelectionStateV",
-      "target": "s:s8SendableP",
-      "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14TabInteractionV",
-      "target": "s:SH",
-      "targetFallback": "Swift.Hashable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14TabInteractionV",
-      "target": "s:SQ",
-      "targetFallback": "Swift.Equatable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14TabInteractionV",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui14TabInteractionV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -20558,6 +20451,30 @@
     {
       "kind": "conformsTo",
       "source": "s:7Ratatui21InlineDocumentRuntimeV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui21InteractionDescriptorV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui21InteractionDescriptorV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui21InteractionDescriptorV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui21InteractionDescriptorV",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
     },
@@ -24216,26 +24133,6 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui14RowInteractionV11isFocusableSbvp",
-      "target": "s:7Ratatui14RowInteractionV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14RowInteractionV6actionAA8ActionIDVSgvp",
-      "target": "s:7Ratatui14RowInteractionV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14RowInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
-      "target": "s:7Ratatui14RowInteractionV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14RowInteractionV7controlAA9ControlIDVvp",
-      "target": "s:7Ratatui14RowInteractionV"
-    },
-    {
-      "kind": "memberOf",
       "source": "s:7Ratatui14ScrollViewportV03rowC0AA03RowC0Vvp",
       "target": "s:7Ratatui14ScrollViewportV"
     },
@@ -24341,7 +24238,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui14SelectableRowsV9itemCount13selectedIndex9rowHeight9placement0F9FillStyle11interaction0H0ACSi_SiSgSiAA18SelectionPlacementOAA0L0VSgAA14RowInteractionVSgSicyAA0bP0V_AA5FrameVztctcfc",
+      "source": "s:7Ratatui14SelectableRowsV9itemCount13selectedIndex9rowHeight9placement0F9FillStyle11interaction0H0ACSi_SiSgSiAA18SelectionPlacementOAA0L0VSgAA21InteractionDescriptorVSgSicyAA0B3RowV_AA5FrameVztctcfc",
       "target": "s:7Ratatui14SelectableRowsV"
     },
     {
@@ -24398,26 +24295,6 @@
       "kind": "memberOf",
       "source": "s:7Ratatui14StatefulWidgetPAAE6render2in4into11environment5stateyAA4RectV_AA6BufferVzAA17RenderEnvironmentV5StateQzztF",
       "target": "s:7Ratatui14StatefulWidgetP"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14TabInteractionV11isFocusableSbvp",
-      "target": "s:7Ratatui14TabInteractionV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14TabInteractionV6actionAA8ActionIDVSgvp",
-      "target": "s:7Ratatui14TabInteractionV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14TabInteractionV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
-      "target": "s:7Ratatui14TabInteractionV"
-    },
-    {
-      "kind": "memberOf",
-      "source": "s:7Ratatui14TabInteractionV7controlAA9ControlIDVvp",
-      "target": "s:7Ratatui14TabInteractionV"
     },
     {
       "kind": "memberOf",
@@ -25321,6 +25198,26 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui21InteractionDescriptorV11isFocusableSbvp",
+      "target": "s:7Ratatui21InteractionDescriptorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui21InteractionDescriptorV6actionAA8ActionIDVSgvp",
+      "target": "s:7Ratatui21InteractionDescriptorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui21InteractionDescriptorV7control6action11isFocusableAcA9ControlIDV_AA06ActionI0VSgSbtcfc",
+      "target": "s:7Ratatui21InteractionDescriptorV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui21InteractionDescriptorV7controlAA9ControlIDVvp",
+      "target": "s:7Ratatui21InteractionDescriptorV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui21TableRowConfigurationV12bottomMarginSivp",
       "target": "s:7Ratatui21TableRowConfigurationV"
     },
@@ -26196,7 +26093,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4TabsV12interactionsSayAA14TabInteractionVSgGvp",
+      "source": "s:7Ratatui4TabsV12interactionsSayAA21InteractionDescriptorVSgGvp",
       "target": "s:7Ratatui4TabsV"
     },
     {
@@ -26256,12 +26153,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSayAA4LineVG_SiSSAA0G0VAqA9AlignmentOAA09SelectionJ0OSSSgAVSayAA14TabInteractionVSgGtcfc",
+      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSayAA4LineVG_SiSSAA0G0VAqA9AlignmentOAA09SelectionJ0OSSSgAVSayAA21InteractionDescriptorVSgGtcfc",
       "target": "s:7Ratatui4TabsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSaySSG_SiSSAA0G0VAoA9AlignmentOAA09SelectionJ0OSSSgATSayAA14TabInteractionVSgGtcfc",
+      "source": "s:7Ratatui4TabsV_13selectedIndex7divider5style0C5Style9alignment18selectionPlacement24leadingOverflowIndicator08trailinglM012interactionsACSaySSG_SiSSAA0G0VAoA9AlignmentOAA09SelectionJ0OSSSgATSayAA21InteractionDescriptorVSgGtcfc",
       "target": "s:7Ratatui4TabsV"
     },
     {

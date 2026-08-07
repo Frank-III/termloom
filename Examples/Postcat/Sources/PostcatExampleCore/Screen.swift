@@ -197,8 +197,9 @@ public struct PostcatScreen: Widget, Sendable {
       interactions: showsHelp
         ? []
         : [
-          TabInteraction(control: "postcat-response-body", action: "postcat.response.body"),
-          TabInteraction(control: "postcat-response-headers", action: "postcat.response.headers"),
+          InteractionDescriptor(control: "postcat-response-body", action: "postcat.response.body"),
+          InteractionDescriptor(
+            control: "postcat-response-headers", action: "postcat.response.headers"),
         ]
     ).render(in: tabArea, into: &frame)
     if let response, let metadata {

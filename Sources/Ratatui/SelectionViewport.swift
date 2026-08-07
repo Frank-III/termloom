@@ -1,4 +1,4 @@
-/// Places a selected fixed-height row within its visible viewport.
+/// Places a selected item toward the leading edge, center, or trailing edge of its projection axis.
 public enum SelectionPlacement: Hashable, Sendable {
   case leading
   case center

@@ -81,7 +81,7 @@ import Testing
       divider: " ",
       selectionPlacement: .center,
       interactions: (0..<4).map {
-        TabInteraction(control: ControlID("tab-\($0)"), action: ActionID("select:\($0)"))
+        InteractionDescriptor(control: ControlID("tab-\($0)"), action: ActionID("select:\($0)"))
       }
     )
     let area = Rect(x: 3, y: 2, width: 15, height: 1)
@@ -107,7 +107,7 @@ import Testing
       divider: " ",
       interactions: [
         nil,
-        TabInteraction(control: "selected", action: "activate"),
+        InteractionDescriptor(control: "selected", action: "activate"),
         nil,
       ]
     )
@@ -138,7 +138,8 @@ import Testing
     )
     #expect(viewport.range.isEmpty)
 
-    let tabs = Tabs(["one"], selectedIndex: -10, interactions: [TabInteraction(control: "one")])
+    let tabs = Tabs(
+      ["one"], selectedIndex: -10, interactions: [InteractionDescriptor(control: "one")])
     var frame = Frame(buffer: Buffer(area: .zero))
     tabs.render(in: .zero, into: &frame)
     #expect(frame.interactions.regions.isEmpty)

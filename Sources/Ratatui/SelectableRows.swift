@@ -1,20 +1,3 @@
-/// Application-owned interaction metadata for a visible selectable row.
-public struct RowInteraction: Hashable, Sendable {
-  public var control: ControlID
-  public var action: ActionID?
-  public var isFocusable: Bool
-
-  public init(
-    control: ControlID,
-    action: ActionID? = nil,
-    isFocusable: Bool = false
-  ) {
-    self.control = control
-    self.action = action
-    self.isFocusable = isFocusable
-  }
-}
-
 /// The same-pass geometry supplied to a visible row renderer.
 public struct SelectableRow: Hashable, Sendable {
   public var index: Int
@@ -42,7 +25,7 @@ public struct SelectableRows: Widget {
   public var placement: SelectionPlacement
   public var selectedFillStyle: Style?
 
-  private let interaction: (Int) -> RowInteraction?
+  private let interaction: (Int) -> InteractionDescriptor?
   private let row: (SelectableRow, inout Frame) -> Void
 
   public init(
@@ -51,7 +34,7 @@ public struct SelectableRows: Widget {
     rowHeight: Int = 1,
     placement: SelectionPlacement = .center,
     selectedFillStyle: Style? = nil,
-    interaction: @escaping (Int) -> RowInteraction? = { _ in nil },
+    interaction: @escaping (Int) -> InteractionDescriptor? = { _ in nil },
     row: @escaping (SelectableRow, inout Frame) -> Void
   ) {
     self.itemCount = max(0, itemCount)

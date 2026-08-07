@@ -171,7 +171,7 @@ public struct DiffScopeScreen: Widget, Sendable {
       interaction: { index in
         guard !showsHelp else { return nil }
         let file = files[index]
-        return RowInteraction(
+        return InteractionDescriptor(
           control: ControlID("diffscope-file-\(file.id)"),
           action: ActionID("file:\(file.id)")
         )
