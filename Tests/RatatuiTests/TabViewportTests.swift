@@ -100,6 +100,24 @@ import Testing
     #expect(selected?.area.width == TerminalWidth.of(family) + 2)
   }
 
+  @Test func largeTabProjectionKeepsTheSelectedRangeBounded() {
+    let count = 100_000
+    let viewport = TabViewport.fitting(
+      widths: Array(repeating: 12, count: count),
+      selectedIndex: count / 2,
+      capacity: 80,
+      spacing: 1,
+      leadingOverflowWidth: 1,
+      trailingOverflowWidth: 1,
+      placement: .center
+    )
+
+    #expect(viewport.range.contains(count / 2))
+    #expect(viewport.range.count <= 6)
+    #expect(viewport.hasTabsBefore)
+    #expect(viewport.hasTabsAfter)
+  }
+
   @Test func oversizedSelectedTabRetainsAVisiblePlacementInNarrowAreas() {
     let tabs = Tabs(
       ["before", "selected tab is wide", "after"],

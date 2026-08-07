@@ -332,6 +332,87 @@ private func primitiveBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
   return samples
 }
 
+private func collectionBenchmarks(iterations: Int) -> [BenchmarkSample] {
+  var samples: [BenchmarkSample] = []
+  let longUnicode = String(repeating: "界é👨‍👩‍👧‍👦", count: 100_000)
+  let styledLine = Line([
+    Span(longUnicode, style: Style(foreground: .cyan)),
+    Span(longUnicode, style: Style(modifiers: [.bold])),
+  ])
+
+  var checksum = 0
+  var stringSample = measure(
+    "fitting/string-unicode-100k", iterations: max(1, iterations / 10)
+  ) { _ in
+    checksum ^= TerminalWidth.truncated(longUnicode, to: 80).utf8.count
+    return 0
+  }
+  stringSample.cellUpdatesPerIteration = nil
+  samples.append(stringSample)
+
+  var fullWidthSample = measure(
+    "fitting/full-width-reference-100k", iterations: max(1, iterations / 100)
+  ) { _ in
+    checksum ^= TerminalWidth.of(longUnicode)
+    return 0
+  }
+  fullWidthSample.cellUpdatesPerIteration = nil
+  samples.append(fullWidthSample)
+
+  var lineSample = measure(
+    "fitting/line-unicode-200k", iterations: max(1, iterations / 10)
+  ) { _ in
+    checksum ^= styledLine.truncated(to: 80).spans.count
+    return 0
+  }
+  lineSample.cellUpdatesPerIteration = nil
+  samples.append(lineSample)
+
+  let selectableRows = SelectableRows(
+    itemCount: 1_000_000,
+    selectedIndex: 500_000,
+    interaction: { index in InteractionDescriptor(control: ControlID("row-\(index)")) },
+    row: { row, frame in
+      frame.buffer.setString(
+        "row \(row.index)", at: Position(x: row.area.x, y: row.area.y))
+    }
+  )
+  let rowArea = Rect(x: 0, y: 0, width: 100, height: 40)
+  var rowsSample = measure("viewport/selectable-million", iterations: iterations) { _ in
+    var rowFrame = Frame(buffer: Buffer(area: rowArea))
+    rowFrame.render(selectableRows)
+    checksum ^= rowFrame.interactions.regions.count
+    return 0
+  }
+  rowsSample.cellUpdatesPerIteration = nil
+  samples.append(rowsSample)
+
+  for count in [1_000, 100_000] {
+    let widths = Array(repeating: 12, count: count)
+    let scaledIterations = max(1, iterations / max(1, count / 1_000))
+    var tabSample = measure(
+      "viewport/tabs-\(count)", iterations: scaledIterations
+    ) { _ in
+      let viewport = TabViewport.fitting(
+        widths: widths,
+        selectedIndex: count / 2,
+        capacity: 120,
+        spacing: 1,
+        leadingOverflowWidth: 1,
+        trailingOverflowWidth: 1,
+        placement: .center
+      )
+      checksum ^= viewport.range.count
+      return 0
+    }
+    tabSample.cellUpdatesPerIteration = nil
+    samples.append(tabSample)
+  }
+
+  withExtendedLifetime(checksum) {}
+  return samples
+}
+
 private func ansiOutputBenchmark(
   name: String,
   iterations: Int,
@@ -410,7 +491,7 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
 }
 
 let options = BenchmarkOptions(arguments: Array(CommandLine.arguments.dropFirst()))
-let validSuites = ["frames", "primitives", "output", "all"]
+let validSuites = ["frames", "primitives", "collections", "output", "all"]
 guard validSuites.contains(options.suite) else {
   FileHandle.standardError.write(
     Data("unknown suite '\(options.suite)'; expected \(validSuites.joined(separator: ", "))\n".utf8)
@@ -424,6 +505,9 @@ if options.suite == "frames" || options.suite == "all" {
 }
 if options.suite == "primitives" || options.suite == "all" {
   samples += try primitiveBenchmarks(iterations: options.iterations)
+}
+if options.suite == "collections" || options.suite == "all" {
+  samples += collectionBenchmarks(iterations: options.iterations)
 }
 if options.suite == "output" || options.suite == "all" {
   samples += try outputBenchmarks(iterations: options.iterations)

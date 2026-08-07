@@ -26,6 +26,19 @@ import Testing
     #expect(TerminalWidth.of(TerminalWidth.fitted("界abcdef", to: 6)) == 6)
   }
 
+  @Test func longUnicodeInputsClipWithoutChangingGraphemeOrStyleSemantics() {
+    let long = String(repeating: "界e\u{301}👨‍👩‍👧‍👦", count: 100_000)
+    #expect(TerminalWidth.truncated(long, to: 8) == "界e\u{301}👨‍👩‍👧‍👦界…")
+
+    let red = Style(foreground: .red)
+    let blue = Style(foreground: .blue)
+    let line = Line([Span(long, style: red), Span("tail", style: blue)])
+      .truncated(to: 8, ellipsis: Span("…", style: blue))
+    #expect(line.width == 8)
+    #expect(line.spans.last == Span("…", style: blue))
+    #expect(line.spans.first?.style == red)
+  }
+
   @Test func richFittingPreservesStylesAndLineMetadata() {
     let red = Style(foreground: .red)
     let blue = Style(foreground: .blue)

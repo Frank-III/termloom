@@ -7,6 +7,8 @@
 - **Risk**: LOW
 - **Depends on**: plan 012
 - **Category**: internal performance
+- **Planned at**: commit `d2e18a0`, 2026-08-07
+- **Status**: DONE
 
 ## Scope
 
@@ -19,3 +21,11 @@ No framework-owned cache, dirty-row API, retained layout index, or Motel databas
 ## Done criteria
 
 Focused benchmarks demonstrate bounded/linear work while preserving exact Unicode/style behavior and all consumer tests.
+
+## Result
+
+Terminal fitting now discovers truncation at the requested column boundary before constructing the clipped result;
+`Span` inherits that path and `Line` probes styled spans only until overflow. `TabViewport` computes prefix and suffix
+width totals once, eliminating repeated slice reductions while preserving saturating arithmetic. The new `collections`
+benchmark compares bounded clipping with full width measurement, million-item visible rows, and 1,000/100,000-tab
+projection. Profiles did not identify Herdr's Ghostty projection as the relevant bottleneck, so it remains unchanged.

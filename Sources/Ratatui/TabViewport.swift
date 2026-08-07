@@ -33,6 +33,14 @@ public struct TabViewport: Hashable, Sendable {
     let spacing = max(0, spacing)
     let leadingOverflowWidth = max(0, leadingOverflowWidth)
     let trailingOverflowWidth = max(0, trailingOverflowWidth)
+    var prefixWidths = Array(repeating: 0, count: widths.count + 1)
+    for index in widths.indices {
+      prefixWidths[index + 1] = saturatingTabAdd(prefixWidths[index], widths[index])
+    }
+    var suffixWidths = Array(repeating: 0, count: widths.count + 1)
+    for index in widths.indices.reversed() {
+      suffixWidths[index] = saturatingTabAdd(suffixWidths[index + 1], widths[index])
+    }
     var start = selected
     var end = selected + 1
     var tabWidth = widths[selected]
@@ -73,7 +81,7 @@ public struct TabViewport: Hashable, Sendable {
     // remainder can therefore fit even when adding only the next tab cannot.
     func prependToBoundary() -> Bool {
       guard start > 0 else { return false }
-      let candidateWidth = widths[..<start].reduce(tabWidth, saturatingTabAdd)
+      let candidateWidth = saturatingTabAdd(tabWidth, prefixWidths[start])
       guard canInclude(start: 0, end: end, width: candidateWidth) else { return false }
       start = 0
       tabWidth = candidateWidth
@@ -82,7 +90,7 @@ public struct TabViewport: Hashable, Sendable {
 
     func appendToBoundary() -> Bool {
       guard end < widths.count else { return false }
-      let candidateWidth = widths[end...].reduce(tabWidth, saturatingTabAdd)
+      let candidateWidth = saturatingTabAdd(tabWidth, suffixWidths[end])
       guard canInclude(start: start, end: widths.count, width: candidateWidth) else { return false }
       end = widths.count
       tabWidth = candidateWidth

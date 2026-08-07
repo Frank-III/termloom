@@ -5,6 +5,16 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Bounded fitting and viewport work
+
+- **Performance correction:** `String`, `Span`, and `Line` truncation establish overflow by scanning only through the
+  requested terminal-column boundary instead of measuring the complete input first. Grapheme, CJK-policy, ellipsis, and
+  style semantics are unchanged.
+- **Performance correction:** `TabViewport.fitting` precomputes boundary totals once, making projection linear overall
+  instead of repeatedly reducing remaining slices.
+- **Evidence:** long-Unicode and 100,000-tab regressions plus the release-mode `collections` benchmark suite. Herdr frame
+  profiles did not justify changing its Ghostty projection boundary.
+
 ### Consolidated collection interaction descriptors
 
 - **Supported breaking migration:** `InteractionDescriptor` replaces the provisional `RowInteraction` and

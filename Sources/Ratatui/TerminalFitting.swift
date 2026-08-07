@@ -8,16 +8,7 @@ extension TerminalWidth {
     let columns = max(0, columns)
     guard columns > 0 else { return "" }
 
-    var result = ""
-    var used = 0
-    for character in value {
-      let width = of(character, policy: policy)
-      guard width <= columns - used else { break }
-
-      result.append(character)
-      used += width
-    }
-    return result
+    return prefixProbe(value, fitting: columns, policy: policy).content
   }
 
   /// Returns the longest trailing substring that fits in `columns` terminal columns.
@@ -49,8 +40,9 @@ extension TerminalWidth {
   ) -> String {
     let columns = max(0, columns)
     guard columns > 0 else { return "" }
-    guard of(value, policy: policy) > columns else { return value }
-    guard let ellipsis else { return prefix(value, fitting: columns, policy: policy) }
+    let probe = prefixProbe(value, fitting: columns, policy: policy)
+    guard probe.isTruncated else { return value }
+    guard let ellipsis else { return probe.content }
 
     let fittedEllipsis = prefix(ellipsis, fitting: columns, policy: policy)
     let ellipsisWidth = of(fittedEllipsis, policy: policy)
@@ -86,6 +78,25 @@ extension TerminalWidth {
       alignment: alignment,
       policy: policy
     )
+  }
+
+  private static func prefixProbe(
+    _ value: String,
+    fitting columns: Int,
+    policy: TerminalWidthPolicy
+  ) -> (content: String, isTruncated: Bool) {
+    var boundary = value.startIndex
+    var used = 0
+    while boundary < value.endIndex {
+      let character = value[boundary]
+      let width = of(character, policy: policy)
+      guard width <= columns - used else {
+        return (String(value[..<boundary]), true)
+      }
+      used += width
+      boundary = value.index(after: boundary)
+    }
+    return (value, false)
   }
 }
 
@@ -129,8 +140,7 @@ extension Line {
   ) -> Line {
     let columns = max(0, columns)
     guard columns > 0 else { return Line([], style: style, alignment: alignment) }
-    let measuredWidth = spans.reduce(0) { $0 + TerminalWidth.of($1.content, policy: policy) }
-    guard measuredWidth > columns else { return self }
+    guard lineExceedsWidth(spans, columns: columns, policy: policy) else { return self }
 
     let fittedEllipsis = ellipsis.map {
       Span(
@@ -185,6 +195,22 @@ extension Line {
     }
     return result
   }
+}
+
+private func lineExceedsWidth(
+  _ spans: [Span],
+  columns: Int,
+  policy: TerminalWidthPolicy
+) -> Bool {
+  var used = 0
+  for span in spans {
+    for character in span.content {
+      let width = TerminalWidth.of(character, policy: policy)
+      if width > columns - used { return true }
+      used += width
+    }
+  }
+  return false
 }
 
 private func paddingWidths(_ missing: Int, alignment: Alignment) -> (leading: Int, trailing: Int) {

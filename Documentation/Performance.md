@@ -8,8 +8,8 @@ swift run -c release ratatui-benchmark -- --suite all --iterations 1000
 swift run -c release ratatui-benchmark -- --suite all --iterations 1000 --json > benchmark.json
 ```
 
-Available suites are `frames`, `primitives`, `output`, and `all`. The default remains `frames`, and a bare integer
-continues to set the iteration count.
+Available suites are `frames`, `primitives`, `collections`, `output`, and `all`. The default remains `frames`, and a
+bare integer continues to set the iteration count.
 
 ## Upstream methodology
 
@@ -76,6 +76,13 @@ The table and an unscrolled paragraph are effectively viewport-bounded. Paragrap
 lines incrementally and stops after the visible rows; its word and character wrappers also stop consuming a long
 source line after producing the requested visual rows. This reduced the 2,048-line top-of-document case from about
 14.0 ms to 0.52 ms on the baseline machine, approximately 27× faster.
+
+The `collections` suite covers client-shaped Unicode clipping, a million-item visible-only selectable projection, and
+1,000- versus 100,000-tab projection. On the same arm64 development host, clipping a 100,000-repeat Unicode string to
+80 columns took approximately 0.12 ms versus 81.5 ms for complete width measurement. A million-item `SelectableRows`
+render remained viewport-bound at approximately 0.026 ms. Tab projection measured approximately 0.0055 ms for 1,000
+widths and 0.60 ms for 100,000 widths, consistent with linear total work after replacing repeated boundary reductions
+with precomputed prefix and suffix totals. These numbers are comparative evidence, not performance guarantees.
 
 A vertical scroll still has to compose preceding wrapped rows to locate its starting point, matching Ratatui Rust's
 streaming composer. The 1,024-row benchmark records that cost explicitly. Avoiding it would require a width-dependent
