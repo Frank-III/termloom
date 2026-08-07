@@ -94,11 +94,11 @@ Expected: all pass.
 
 ## Done criteria
 
-- [ ] ANSI history reads every source cell relative to `buffer.area`.
-- [ ] Zero-origin behavior is byte-for-byte unchanged.
-- [ ] Non-zero history and restoration buffers have regressions.
-- [ ] Wide-cell continuation behavior remains correct.
-- [ ] Full framework and consumer matrix passes.
+- [x] ANSI history reads every source cell relative to `buffer.area`.
+- [x] Zero-origin behavior is byte-for-byte unchanged.
+- [x] Non-zero history and restoration buffers have regressions.
+- [x] Wide-cell continuation behavior remains correct.
+- [x] Full framework and consumer matrix passes.
 
 ## STOP conditions
 

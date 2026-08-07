@@ -12,7 +12,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 002 | Propagate scoped restoration and resume failures | P1 | S–M | 001 | DONE |
 | 003 | Recover terminal modes after transaction commit failure | P1 | M | 001, 002 | DONE |
 | 004 | Enforce native-scrollback backend semantics | P1 | S | 001–003 | DONE |
-| 005 | Honor mapped buffer origins in ANSI history output | P1 | S | 004 | TODO |
+| 005 | Honor mapped buffer origins in ANSI history output | P1 | S | 004 | DONE |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
