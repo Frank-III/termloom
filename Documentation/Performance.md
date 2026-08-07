@@ -84,6 +84,14 @@ render remained viewport-bound at approximately 0.026 ms. Tab projection measure
 widths and 0.60 ms for 100,000 widths, consistent with linear total work after replacing repeated boundary reductions
 with precomputed prefix and suffix totals. These numbers are comparative evidence, not performance guarantees.
 
+`RatatuiSyntaxHighlighting` uses a private 256-entry LRU keyed by code, language, full theme, and background. It
+accounts at most 1 MiB of retained source input and skips code arguments larger than 16 KiB; those limits are not a
+total heap estimate for cached spans. This cache is independent of terminal width, so
+Codex can reuse tokenized spans while rebuilding width-dependent rows. In three repeated release runs of Codex's
+2,000-turn fixture, median cold presentation fell from about 2.99 s to 0.79 s and median width reflow from about
+3.0–3.2 s to 0.78 s; cold/reflow RSS fell from roughly 162/262 MiB to 70/78 MiB. That is a deliberately repetitive
+consumer workload, not a claim that unique source code becomes free.
+
 A vertical scroll still has to compose preceding wrapped rows to locate its starting point, matching Ratatui Rust's
 streaming composer. The 1,024-row benchmark records that cost explicitly. Avoiding it would require a width-dependent
 layout index owned by the application or a separate cache, rather than hidden retained widget state in core.

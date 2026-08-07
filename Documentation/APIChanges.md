@@ -5,6 +5,18 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Bounded syntax-highlight memoization
+
+- **Performance correction:** `TerminalSyntaxHighlighter` reuses exact results by code, language, complete theme, and
+  background. The private LRU retains at most 256 entries, accounts at most 1 MiB of cached source input, and never
+  retains a code argument larger than 16 KiB. These are source-input and entry-count bounds rather than a total heap
+  estimate; output semantics and public API are unchanged.
+- Cache access and syntax parsing use separate locks. Exact hits do not wait for parser work, while misses serialize
+  access to one shared upstream `Highlighter`, including its grammar warm-up.
+- **Evidence:** cache-key, eviction, oversized-input, and concurrent-miss tests. In Codex's repeated 2,000-turn fixture,
+  cold canonical presentation fell from approximately 2.99 s to 0.79 s, width reflow from 3.20 s to 0.79 s, and cold
+  RSS from 162 MiB to 70 MiB.
+
 ### Bounded fitting and viewport work
 
 - **Performance correction:** `String`, `Span`, and `Line` truncation establish overflow by scanning only through the

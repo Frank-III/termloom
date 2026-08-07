@@ -19,10 +19,11 @@ Source: `main` at the commit recorded immediately before tagging
 ## API and automated validation
 
 - [x] `swift format lint --strict --recursive Package.swift Sources Tests`
-- [x] `swift test`: 269 Ratatui tests in 27 suites plus 3 syntax-highlighting tests.
+- [x] `swift test`: 269 Ratatui tests in 27 suites plus 8 syntax-highlighting tests.
 - [x] `Scripts/check-api.sh`: 1,540 reviewed symbols and zero additions.
 - [x] `Scripts/test-ecosystem.sh`
 - [x] `Scripts/test-consumers.sh`: Codex 156 tests, Motel 14 tests, and Herdr 91 tests.
+- [x] Targeted Thread Sanitizer run passes concurrent syntax-highlight cache misses.
 - [x] Release benchmark JSON smoke parses with 26 unique registered scenarios.
 
 ## Terminal validation
@@ -48,7 +49,7 @@ Source: `main` at the commit recorded immediately before tagging
 
 - Date: 2026-08-07
 - Toolchain: Apple Swift 6.4 (`swift-tools-version: 6.2`), arm64 macOS.
-- Automated matrix log: `/tmp/ratatui-0.2-consumer-matrix.log`.
+- Automated matrix log: `/tmp/ratatui-0.2-highlight-cache-matrix.log`.
 - Benchmark smoke: `/tmp/ratatui-0.2-benchmark-smoke.json` (26 unique scenarios).
 - `terminal-control` 0.4.1 supplemental smokes exercised the built inline counter, fullscreen Observation demo, and a
   temporary fixed-region program with explicit resize. Captures are in `/tmp/ratatui-0.2-termctrl-*.txt`; these are
