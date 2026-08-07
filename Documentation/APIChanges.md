@@ -5,6 +5,20 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Terminal-column fitting and top-origin row viewports
+
+- **Additive:** `TerminalWidth` now clips prefixes and suffixes, truncates with an optional ellipsis, pads by alignment,
+  and combines truncation and padding into exact-column fitting. `Span` and `Line` provide style-preserving
+  `truncated` and `fitted` operations.
+- **Additive:** `RowViewport` provides normalized top-origin row projection, a clamped visible range, boundary flags,
+  and progress. `ScrollViewport.rowViewport` exposes the equivalent projection without changing its established
+  end-origin behavior.
+- **Migration:** replace `String.count`, `String.padding`, and local grapheme loops used for terminal alignment with
+  `TerminalWidth` fitting. Replace manually clamped top-origin slices with `RowViewport.visibleRange`.
+- **Evidence:** Unicode regressions cover CJK, emoji ZWJ families, combining sequences, narrow ellipses, alignment,
+  CJK width policy, and styled spans. Exhaustive small-domain viewport tests cover invalid and extreme inputs.
+  Postcat, DiffScope, and Motel exercise the APIs in production-shaped rendering.
+
 ### Swift-native terminal geometry
 
 - **Supported breaking migration:** application-facing coordinates and extents now use Swift `Int`. This includes

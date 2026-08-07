@@ -16,6 +16,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 006 | Preserve fragmented input and suppress stale semantic events | P1 | S | 001–005 | DONE (`85319e1`) |
 | 007 | Remove proven text and block construction workarounds | P1 | S–M | 006 | DONE |
 | 008 | Migrate public terminal geometry to Swift-native `Int` | P0 | XL | 006, 007 | DONE |
+| 009 | Add terminal-column fitting and top-origin row viewport geometry | P0 | M | 008 | DONE |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
@@ -28,6 +29,7 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reas
 - 006 is an independent correctness pass over input routing and Observation wakeups.
 - 007 follows 006 so its consumer matrix validates on the corrected runtime baseline.
 - 008 is the dedicated source-breaking geometry milestone after the lower-risk correctness and ergonomics work.
+- 009 adds additive Unicode-safe fitting and viewport projection before larger interactive collection work.
 
 ## Required final matrix
 

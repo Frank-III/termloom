@@ -277,9 +277,12 @@ public struct DiffScopeScreen: Widget, Sendable {
         .foregroundStyle(DiffScopeTheme.dim)
         .render(in: content, into: &frame)
     } else {
-      let start = min(max(0, diffScroll), diffLines.count)
-      let end = min(diffLines.count, start + content.height)
-      let visibleLines = diffLines[start..<end].map(styledDiffLine)
+      let viewport = RowViewport(
+        totalRows: diffLines.count,
+        viewportRows: content.height,
+        offset: diffScroll
+      )
+      let visibleLines = diffLines[viewport.visibleRange].map(styledDiffLine)
       let paragraph = Paragraph(
         Text(visibleLines),
         wrap: .none,
@@ -289,7 +292,7 @@ public struct DiffScopeScreen: Widget, Sendable {
       Scrollbar(
         contentLength: diffLines.count,
         viewportLength: content.height,
-        position: diffScroll,
+        position: viewport.clampedOffset,
         orientation: .verticalRight,
         style: Style(foreground: DiffScopeTheme.border),
         thumbStyle: Style(foreground: DiffScopeTheme.accent)

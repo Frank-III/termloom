@@ -102,7 +102,7 @@ public struct PostcatScreen: Widget, Sendable {
     let methodArea = Rect(x: inner.x, y: inner.y, width: min(12, inner.width), height: 1)
     Line([
       Span(
-        " \(method.rawValue.padding(toLength: 7, withPad: " ", startingAt: 0))",
+        " \(TerminalWidth.padded(method.rawValue, to: 7))",
         style: Style(
           foreground: ExampleTheme.method(method), modifiers: [.bold])),
       Span("▾ │", style: Style(foreground: ExampleTheme.dim)),
@@ -219,10 +219,16 @@ public struct PostcatScreen: Widget, Sendable {
       paragraph.scroll = responseScroll
       paragraph.render(in: content, into: &frame)
     } else {
-      let start = min(responseScroll, max(0, responseLines.count - 1))
-      let end = min(responseLines.count, start + content.height)
-      Paragraph(Text(Array(responseLines[start..<end])), wrap: .none, trimLeadingWhitespace: false)
-        .render(in: content, into: &frame)
+      let viewport = RowViewport(
+        totalRows: responseLines.count,
+        viewportRows: content.height,
+        offset: responseScroll
+      )
+      Paragraph(
+        Text(Array(responseLines[viewport.visibleRange])),
+        wrap: .none,
+        trimLeadingWhitespace: false
+      ).render(in: content, into: &frame)
     }
   }
 

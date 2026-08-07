@@ -95,6 +95,10 @@ import Testing
     app.focus = .response
     _ = await app.update(.key(KeyEvent(.character("j"))))
     #expect(app.responseScroll == 1)
+    app.responseScroll = .max
+    let bottom = render(app.body, width: 80, height: 20)
+    #expect(bottom.contains("line 79"))
+
     _ = await app.update(.key(KeyEvent(.character("]"))))
     #expect(app.responseTab == .headers)
     #expect(app.renderedResponse.map(\.content).joined().contains("x-one"))

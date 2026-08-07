@@ -2172,6 +2172,137 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui11RowViewportV",
+      "kind": "swift.struct",
+      "path": [
+        "RowViewport"
+      ],
+      "title": "RowViewport",
+      "declaration": "struct RowViewport",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV12hasRowsAfterSbvp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "hasRowsAfter"
+      ],
+      "title": "hasRowsAfter",
+      "declaration": "var hasRowsAfter: Bool { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV12viewportRowsSivp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "viewportRows"
+      ],
+      "title": "viewportRows",
+      "declaration": "var viewportRows: Int { get set }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV12visibleRangeSnySiGvp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "visibleRange"
+      ],
+      "title": "visibleRange",
+      "declaration": "var visibleRange: Range<Int> { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV13clampedOffsetSivp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "clampedOffset"
+      ],
+      "title": "clampedOffset",
+      "declaration": "var clampedOffset: Int { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV13hasRowsBeforeSbvp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "hasRowsBefore"
+      ],
+      "title": "hasRowsBefore",
+      "declaration": "var hasRowsBefore: Bool { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV13maximumOffsetSivp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "maximumOffset"
+      ],
+      "title": "maximumOffset",
+      "declaration": "var maximumOffset: Int { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV15progressPercentSivp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "progressPercent"
+      ],
+      "title": "progressPercent",
+      "declaration": "var progressPercent: Int { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV6offsetSivp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "offset"
+      ],
+      "title": "offset",
+      "declaration": "var offset: Int { get set }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV9totalRows08viewportE06offsetACSi_S2itcfc",
+      "kind": "swift.init",
+      "path": [
+        "RowViewport",
+        "init(totalRows:viewportRows:offset:)"
+      ],
+      "title": "init(totalRows:viewportRows:offset:)",
+      "declaration": "init(totalRows: Int, viewportRows: Int, offset: Int = 0)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11RowViewportV9totalRowsSivp",
+      "kind": "swift.property",
+      "path": [
+        "RowViewport",
+        "totalRows"
+      ],
+      "title": "totalRows",
+      "declaration": "var totalRows: Int { get set }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui11SpanBuilderO",
       "kind": "swift.enum",
       "path": [
@@ -3668,6 +3799,66 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui13TerminalWidthO6fitted_2to9alignment8ellipsis6policyS2S_SiAA9AlignmentOSSSgAA0bC6PolicyOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "TerminalWidth",
+        "fitted(_:to:alignment:ellipsis:policy:)"
+      ],
+      "title": "fitted(_:to:alignment:ellipsis:policy:)",
+      "declaration": "static func fitted(_ value: String, to columns: Int, alignment: Alignment = .leading, ellipsis: String? = \"\u2026\", policy: TerminalWidthPolicy = .standard) -> String",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13TerminalWidthO6padded_2to9alignment6policyS2S_SiAA9AlignmentOAA0bC6PolicyOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "TerminalWidth",
+        "padded(_:to:alignment:policy:)"
+      ],
+      "title": "padded(_:to:alignment:policy:)",
+      "declaration": "static func padded(_ value: String, to columns: Int, alignment: Alignment = .leading, policy: TerminalWidthPolicy = .standard) -> String",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13TerminalWidthO6prefix_7fitting6policyS2S_SiAA0bC6PolicyOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "TerminalWidth",
+        "prefix(_:fitting:policy:)"
+      ],
+      "title": "prefix(_:fitting:policy:)",
+      "declaration": "static func prefix(_ value: String, fitting columns: Int, policy: TerminalWidthPolicy = .standard) -> String",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13TerminalWidthO6suffix_7fitting6policyS2S_SiAA0bC6PolicyOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "TerminalWidth",
+        "suffix(_:fitting:policy:)"
+      ],
+      "title": "suffix(_:fitting:policy:)",
+      "declaration": "static func suffix(_ value: String, fitting columns: Int, policy: TerminalWidthPolicy = .standard) -> String",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui13TerminalWidthO9truncated_2to8ellipsis6policyS2S_SiSSSgAA0bC6PolicyOtFZ",
+      "kind": "swift.type.method",
+      "path": [
+        "TerminalWidth",
+        "truncated(_:to:ellipsis:policy:)"
+      ],
+      "title": "truncated(_:to:ellipsis:policy:)",
+      "declaration": "static func truncated(_ value: String, to columns: Int, ellipsis: String? = \"\u2026\", policy: TerminalWidthPolicy = .standard) -> String",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui13WidgetBuilderO",
       "kind": "swift.enum",
       "path": [
@@ -4164,6 +4355,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui14ScrollViewportV03rowC0AA03RowC0Vvp",
+      "kind": "swift.property",
+      "path": [
+        "ScrollViewport",
+        "rowViewport"
+      ],
+      "title": "rowViewport",
+      "declaration": "var rowViewport: RowViewport { get }",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui14ScrollViewportV12viewportRowsSivp",
       "kind": "swift.property",
       "path": [
@@ -4171,7 +4374,7 @@
         "viewportRows"
       ],
       "title": "viewportRows",
-      "declaration": "var viewportRows: Int",
+      "declaration": "var viewportRows: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -4207,7 +4410,7 @@
         "offsetFromEnd"
       ],
       "title": "offsetFromEnd",
-      "declaration": "var offsetFromEnd: Int",
+      "declaration": "var offsetFromEnd: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -4255,7 +4458,7 @@
         "totalRows"
       ],
       "title": "totalRows",
-      "declaration": "var totalRows: Int",
+      "declaration": "var totalRows: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -8934,6 +9137,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui4LineV6fitted2to9alignment8ellipsis12paddingStyle6policyACSi_AA9AlignmentOAA4SpanVSgAA0H0VAA19TerminalWidthPolicyOtF",
+      "kind": "swift.method",
+      "path": [
+        "Line",
+        "fitted(to:alignment:ellipsis:paddingStyle:policy:)"
+      ],
+      "title": "fitted(to:alignment:ellipsis:paddingStyle:policy:)",
+      "declaration": "func fitted(to columns: Int, alignment fittedAlignment: Alignment = .leading, ellipsis: Span? = Span(\"\u2026\"), paddingStyle: Style = .plain, policy: TerminalWidthPolicy = .standard) -> Line",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui4LineV6render2in4intoyAA4RectV_AA5FrameVztF",
       "kind": "swift.method",
       "path": [
@@ -9002,6 +9217,18 @@
       ],
       "title": "alignment(_:)",
       "declaration": "func alignment(_ alignment: Alignment) -> Line",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui4LineV9truncated2to8ellipsis6policyACSi_AA4SpanVSgAA19TerminalWidthPolicyOtF",
+      "kind": "swift.method",
+      "path": [
+        "Line",
+        "truncated(to:ellipsis:policy:)"
+      ],
+      "title": "truncated(to:ellipsis:policy:)",
+      "declaration": "func truncated(to columns: Int, ellipsis: Span? = Span(\"\u2026\"), policy: TerminalWidthPolicy = .standard) -> Line",
       "accessLevel": "public",
       "availability": []
     },
@@ -9686,6 +9913,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui4SpanV6fitted2to9alignment8ellipsis6policyACSi_AA9AlignmentOSSSgAA19TerminalWidthPolicyOtF",
+      "kind": "swift.method",
+      "path": [
+        "Span",
+        "fitted(to:alignment:ellipsis:policy:)"
+      ],
+      "title": "fitted(to:alignment:ellipsis:policy:)",
+      "declaration": "func fitted(to columns: Int, alignment: Alignment = .leading, ellipsis: String? = \"\u2026\", policy: TerminalWidthPolicy = .standard) -> Span",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui4SpanV7contentSSvp",
       "kind": "swift.property",
       "path": [
@@ -9718,6 +9957,18 @@
       ],
       "title": "centered()",
       "declaration": "func centered() -> Line",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui4SpanV9truncated2to8ellipsis6policyACSi_SSSgAA19TerminalWidthPolicyOtF",
+      "kind": "swift.method",
+      "path": [
+        "Span",
+        "truncated(to:ellipsis:policy:)"
+      ],
+      "title": "truncated(to:ellipsis:policy:)",
+      "declaration": "func truncated(to columns: Int, ellipsis: String? = \"\u2026\", policy: TerminalWidthPolicy = .standard) -> Span",
       "accessLevel": "public",
       "availability": []
     },
@@ -18180,6 +18431,30 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui11RowViewportV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11RowViewportV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11RowViewportV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11RowViewportV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui11TestBackendV",
       "target": "s:7Ratatui20InlineHistoryBackendP"
     },
@@ -22321,6 +22596,56 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV12hasRowsAfterSbvp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV12viewportRowsSivp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV12visibleRangeSnySiGvp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV13clampedOffsetSivp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV13hasRowsBeforeSbvp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV13maximumOffsetSivp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV15progressPercentSivp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV6offsetSivp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV9totalRows08viewportE06offsetACSi_S2itcfc",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11RowViewportV9totalRowsSivp",
+      "target": "s:7Ratatui11RowViewportV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui11SpanBuilderO10buildArrayySayAA0B0VGSayAGGFZ",
       "target": "s:7Ratatui11SpanBuilderO"
     },
@@ -22871,6 +23196,31 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui13TerminalWidthO6fitted_2to9alignment8ellipsis6policyS2S_SiAA9AlignmentOSSSgAA0bC6PolicyOtFZ",
+      "target": "s:7Ratatui13TerminalWidthO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13TerminalWidthO6padded_2to9alignment6policyS2S_SiAA9AlignmentOAA0bC6PolicyOtFZ",
+      "target": "s:7Ratatui13TerminalWidthO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13TerminalWidthO6prefix_7fitting6policyS2S_SiAA0bC6PolicyOtFZ",
+      "target": "s:7Ratatui13TerminalWidthO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13TerminalWidthO6suffix_7fitting6policyS2S_SiAA0bC6PolicyOtFZ",
+      "target": "s:7Ratatui13TerminalWidthO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui13TerminalWidthO9truncated_2to8ellipsis6policyS2S_SiSSSgAA0bC6PolicyOtFZ",
+      "target": "s:7Ratatui13TerminalWidthO"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui13WidgetBuilderO10buildArrayyAA0B4ListVSayAFGFZ",
       "target": "s:7Ratatui13WidgetBuilderO"
     },
@@ -23038,6 +23388,11 @@
       "kind": "memberOf",
       "source": "s:7Ratatui14MouseEventKindO8scrollUpyA2CmF",
       "target": "s:7Ratatui14MouseEventKindO"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui14ScrollViewportV03rowC0AA03RowC0Vvp",
+      "target": "s:7Ratatui14ScrollViewportV"
     },
     {
       "kind": "memberOf",
@@ -24576,6 +24931,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui4LineV6fitted2to9alignment8ellipsis12paddingStyle6policyACSi_AA9AlignmentOAA4SpanVSgAA0H0VAA19TerminalWidthPolicyOtF",
+      "target": "s:7Ratatui4LineV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui4LineV6render2in4intoyAA4RectV_AA5FrameVztF",
       "target": "s:7Ratatui4LineV"
     },
@@ -24602,6 +24962,11 @@
     {
       "kind": "memberOf",
       "source": "s:7Ratatui4LineV9alignmentyAcA9AlignmentOF",
+      "target": "s:7Ratatui4LineV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui4LineV9truncated2to8ellipsis6policyACSi_AA4SpanVSgAA19TerminalWidthPolicyOtF",
       "target": "s:7Ratatui4LineV"
     },
     {
@@ -24871,6 +25236,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui4SpanV6fitted2to9alignment8ellipsis6policyACSi_AA9AlignmentOSSSgAA19TerminalWidthPolicyOtF",
+      "target": "s:7Ratatui4SpanV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui4SpanV7contentSSvp",
       "target": "s:7Ratatui4SpanV"
     },
@@ -24882,6 +25252,11 @@
     {
       "kind": "memberOf",
       "source": "s:7Ratatui4SpanV8centeredAA4LineVyF",
+      "target": "s:7Ratatui4SpanV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui4SpanV9truncated2to8ellipsis6policyACSi_SSSgAA19TerminalWidthPolicyOtF",
       "target": "s:7Ratatui4SpanV"
     },
     {

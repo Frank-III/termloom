@@ -1,8 +1,8 @@
 # Core and ecosystem boundary
 
 Ratatui Swift should be useful as a small rendering library without forcing applications to adopt chat,
-HTTP, Git, persistence, networking, or a specific state architecture. The larger Codex stress client and the
-Postcat and DiffScope examples are boundary tests, not templates for moving their product semantics into core.
+HTTP, Git, telemetry, persistence, networking, or a specific state architecture. Codex, Herdr, and Motel plus
+Postcat and DiffScope are production-shaped boundary tests, not templates for moving their product semantics into core.
 
 ## Current conclusion
 

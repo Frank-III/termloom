@@ -98,6 +98,8 @@ Included widgets and controls:
 - Focusable `Button`, `Checkbox`, `RadioButton`, and editable `TextField` controls
 - Grapheme-safe `TextFieldState` with selection, word movement, paste, horizontal scrolling, and
   state-derived hardware cursor placement
+- Unicode-aware terminal-column clipping, ellipsis, alignment padding, and style-preserving `Span`/`Line`
+  fitting, plus pure top-origin and end-origin row viewport geometry
 - Point-Free inline snapshot helpers for exact-width terminal buffers and readable ANSI streams
 - `RatatuiSyntaxHighlighting`, an optional pure-Swift 192-language highlighter that emits styled
   terminal spans, maps paths to languages, includes the Codex theme catalog, and parses custom
