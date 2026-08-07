@@ -73,9 +73,9 @@ extension Table where Row == TableRow {
     highlightSymbol: Line = Line(""),
     highlightSymbols: [Line] = [],
     highlightSpacing: HighlightSpacing = .whenSelected,
-    columnSpacing: UInt16 = 1,
+    columnSpacing: Int = 1,
     flex: Flex = .start,
-    rowSpacing: UInt16 = 0
+    rowSpacing: Int = 0
   ) {
     self.rows = rows
     columns = []
@@ -90,9 +90,9 @@ extension Table where Row == TableRow {
     self.selectedRow = selectedRow
     self.highlightSymbols = highlightSymbols.isEmpty ? [highlightSymbol] : highlightSymbols
     self.highlightSpacing = highlightSpacing
-    self.columnSpacing = columnSpacing
+    self.columnSpacing = max(0, columnSpacing)
     self.flex = flex
-    self.rowSpacing = rowSpacing
+    self.rowSpacing = max(0, rowSpacing)
     rowStyle = nil
     rowHeight = nil
     rowConfiguration = { row in
@@ -166,9 +166,9 @@ public struct TableRowConfiguration: Hashable, Sendable {
     bottomMargin: Int = 0
   ) {
     self.style = style
-    self.height = min(max(0, height), Int(UInt16.max))
-    self.topMargin = min(max(0, topMargin), Int(UInt16.max))
-    self.bottomMargin = min(max(0, bottomMargin), Int(UInt16.max))
+    self.height = max(0, height)
+    self.topMargin = max(0, topMargin)
+    self.bottomMargin = max(0, bottomMargin)
   }
 
   fileprivate var normalized: Self {
@@ -424,9 +424,9 @@ public struct Table<Row>: Widget, StatefulWidget {
     set { highlightSymbols = [newValue] }
   }
   public var highlightSpacing: HighlightSpacing
-  public var columnSpacing: UInt16
+  public var columnSpacing: Int { didSet { columnSpacing = max(0, columnSpacing) } }
   public var flex: Flex
-  public var rowSpacing: UInt16
+  public var rowSpacing: Int { didSet { rowSpacing = max(0, rowSpacing) } }
   private let rowStyle: ((Row) -> Style)?
   private let rowHeight: ((Row) -> Int)?
   private let rowConfiguration: ((Row) -> TableRowConfiguration)?
@@ -449,9 +449,9 @@ public struct Table<Row>: Widget, StatefulWidget {
     highlightSymbol: Line = Line(""),
     highlightSymbols: [Line] = [],
     highlightSpacing: HighlightSpacing = .whenSelected,
-    columnSpacing: UInt16 = 1,
+    columnSpacing: Int = 1,
     flex: Flex = .start,
-    rowSpacing: UInt16 = 0,
+    rowSpacing: Int = 0,
     rowStyle: ((Row) -> Style)? = nil,
     rowHeight: ((Row) -> Int)? = nil,
     rowConfiguration: ((Row) -> TableRowConfiguration)? = nil,
@@ -470,9 +470,9 @@ public struct Table<Row>: Widget, StatefulWidget {
     self.selectedRow = selectedRow
     self.highlightSymbols = highlightSymbols.isEmpty ? [highlightSymbol] : highlightSymbols
     self.highlightSpacing = highlightSpacing
-    self.columnSpacing = columnSpacing
+    self.columnSpacing = max(0, columnSpacing)
     self.flex = flex
-    self.rowSpacing = rowSpacing
+    self.rowSpacing = max(0, rowSpacing)
     self.rowStyle = rowStyle
     self.rowHeight = rowHeight
     self.rowConfiguration = rowConfiguration
@@ -511,11 +511,11 @@ public struct Table<Row>: Widget, StatefulWidget {
       highlightSpacing.reservesColumn(hasSelection: state.selectedRow != nil)
       && highlightWidth > 0
     let selectionWidth =
-      reservesSelectionColumn ? min(Int(area.width), highlightWidth) : 0
+      reservesSelectionColumn ? min(area.width, highlightWidth) : 0
     let columnsArea = Rect(
-      x: UInt16(clamping: Int(area.x) + selectionWidth),
+      x: (area.x + selectionWidth),
       y: area.y,
-      width: UInt16(clamping: Int(area.width) - selectionWidth),
+      width: (area.width - selectionWidth),
       height: area.height
     )
     let columnAreas: [Rect]
@@ -527,7 +527,7 @@ public struct Table<Row>: Widget, StatefulWidget {
         flex: flex
       )
     } else if rawWidths != nil || columns.allSatisfy(\.usesAutomaticWidth) {
-      let defaultWidth = logicalColumnCount > 0 ? Int(area.width) / logicalColumnCount : 0
+      let defaultWidth = logicalColumnCount > 0 ? area.width / logicalColumnCount : 0
       let defaultLengths = Array(repeating: defaultWidth, count: layoutColumnCount)
       if flex == .start {
         columnAreas = Self.fixedColumnAreas(
@@ -538,7 +538,7 @@ public struct Table<Row>: Widget, StatefulWidget {
       } else {
         columnAreas = Layout(
           .horizontal,
-          constraints: defaultLengths.map { .length(UInt16(clamping: $0)) },
+          constraints: defaultLengths.map { .length(($0)) },
           spacing: .space(columnSpacing),
           flex: flex
         ).split(columnsArea)
@@ -566,36 +566,34 @@ public struct Table<Row>: Widget, StatefulWidget {
       bands = (emptyBand, emptyBand, emptyBand)
     } else if headerConfiguration == TableRowConfiguration(),
       footerConfiguration == defaultFooterConfiguration,
-      Int(area.height) >= 1 + (hasFooter ? 1 : 0)
+      area.height >= 1 + (hasFooter ? 1 : 0)
     {
       let headerHeight = min(area.height, 1)
-      let footerHeight: UInt16 = hasFooter ? min(area.height, 1) : 0
+      let footerHeight: Int = hasFooter ? min(area.height, 1) : 0
       bands = (
         Rect(x: area.x, y: area.y, width: area.width, height: headerHeight),
         Rect(
           x: area.x,
-          y: UInt16(clamping: Int(area.y) + Int(headerHeight)),
+          y: (area.y + headerHeight),
           width: area.width,
-          height: UInt16(
-            clamping: max(0, Int(area.height) - Int(headerHeight) - Int(footerHeight))
-          )
+          height: (max(0, area.height - headerHeight - footerHeight))
         ),
         Rect(
           x: area.x,
-          y: UInt16(clamping: Int(area.bottom) - Int(footerHeight)),
+          y: (area.bottom - footerHeight),
           width: area.width,
           height: footerHeight
         )
       )
     } else {
       let verticalAreas = Layout.vertical(
-        .length(UInt16(clamping: headerConfiguration.topMargin)),
-        .length(UInt16(clamping: headerConfiguration.height)),
-        .length(UInt16(clamping: headerConfiguration.bottomMargin)),
+        .length(headerConfiguration.topMargin),
+        .length(headerConfiguration.height),
+        .length(headerConfiguration.bottomMargin),
         .min(0),
-        .length(UInt16(clamping: footerConfiguration.topMargin)),
-        .length(UInt16(clamping: footerConfiguration.height)),
-        .length(UInt16(clamping: footerConfiguration.bottomMargin))
+        .length(footerConfiguration.topMargin),
+        .length(footerConfiguration.height),
+        .length(footerConfiguration.bottomMargin)
       ).split(area)
       bands = (verticalAreas[1], verticalAreas[3], verticalAreas[5])
     }
@@ -656,7 +654,7 @@ public struct Table<Row>: Widget, StatefulWidget {
       }
     }
 
-    let viewportHeight = Int(rowBand.height)
+    let viewportHeight = rowBand.height
     if logicalColumnCount == 0 {
       state.selectedColumn = nil
     } else if let selectedColumn = state.selectedColumn {
@@ -698,9 +696,7 @@ public struct Table<Row>: Widget, StatefulWidget {
     for rowIndex in visible {
       let row = rows[rowIndex]
       let configuration = rowConfigurations?[rowIndex] ?? TableRowConfiguration()
-      let rowY = UInt16(
-        clamping: Int(rowBand.y) + consumedHeight + configuration.topMargin
-      )
+      let rowY = (rowBand.y + consumedHeight + configuration.topMargin)
       let contentHeight = configuration.height
       consumedHeight += configuration.totalHeight
       let baseStyle = style.patching(configuration.style)
@@ -708,7 +704,7 @@ public struct Table<Row>: Widget, StatefulWidget {
         x: area.x,
         y: rowY,
         width: area.width,
-        height: UInt16(clamping: contentHeight)
+        height: contentHeight
       )
       Self.patch(baseStyle, in: rowArea, into: &frame.buffer)
       if rowIndex == state.selectedRow {
@@ -719,8 +715,8 @@ public struct Table<Row>: Widget, StatefulWidget {
             in: Rect(
               x: area.x,
               y: rowY,
-              width: UInt16(clamping: selectionWidth),
-              height: UInt16(clamping: contentHeight)
+              width: selectionWidth,
+              height: contentHeight
             ),
             into: &frame.buffer,
             environment: frame.environment
@@ -753,14 +749,14 @@ public struct Table<Row>: Widget, StatefulWidget {
           let columnArea = Rect(
             x: firstArea.x,
             y: firstArea.y,
-            width: UInt16(clamping: Int(finalArea.right) - Int(firstArea.x)),
+            width: (finalArea.right - firstArea.x),
             height: firstArea.height
           )
           let cellArea = Rect(
             x: columnArea.x,
             y: rowY,
             width: columnArea.width,
-            height: UInt16(clamping: contentHeight)
+            height: contentHeight
           )
           let configuredCellStyle = column.style.patching(richCell?.style ?? .plain)
           Self.patch(configuredCellStyle, in: cellArea, into: &frame.buffer)
@@ -780,7 +776,7 @@ public struct Table<Row>: Widget, StatefulWidget {
                 column.aligned(line).patchStyle(cellStyle),
                 in: Rect(
                   x: columnArea.x,
-                  y: UInt16(clamping: Int(rowY) + lineIndex),
+                  y: (rowY + lineIndex),
                   width: columnArea.width,
                   height: 1
                 ),
@@ -885,7 +881,7 @@ public struct Table<Row>: Widget, StatefulWidget {
   private static func renderSequentialCells(
     _ cells: [TableCell],
     columnAreas: [Rect],
-    rowY: UInt16,
+    rowY: Int,
     contentHeight: Int,
     baseStyle: Style,
     into buffer: inout Buffer,
@@ -904,8 +900,8 @@ public struct Table<Row>: Widget, StatefulWidget {
         in: Rect(
           x: firstArea.x,
           y: rowY,
-          width: UInt16(clamping: Int(finalArea.right) - Int(firstArea.x)),
-          height: UInt16(clamping: contentHeight)
+          width: (finalArea.right - firstArea.x),
+          height: contentHeight
         ),
         into: &buffer,
         environment: environment
@@ -923,12 +919,12 @@ public struct Table<Row>: Widget, StatefulWidget {
   ) {
     patch(cell.style, in: area, into: &buffer)
     let cellStyle = baseStyle.patching(cell.style)
-    for (lineIndex, line) in cell.lines.prefix(Int(area.height)).enumerated() {
+    for (lineIndex, line) in cell.lines.prefix(area.height).enumerated() {
       render(
         line.patchStyle(cellStyle),
         in: Rect(
           x: area.x,
-          y: UInt16(clamping: Int(area.y) + lineIndex),
+          y: (area.y + lineIndex),
           width: area.width,
           height: 1
         ),
@@ -944,12 +940,12 @@ public struct Table<Row>: Widget, StatefulWidget {
     into buffer: inout Buffer,
     environment: RenderEnvironment
   ) {
-    for (lineIndex, line) in lines.prefix(Int(area.height)).enumerated() {
+    for (lineIndex, line) in lines.prefix(area.height).enumerated() {
       render(
         line,
         in: Rect(
           x: area.x,
-          y: UInt16(clamping: Int(area.y) + lineIndex),
+          y: (area.y + lineIndex),
           width: area.width,
           height: 1
         ),
@@ -989,7 +985,7 @@ public struct Table<Row>: Widget, StatefulWidget {
         alignment: alignment,
         in: Rect(
           x: area.x,
-          y: UInt16(clamping: Int(area.y) + lineIndex),
+          y: (area.y + lineIndex),
           width: area.width,
           height: 1
         ),
@@ -1013,7 +1009,7 @@ public struct Table<Row>: Widget, StatefulWidget {
 
     let contentWidth = TerminalWidth.of(content)
     guard contentWidth > 0 else { return }
-    let areaWidth = Int(area.width)
+    let areaWidth = area.width
     let leadingSkip: Int
     let indent: Int
     if contentWidth <= areaWidth {
@@ -1035,14 +1031,14 @@ public struct Table<Row>: Widget, StatefulWidget {
     }
 
     var skipped = 0
-    var position = Position(x: UInt16(clamping: Int(area.x) + indent), y: area.y)
-    let end = Int(area.x) + Int(area.width)
+    var position = Position(x: (area.x + indent), y: area.y)
+    let end = area.x + area.width
     if leadingSkip == 0 {
       buffer.setString(
         content,
         at: position,
         style: style,
-        maxWidth: UInt16(clamping: end - Int(position.x))
+        maxWidth: (end - position.x)
       )
       return
     }
@@ -1051,18 +1047,18 @@ public struct Table<Row>: Widget, StatefulWidget {
       if skipped < leadingSkip {
         let endOfCharacter = skipped + characterWidth
         if endOfCharacter > leadingSkip {
-          position.x = UInt16(clamping: Int(position.x) + endOfCharacter - leadingSkip)
+          position.x = (position.x + endOfCharacter - leadingSkip)
         }
         skipped = endOfCharacter
         continue
       }
       guard characterWidth > 0 else { continue }
-      guard Int(position.x) + characterWidth <= end else { return }
+      guard position.x + characterWidth <= end else { return }
       position = buffer.setString(
         String(character),
         at: position,
         style: style,
-        maxWidth: UInt16(clamping: end - Int(position.x))
+        maxWidth: (end - position.x)
       )
     }
   }
@@ -1085,7 +1081,7 @@ public struct Table<Row>: Widget, StatefulWidget {
   static func resolveColumnAreas(
     in area: Rect,
     constraints: [Constraint],
-    spacing: UInt16,
+    spacing: Int,
     flex: Flex
   ) -> [Rect] {
     guard !constraints.isEmpty else { return [] }
@@ -1160,8 +1156,8 @@ public struct Table<Row>: Widget, StatefulWidget {
     ).split(area)
   }
 
-  private static func availableWidth(in area: Rect, spacing: UInt16, count: Int) -> Int {
-    max(0, Int(area.width) - min(Int(area.width), max(0, count - 1) * Int(spacing)))
+  private static func availableWidth(in area: Rect, spacing: Int, count: Int) -> Int {
+    max(0, area.width - min(area.width, max(0, count - 1) * spacing))
   }
 
   private static func waterFilledMinimums(_ minimums: [Double], total: Int) -> [Double] {
@@ -1185,7 +1181,7 @@ public struct Table<Row>: Widget, StatefulWidget {
   private static func fractionalColumnAreas(
     in area: Rect,
     requestedLengths: [Double],
-    spacing: UInt16,
+    spacing: Int,
     fillWhenOverconstrained: Bool
   ) -> [Rect] {
     let available = availableWidth(in: area, spacing: spacing, count: requestedLengths.count)
@@ -1202,13 +1198,13 @@ public struct Table<Row>: Widget, StatefulWidget {
       defer { previousBoundary = boundary }
       return max(0, boundary - previousBoundary)
     }
-    var cursor = Int(area.x)
+    var cursor = area.x
     return lengths.map { width in
-      defer { cursor = min(Int(area.right), cursor + width + Int(spacing)) }
+      defer { cursor = min(area.right, cursor + width + spacing) }
       return Rect(
-        x: UInt16(clamping: cursor),
+        x: cursor,
         y: area.y,
-        width: UInt16(clamping: width),
+        width: width,
         height: area.height
       )
     }
@@ -1218,12 +1214,12 @@ public struct Table<Row>: Widget, StatefulWidget {
   private static func fixedColumnAreas(
     in area: Rect,
     requestedLengths: [Int],
-    spacing: UInt16
+    spacing: Int
   ) -> [Rect] {
     guard !requestedLengths.isEmpty else { return [] }
     let gapCount = max(0, requestedLengths.count - 1)
-    let totalSpacing = min(Int(area.width), gapCount * Int(spacing))
-    let available = max(0, Int(area.width) - totalSpacing)
+    let totalSpacing = min(area.width, gapCount * spacing)
+    let available = max(0, area.width - totalSpacing)
     let requestedTotal = requestedLengths.reduce(0, +)
     let lengths: [Int]
     if requestedTotal > available, requestedTotal > 0 {
@@ -1240,13 +1236,13 @@ public struct Table<Row>: Widget, StatefulWidget {
     } else {
       lengths = requestedLengths
     }
-    var cursor = Int(area.x)
+    var cursor = area.x
     return lengths.map { width in
-      defer { cursor = min(Int(area.right), cursor + width + Int(spacing)) }
+      defer { cursor = min(area.right, cursor + width + spacing) }
       return Rect(
-        x: UInt16(clamping: cursor),
+        x: cursor,
         y: area.y,
-        width: UInt16(clamping: width),
+        width: width,
         height: area.height
       )
     }

@@ -17,64 +17,61 @@ public struct BorderEdges: OptionSet, Hashable, Sendable {
 /// Horizontal values use Swift's direction-aware leading/trailing vocabulary. The left/right
 /// factories remain available for direct Ratatui fixture translation.
 public struct Padding: Hashable, Sendable {
-  public var top: UInt16
-  public var leading: UInt16
-  public var bottom: UInt16
-  public var trailing: UInt16
+  public var top: Int { didSet { top = max(0, top) } }
+  public var leading: Int { didSet { leading = max(0, leading) } }
+  public var bottom: Int { didSet { bottom = max(0, bottom) } }
+  public var trailing: Int { didSet { trailing = max(0, trailing) } }
 
   public init(
-    top: UInt16 = 0,
-    leading: UInt16 = 0,
-    bottom: UInt16 = 0,
-    trailing: UInt16 = 0
+    top: Int = 0,
+    leading: Int = 0,
+    bottom: Int = 0,
+    trailing: Int = 0
   ) {
-    self.top = top
-    self.leading = leading
-    self.bottom = bottom
-    self.trailing = trailing
+    self.top = max(0, top)
+    self.leading = max(0, leading)
+    self.bottom = max(0, bottom)
+    self.trailing = max(0, trailing)
   }
 
-  public init(left: UInt16, right: UInt16, top: UInt16, bottom: UInt16) {
+  public init(left: Int, right: Int, top: Int, bottom: Int) {
     self.init(top: top, leading: left, bottom: bottom, trailing: right)
   }
 
   public static let zero = Self()
 
-  public static func horizontal(_ value: UInt16) -> Self {
+  public static func horizontal(_ value: Int) -> Self {
     Self(leading: value, trailing: value)
   }
 
-  public static func vertical(_ value: UInt16) -> Self {
+  public static func vertical(_ value: Int) -> Self {
     Self(top: value, bottom: value)
   }
 
-  public static func uniform(_ value: UInt16) -> Self { all(value) }
+  public static func uniform(_ value: Int) -> Self { all(value) }
 
-  public static func all(_ value: UInt16) -> Self {
+  public static func all(_ value: Int) -> Self {
     Self(top: value, leading: value, bottom: value, trailing: value)
   }
 
-  public static func proportional(_ value: UInt16) -> Self {
-    Self(
-      top: value,
-      leading: UInt16(clamping: Int(value) * 2),
-      bottom: value,
-      trailing: UInt16(clamping: Int(value) * 2)
-    )
+  public static func proportional(_ value: Int) -> Self {
+    let value = max(0, value)
+    let horizontal = value > Int.max / 2 ? Int.max : value * 2
+    return Self(top: value, leading: horizontal, bottom: value, trailing: horizontal)
   }
 
-  public static func symmetric(horizontal: UInt16, vertical: UInt16) -> Self {
+  public static func symmetric(horizontal: Int, vertical: Int) -> Self {
     Self(top: vertical, leading: horizontal, bottom: vertical, trailing: horizontal)
   }
 
-  public static func symmetric(_ x: UInt16, _ y: UInt16) -> Self {
+  public static func symmetric(_ x: Int, _ y: Int) -> Self {
     symmetric(horizontal: x, vertical: y)
   }
 
-  public static func left(_ value: UInt16) -> Self { Self(leading: value) }
-  public static func right(_ value: UInt16) -> Self { Self(trailing: value) }
-  public static func top(_ value: UInt16) -> Self { Self(top: value) }
-  public static func bottom(_ value: UInt16) -> Self { Self(bottom: value) }
+  public static func left(_ value: Int) -> Self { Self(leading: value) }
+  public static func right(_ value: Int) -> Self { Self(trailing: value) }
+  public static func top(_ value: Int) -> Self { Self(top: value) }
+  public static func bottom(_ value: Int) -> Self { Self(bottom: value) }
 
   public var insets: Insets {
     Insets(top: top, leading: leading, bottom: bottom, trailing: trailing)
@@ -380,32 +377,28 @@ public struct Block<Content: Widget>: Widget {
     let hasBottom = borderEdges.contains(.bottom) || titles.contains { $0.position == .bottom }
     return area.inset(
       by: Insets(
-        top: UInt16(clamping: Int(padding.top) + (hasTop ? 1 : 0)),
-        leading: UInt16(
-          clamping: Int(padding.leading) + (borderEdges.contains(.leading) ? 1 : 0)
-        ),
-        bottom: UInt16(clamping: Int(padding.bottom) + (hasBottom ? 1 : 0)),
-        trailing: UInt16(
-          clamping: Int(padding.trailing) + (borderEdges.contains(.trailing) ? 1 : 0)
-        )
+        top: paddedSpace(padding.top, decorated: hasTop),
+        leading: paddedSpace(padding.leading, decorated: borderEdges.contains(.leading)),
+        bottom: paddedSpace(padding.bottom, decorated: hasBottom),
+        trailing: paddedSpace(padding.trailing, decorated: borderEdges.contains(.trailing))
       )
     )
   }
 
-  public var horizontalSpace: (leading: UInt16, trailing: UInt16) {
+  public var horizontalSpace: (leading: Int, trailing: Int) {
     (
-      UInt16(clamping: Int(padding.leading) + (borderEdges.contains(.leading) ? 1 : 0)),
-      UInt16(clamping: Int(padding.trailing) + (borderEdges.contains(.trailing) ? 1 : 0))
+      paddedSpace(padding.leading, decorated: borderEdges.contains(.leading)),
+      paddedSpace(padding.trailing, decorated: borderEdges.contains(.trailing))
     )
   }
 
-  public var verticalSpace: (top: UInt16, bottom: UInt16) {
+  public var verticalSpace: (top: Int, bottom: Int) {
     let hasTop =
       borderEdges.contains(.top) || title != nil || titles.contains { $0.position == .top }
     let hasBottom = borderEdges.contains(.bottom) || titles.contains { $0.position == .bottom }
     return (
-      UInt16(clamping: Int(padding.top) + (hasTop ? 1 : 0)),
-      UInt16(clamping: Int(padding.bottom) + (hasBottom ? 1 : 0))
+      paddedSpace(padding.top, decorated: hasTop),
+      paddedSpace(padding.bottom, decorated: hasBottom)
     )
   }
 
@@ -426,18 +419,18 @@ public struct Block<Content: Widget>: Widget {
 
   private func renderShadow(behind area: Rect, into buffer: inout Buffer) {
     guard let shadow else { return }
-    let bufferLeft = Int(buffer.area.x)
-    let bufferTop = Int(buffer.area.y)
-    let bufferRight = bufferLeft + Int(buffer.area.width)
-    let bufferBottom = bufferTop + Int(buffer.area.height)
-    let shadowLeft = Int(area.x) + shadow.offset.x
-    let shadowTop = Int(area.y) + shadow.offset.y
+    let bufferLeft = buffer.area.x
+    let bufferTop = buffer.area.y
+    let bufferRight = bufferLeft + buffer.area.width
+    let bufferBottom = bufferTop + buffer.area.height
+    let shadowLeft = area.x + shadow.offset.x
+    let shadowTop = area.y + shadow.offset.y
 
-    for y in shadowTop..<(shadowTop + Int(area.height)) {
+    for y in shadowTop..<(shadowTop + area.height) {
       guard y >= bufferTop, y < bufferBottom else { continue }
-      for x in shadowLeft..<(shadowLeft + Int(area.width)) {
+      for x in shadowLeft..<(shadowLeft + area.width) {
         guard x >= bufferLeft, x < bufferRight else { continue }
-        let position = Position(x: UInt16(clamping: x), y: UInt16(clamping: y))
+        let position = Position(x: x, y: y)
         guard !area.contains(position), var cell = buffer.cell(at: position) else { continue }
         let shadowStyle = cell.style.patching(shadow.style)
         if let symbol = shadow.symbol {
@@ -451,8 +444,8 @@ public struct Block<Content: Widget>: Widget {
   }
 
   private func renderBorders(in area: Rect, into buffer: inout Buffer) {
-    let right = Int(area.x) + Int(area.width) - 1
-    let bottom = Int(area.y) + Int(area.height) - 1
+    let right = area.x + area.width - 1
+    let bottom = area.y + area.height - 1
     let drawnStyle = style.patching(borderStyle)
 
     func draw(_ symbol: Character, at position: Position) {
@@ -460,36 +453,36 @@ public struct Block<Content: Widget>: Widget {
     }
 
     if borderEdges.contains(.top) {
-      let start = Int(area.x) + (borderEdges.contains(.leading) ? 1 : 0)
+      let start = area.x + (borderEdges.contains(.leading) ? 1 : 0)
       let end = right + (borderEdges.contains(.trailing) ? 0 : 1)
       for x in start..<max(start, end) {
-        draw(borderSet.horizontalTop, at: Position(x: UInt16(clamping: x), y: area.y))
+        draw(borderSet.horizontalTop, at: Position(x: x, y: area.y))
       }
     }
     if borderEdges.contains(.bottom) {
-      let start = Int(area.x) + (borderEdges.contains(.leading) ? 1 : 0)
+      let start = area.x + (borderEdges.contains(.leading) ? 1 : 0)
       let end = right + (borderEdges.contains(.trailing) ? 0 : 1)
       for x in start..<max(start, end) {
         draw(
           borderSet.horizontalBottom,
-          at: Position(x: UInt16(clamping: x), y: UInt16(clamping: bottom))
+          at: Position(x: x, y: bottom)
         )
       }
     }
     if borderEdges.contains(.leading) {
-      let start = Int(area.y) + (borderEdges.contains(.top) ? 1 : 0)
+      let start = area.y + (borderEdges.contains(.top) ? 1 : 0)
       let end = bottom + (borderEdges.contains(.bottom) ? 0 : 1)
       for y in start..<max(start, end) {
-        draw(borderSet.verticalLeft, at: Position(x: area.x, y: UInt16(clamping: y)))
+        draw(borderSet.verticalLeft, at: Position(x: area.x, y: y))
       }
     }
     if borderEdges.contains(.trailing) {
-      let start = Int(area.y) + (borderEdges.contains(.top) ? 1 : 0)
+      let start = area.y + (borderEdges.contains(.top) ? 1 : 0)
       let end = bottom + (borderEdges.contains(.bottom) ? 0 : 1)
       for y in start..<max(start, end) {
         draw(
           borderSet.verticalRight,
-          at: Position(x: UInt16(clamping: right), y: UInt16(clamping: y))
+          at: Position(x: right, y: y)
         )
       }
     }
@@ -497,17 +490,17 @@ public struct Block<Content: Widget>: Widget {
     func corner(_ symbol: Character, x: Int, y: Int) {
       draw(
         symbol,
-        at: Position(x: UInt16(clamping: x), y: UInt16(clamping: y))
+        at: Position(x: x, y: y)
       )
     }
     if borderEdges.isSuperset(of: [.top, .leading]) {
-      corner(borderSet.topLeft, x: Int(area.x), y: Int(area.y))
+      corner(borderSet.topLeft, x: area.x, y: area.y)
     }
     if borderEdges.isSuperset(of: [.top, .trailing]) {
-      corner(borderSet.topRight, x: right, y: Int(area.y))
+      corner(borderSet.topRight, x: right, y: area.y)
     }
     if borderEdges.isSuperset(of: [.bottom, .leading]) {
-      corner(borderSet.bottomLeft, x: Int(area.x), y: bottom)
+      corner(borderSet.bottomLeft, x: area.x, y: bottom)
     }
     if borderEdges.isSuperset(of: [.bottom, .trailing]) {
       corner(borderSet.bottomRight, x: right, y: bottom)
@@ -519,9 +512,9 @@ public struct Block<Content: Widget>: Widget {
     let leftInset = borderEdges.contains(.leading) ? 1 : 0
     let rightInset = borderEdges.contains(.trailing) ? 1 : 0
     let titleArea = Rect(
-      x: UInt16(clamping: Int(area.x) + leftInset),
+      x: (area.x + leftInset),
       y: area.y,
-      width: UInt16(clamping: Int(area.width) - leftInset - rightInset),
+      width: (area.width - leftInset - rightInset),
       height: 1
     )
     guard titleArea.width > 0 else { return }
@@ -529,8 +522,8 @@ public struct Block<Content: Widget>: Widget {
     for position in [BlockTitlePosition.top, .bottom] {
       let y =
         position == .top
-        ? Int(area.y)
-        : Int(area.y) + Int(area.height) - 1
+        ? area.y
+        : area.y + area.height - 1
       for alignment in [Alignment.leading, .center, .trailing] {
         let matching = allTitles.filter {
           $0.position == position && ($0.line.alignment ?? .leading) == alignment
@@ -548,20 +541,20 @@ public struct Block<Content: Widget>: Widget {
           // glyph before its padded title. Rich titles align directly to the
           // title area, matching Ratatui's newer multi-title behavior.
           offset = position == .top && title != nil ? 1 : 0
-        case .center: offset = max(0, (Int(titleArea.width) - width) / 2)
-        case .trailing: offset = max(0, Int(titleArea.width) - width)
+        case .center: offset = max(0, (titleArea.width - width) / 2)
+        case .trailing: offset = max(0, titleArea.width - width)
         }
         var cursor = Position(
-          x: UInt16(clamping: Int(titleArea.x) + offset),
-          y: UInt16(clamping: y)
+          x: (titleArea.x + offset),
+          y: y
         )
-        let end = Int(titleArea.x) + Int(titleArea.width)
-        for (span, lineStyle) in styledSpans where Int(cursor.x) < end {
+        let end = titleArea.x + titleArea.width
+        for (span, lineStyle) in styledSpans where cursor.x < end {
           cursor = buffer.setString(
             span.content,
             at: cursor,
             style: style.patching(titleStyle).patching(lineStyle).patching(span.style),
-            maxWidth: UInt16(clamping: end - Int(cursor.x))
+            maxWidth: (end - cursor.x)
           )
         }
       }
@@ -603,13 +596,15 @@ extension Block: IntrinsicSizeWidget where Content: IntrinsicSizeWidget {
     let horizontal = horizontalSpace
     let vertical = verticalSpace
     return Size(
-      width: UInt16(
-        clamping: Int(content.intrinsicSize.width) + Int(horizontal.leading)
-          + Int(horizontal.trailing)
-      ),
-      height: UInt16(
-        clamping: Int(content.intrinsicSize.height) + Int(vertical.top) + Int(vertical.bottom)
-      )
+      width: (content.intrinsicSize.width + horizontal.leading
+        + horizontal.trailing),
+      height: (content.intrinsicSize.height + vertical.top + vertical.bottom)
     )
   }
+}
+
+private func paddedSpace(_ padding: Int, decorated: Bool) -> Int {
+  let padding = max(0, padding)
+  guard decorated else { return padding }
+  return padding == Int.max ? Int.max : padding + 1
 }

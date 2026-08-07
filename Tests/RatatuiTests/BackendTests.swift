@@ -61,7 +61,7 @@ private final class PartiallyFailingOutput {
   }
 }
 
-private func historyBuffer(_ content: String, width: UInt16 = 10) -> Buffer {
+private func historyBuffer(_ content: String, width: Int = 10) -> Buffer {
   var buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: 1))
   buffer.setString(content, at: Position(x: 0, y: 0))
   return buffer
@@ -105,7 +105,7 @@ private func terminalOutputBackend() -> ANSIBackend {
     var backend = TestBackend(width: 1, height: 4)
     try backend.draw(
       ["A", "B", "C", "D"].enumerated().map {
-        CellUpdate(position: Position(x: 0, y: UInt16($0.offset)), cell: Cell(symbol: $0.element))
+        CellUpdate(position: Position(x: 0, y: Int($0.offset)), cell: Cell(symbol: $0.element))
       }
     )
 
@@ -135,7 +135,7 @@ private func terminalOutputBackend() -> ANSIBackend {
     var backend = TestBackend(width: 1, height: 5)
     try backend.draw(
       ["A", "B", "C", "D", "E"].enumerated().map {
-        CellUpdate(position: Position(x: 0, y: UInt16($0.offset)), cell: Cell(symbol: $0.element))
+        CellUpdate(position: Position(x: 0, y: Int($0.offset)), cell: Cell(symbol: $0.element))
       }
     )
     try backend.setCursor(Position(x: 0, y: 4))
@@ -507,7 +507,7 @@ private func terminalOutputBackend() -> ANSIBackend {
     try backend.draw(
       (0..<12).map {
         CellUpdate(
-          position: Position(x: UInt16($0 % 4), y: UInt16($0 / 4)),
+          position: Position(x: Int($0 % 4), y: Int($0 / 4)),
           cell: Cell(symbol: "X")
         )
       }

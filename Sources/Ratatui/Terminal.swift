@@ -185,7 +185,7 @@ public struct Terminal<BackendType: Backend> {
   /// Inserts rendered rows immediately above an inline viewport while keeping
   /// the retained viewport content intact.
   public mutating func insertBefore(
-    height: UInt16,
+    height: Int,
     batchPosition: HistoryInsertionBatchPosition = .single,
     _ render: (inout Buffer) throws -> Void
   ) throws where BackendType: InlineHistoryBackend {
@@ -209,34 +209,34 @@ public struct Terminal<BackendType: Backend> {
     }
     var consumed = 0
 
-    let viewportBottom = min(Int(screen.height), Int(origin.y) + Int(viewportHeight))
-    let spaceBelow = max(0, Int(screen.height) - viewportBottom)
-    let pushDown = min(Int(height), spaceBelow)
+    let viewportBottom = min(screen.height, origin.y + viewportHeight)
+    let spaceBelow = max(0, screen.height - viewportBottom)
+    let pushDown = min(height, spaceBelow)
     if pushDown > 0 {
       try backend.scrollRegionDown(
-        origin.y..<UInt16(clamping: viewportBottom + pushDown),
-        by: UInt16(clamping: pushDown)
+        origin.y..<(viewportBottom + pushDown),
+        by: pushDown
       )
       try drawRows(
         from: inserted,
         startingAt: consumed,
         count: pushDown,
-        screenY: Int(origin.y)
+        screenY: origin.y
       )
       consumed += pushDown
-      origin.y = UInt16(clamping: Int(origin.y) + pushDown)
+      origin.y = (origin.y + pushDown)
       try backend.setViewportOrigin(origin)
     }
 
-    while consumed < Int(height), origin.y > 0 {
-      let count = min(Int(height) - consumed, Int(origin.y))
+    while consumed < height, origin.y > 0 {
+      let count = min(height - consumed, origin.y)
       try backend.scrollRegionUpIntoScrollback(
-        0..<origin.y, by: UInt16(clamping: count))
+        0..<origin.y, by: count)
       try drawRows(
         from: inserted,
         startingAt: consumed,
         count: count,
-        screenY: Int(origin.y) - count
+        screenY: origin.y - count
       )
       consumed += count
     }
@@ -289,21 +289,21 @@ public struct Terminal<BackendType: Backend> {
     guard count > 0 else { return }
     let savedOrigin = backend.viewportOrigin
     try backend.setViewportOrigin(
-      Position(x: savedOrigin.x, y: UInt16(clamping: screenY))
+      Position(x: savedOrigin.x, y: screenY)
     )
     defer { try? backend.setViewportOrigin(savedOrigin) }
     var updates: [CellUpdate] = []
-    updates.reserveCapacity(Int(buffer.area.width) * count)
+    updates.reserveCapacity(buffer.area.width * count)
     for row in 0..<count {
-      for column in 0..<Int(buffer.area.width) {
+      for column in 0..<buffer.area.width {
         let source = Position(
-          x: UInt16(clamping: column),
-          y: UInt16(clamping: startRow + row)
+          x: column,
+          y: (startRow + row)
         )
         guard let cell = buffer.cell(at: source) else { continue }
         updates.append(
           CellUpdate(
-            position: Position(x: UInt16(clamping: column), y: UInt16(clamping: row)),
+            position: Position(x: column, y: row),
             cell: cell
           )
         )

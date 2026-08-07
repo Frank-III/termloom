@@ -65,14 +65,14 @@ public struct Buffer: Hashable, Sendable {
     _ string: String,
     at position: Position,
     style: Style = .plain,
-    maxWidth: UInt16? = nil
+    maxWidth: Int? = nil
   ) -> Position {
     guard area.contains(position) else { return position }
 
-    let areaEnd = Int(area.x) + Int(area.width)
-    let requestedEnd = maxWidth.map { Int(position.x) + Int($0) } ?? areaEnd
+    let areaEnd = area.x + area.width
+    let requestedEnd = maxWidth.map { position.x + Int($0) } ?? areaEnd
     let endX = min(areaEnd, requestedEnd)
-    var x = Int(position.x)
+    var x = position.x
 
     for character in string {
       let width = TerminalWidth.of(character)
@@ -82,9 +82,9 @@ public struct Buffer: Hashable, Sendable {
       }
       guard x + width <= endX else { break }
       for occupiedX in x..<(x + width) {
-        clearGlyph(at: Position(x: UInt16(clamping: occupiedX), y: position.y))
+        clearGlyph(at: Position(x: occupiedX, y: position.y))
       }
-      let cellPosition = Position(x: UInt16(clamping: x), y: position.y)
+      let cellPosition = Position(x: x, y: position.y)
       setCell(
         Cell(
           symbol: String(character),
@@ -98,26 +98,26 @@ public struct Buffer: Hashable, Sendable {
         for continuation in 1..<width {
           setCell(
             Cell(symbol: "", style: style, width: 0, isContinuation: true),
-            at: Position(x: UInt16(clamping: x + continuation), y: position.y)
+            at: Position(x: (x + continuation), y: position.y)
           )
         }
       }
       x += width
     }
-    return Position(x: UInt16(clamping: x), y: position.y)
+    return Position(x: x, y: position.y)
   }
 
   public mutating func fill(_ area: Rect, with cell: Cell) {
     let clipped = intersection(area, self.area)
     guard !clipped.isEmpty, cell.width == 1, !cell.isContinuation else { return }
-    for y in Int(clipped.y)..<(Int(clipped.y) + Int(clipped.height)) {
-      for x in Int(clipped.x)..<(Int(clipped.x) + Int(clipped.width)) {
-        clearGlyph(at: Position(x: UInt16(x), y: UInt16(y)))
+    for y in clipped.y..<(clipped.y + clipped.height) {
+      for x in clipped.x..<(clipped.x + clipped.width) {
+        clearGlyph(at: Position(x: x, y: y))
       }
     }
-    for y in Int(clipped.y)..<(Int(clipped.y) + Int(clipped.height)) {
-      for x in Int(clipped.x)..<(Int(clipped.x) + Int(clipped.width)) {
-        storage[index(of: Position(x: UInt16(x), y: UInt16(y)))] = cell
+    for y in clipped.y..<(clipped.y + clipped.height) {
+      for x in clipped.x..<(clipped.x + clipped.width) {
+        storage[index(of: Position(x: x, y: y))] = cell
       }
     }
   }
@@ -197,12 +197,12 @@ public struct Buffer: Hashable, Sendable {
 
   public func lines(trimmingTrailingWhitespace: Bool = false) -> [String] {
     guard area.width > 0, area.height > 0 else { return [] }
-    return (0..<Int(area.height)).map { row in
+    return (0..<area.height).map { row in
       var line = ""
-      for column in 0..<Int(area.width) {
+      for column in 0..<area.width {
         let position = Position(
-          x: UInt16(clamping: Int(area.x) + column),
-          y: UInt16(clamping: Int(area.y) + row)
+          x: (area.x + column),
+          y: (area.y + row)
         )
         let cell = storage[index(of: position)]
         if !cell.isContinuation {
@@ -225,62 +225,62 @@ public struct Buffer: Hashable, Sendable {
   }
 
   private func index(of position: Position) -> Int {
-    let row = Int(position.y) - Int(area.y)
-    let column = Int(position.x) - Int(area.x)
-    return row * Int(area.width) + column
+    let row = position.y - area.y
+    let column = position.x - area.x
+    return row * area.width + column
   }
 
   private func position(of index: Int) -> Position {
-    let width = max(1, Int(area.width))
+    let width = max(1, area.width)
     return Position(
-      x: UInt16(clamping: Int(area.x) + index % width),
-      y: UInt16(clamping: Int(area.y) + index / width)
+      x: (area.x + index % width),
+      y: (area.y + index / width)
     )
   }
 
   private mutating func clearGlyph(at position: Position) {
     guard area.contains(position) else { return }
-    var startX = Int(position.x)
-    while startX > Int(area.x) {
+    var startX = position.x
+    while startX > area.x {
       let cell = storage[
-        index(of: Position(x: UInt16(clamping: startX), y: position.y))
+        index(of: Position(x: startX, y: position.y))
       ]
       guard cell.isContinuation else { break }
       startX -= 1
     }
 
-    let start = Position(x: UInt16(clamping: startX), y: position.y)
+    let start = Position(x: startX, y: position.y)
     let width = max(1, Int(storage[index(of: start)].width))
-    let endX = min(Int(area.x) + Int(area.width), startX + width)
+    let endX = min(area.x + area.width, startX + width)
     for x in startX..<endX {
-      storage[index(of: Position(x: UInt16(clamping: x), y: position.y))] = .empty
+      storage[index(of: Position(x: x, y: position.y))] = .empty
     }
   }
 
-  private mutating func appendZeroWidth(_ character: Character, beforeX x: Int, y: UInt16) {
-    guard x > Int(area.x) else { return }
+  private mutating func appendZeroWidth(_ character: Character, beforeX x: Int, y: Int) {
+    guard x > area.x else { return }
     var targetX = x - 1
-    while targetX > Int(area.x) {
-      let position = Position(x: UInt16(clamping: targetX), y: y)
+    while targetX > area.x {
+      let position = Position(x: targetX, y: y)
       guard storage[index(of: position)].isContinuation else { break }
       targetX -= 1
     }
-    let position = Position(x: UInt16(clamping: targetX), y: y)
+    let position = Position(x: targetX, y: y)
     guard area.contains(position), !storage[index(of: position)].isContinuation else { return }
     storage[index(of: position)].symbol.append(contentsOf: String(character))
   }
 
   private func intersection(_ lhs: Rect, _ rhs: Rect) -> Rect {
-    let left = max(Int(lhs.x), Int(rhs.x))
-    let top = max(Int(lhs.y), Int(rhs.y))
-    let right = min(Int(lhs.x) + Int(lhs.width), Int(rhs.x) + Int(rhs.width))
-    let bottom = min(Int(lhs.y) + Int(lhs.height), Int(rhs.y) + Int(rhs.height))
+    let left = max(lhs.x, rhs.x)
+    let top = max(lhs.y, rhs.y)
+    let right = min(lhs.x + lhs.width, rhs.x + rhs.width)
+    let bottom = min(lhs.y + lhs.height, rhs.y + rhs.height)
     guard right > left, bottom > top else { return .zero }
     return Rect(
-      x: UInt16(clamping: left),
-      y: UInt16(clamping: top),
-      width: UInt16(clamping: right - left),
-      height: UInt16(clamping: bottom - top)
+      x: left,
+      y: top,
+      width: (right - left),
+      height: (bottom - top)
     )
   }
 }

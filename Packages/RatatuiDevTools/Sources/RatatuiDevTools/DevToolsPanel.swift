@@ -32,7 +32,7 @@ public struct DevToolsPanel: Widget, Hashable, Sendable {
     let inner = block.inner(area)
     guard !inner.isEmpty else { return }
 
-    let rows = summaryLines + logLines(limit: max(0, Int(inner.height) - summaryLines.count - 1))
+    let rows = summaryLines + logLines(limit: max(0, inner.height - summaryLines.count - 1))
     frame.render(
       Paragraph(Text(rows), wrap: .character, trimLeadingWhitespace: false),
       in: inner)

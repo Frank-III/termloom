@@ -115,7 +115,7 @@ public struct List<Row>: Widget, StatefulWidget {
     let bounds = visibleBounds(
       state: &state,
       heights: heights,
-      viewportHeight: Int(area.height)
+      viewportHeight: area.height
     )
     let markerWidth =
       highlightSpacing.reservesColumn(hasSelection: state.selected != nil)
@@ -127,9 +127,9 @@ public struct List<Row>: Widget, StatefulWidget {
       let y: Int
       switch direction {
       case .topToBottom:
-        y = Int(area.y) + consumedHeight
+        y = area.y + consumedHeight
       case .bottomToTop:
-        y = Int(area.y) + Int(area.height) - consumedHeight - rowHeight
+        y = area.y + area.height - consumedHeight - rowHeight
       }
       consumedHeight += rowHeight
       let isSelected = rowIndex == state.selected
@@ -138,22 +138,22 @@ public struct List<Row>: Widget, StatefulWidget {
         frame.buffer.fill(
           Rect(
             x: area.x,
-            y: UInt16(clamping: y),
+            y: y,
             width: area.width,
-            height: UInt16(clamping: rowHeight)
+            height: rowHeight
           ),
           with: Cell(symbol: " ", style: style)
         )
       }
       for lineIndex in 0..<rowHeight {
-        let lineY = UInt16(clamping: y + lineIndex)
+        let lineY = (y + lineIndex)
         if markerWidth > 0 {
           let showsMarker = isSelected && (lineIndex == 0 || repeatMarker)
           frame.buffer.setString(
             showsMarker ? marker : String(repeating: " ", count: markerWidth),
             at: Position(x: area.x, y: lineY),
             style: style,
-            maxWidth: UInt16(clamping: markerWidth)
+            maxWidth: markerWidth
           )
         }
         guard lineIndex < lines.count else { continue }
@@ -167,9 +167,9 @@ public struct List<Row>: Widget, StatefulWidget {
         }
         Paragraph(wrap: .none) { line }.render(
           in: Rect(
-            x: UInt16(clamping: Int(area.x) + markerWidth),
+            x: (area.x + markerWidth),
             y: lineY,
-            width: UInt16(clamping: max(0, Int(area.width) - markerWidth)),
+            width: (max(0, area.width - markerWidth)),
             height: 1
           ),
           into: &frame.buffer,
@@ -306,22 +306,22 @@ public struct Tabs: Widget, Hashable, Sendable {
     let horizontalOffset: Int
     switch alignment {
     case .leading: horizontalOffset = 0
-    case .center: horizontalOffset = max(0, (Int(area.width) - contentWidth) / 2)
-    case .trailing: horizontalOffset = max(0, Int(area.width) - contentWidth)
+    case .center: horizontalOffset = max(0, (area.width - contentWidth) / 2)
+    case .trailing: horizontalOffset = max(0, area.width - contentWidth)
     }
     var position = Position(
-      x: UInt16(clamping: Int(area.x) + horizontalOffset),
+      x: (area.x + horizontalOffset),
       y: area.y
     )
-    let end = Int(area.x) + Int(area.width)
+    let end = area.x + area.width
     for (index, title) in titles.enumerated() {
-      guard Int(position.x) < end else { break }
+      guard position.x < end else { break }
       if index > 0 {
         position = frame.buffer.setString(
           divider,
           at: position,
           style: style,
-          maxWidth: UInt16(clamping: end - Int(position.x))
+          maxWidth: (end - position.x)
         )
       }
       let activeStyle = index == selectedIndex ? style.patching(selectedStyle) : style
@@ -332,18 +332,18 @@ public struct Tabs: Widget, Hashable, Sendable {
         span.style = activeStyle.patching(span.style)
         return span
       }
-      let titleWidth = min(renderedTitle.width, max(0, end - Int(position.x)))
+      let titleWidth = min(renderedTitle.width, max(0, end - position.x))
       Paragraph(wrap: .none) { renderedTitle }.render(
         in: Rect(
           x: position.x,
           y: position.y,
-          width: UInt16(clamping: titleWidth),
+          width: titleWidth,
           height: 1
         ),
         into: &frame.buffer,
         environment: frame.environment
       )
-      position.x = UInt16(clamping: Int(position.x) + titleWidth)
+      position.x = (position.x + titleWidth)
       position = frame.buffer.setString(" ", at: position, style: activeStyle, maxWidth: 1)
     }
   }

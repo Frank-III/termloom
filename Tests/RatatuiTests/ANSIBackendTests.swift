@@ -109,6 +109,26 @@ import Testing
     #expect(output.contains("\u{1B}[6;6H\u{1B}[0mX"))
   }
 
+  @Test func ansiCoordinateSerializationSaturatesNativeIntegerOverflow() throws {
+    let pipe = Pipe()
+    var backend = ANSIBackend(
+      output: pipe.fileHandleForWriting,
+      fallbackSize: Size(width: 1, height: 1),
+      cursorAddressing: .absoluteOrigin(Position(x: .max, y: .max))
+    )
+
+    try backend.draw([
+      CellUpdate(position: Position(x: .max, y: .max), cell: Cell(symbol: "X"))
+    ])
+    try pipe.fileHandleForWriting.close()
+
+    let output = String(
+      decoding: pipe.fileHandleForReading.readDataToEndOfFile(),
+      as: UTF8.self
+    )
+    #expect(output.contains("\u{1B}[\(Int.max);\(Int.max)H\u{1B}[0mX"))
+  }
+
   @Test func inlineClearDoesNotEraseTheWholeTerminal() throws {
     let pipe = Pipe()
     var backend = ANSIBackend(

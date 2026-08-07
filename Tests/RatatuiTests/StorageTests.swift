@@ -4,10 +4,10 @@ import Testing
 
 @Suite struct StorageTests {
   @Test func hotValuesStayWithinMeasuredBudgets() {
-    #expect(MemoryLayout<Position>.stride == 4)
+    #expect(MemoryLayout<Position>.stride == 16)
     #expect(MemoryLayout<Style>.stride <= 16)
     #expect(MemoryLayout<Cell>.stride <= 32)
-    #expect(MemoryLayout<CellUpdate>.stride <= 40)
+    #expect(MemoryLayout<CellUpdate>.stride <= 48)
   }
 
   @Test func ordinaryTerminalBuffersRemainModest() {

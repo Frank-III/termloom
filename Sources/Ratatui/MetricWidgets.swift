@@ -38,10 +38,10 @@ public struct Gauge: Widget, Hashable, Sendable {
   public func render(in area: Rect, into frame: inout Frame) {
     guard !area.isEmpty else { return }
     let filled = Int((Double(area.width) * ratio).rounded(.down))
-    for x in 0..<Int(area.width) {
+    for x in 0..<area.width {
       frame.buffer.setString(
         String(x < filled ? symbols.filled : symbols.empty),
-        at: Position(x: UInt16(clamping: Int(area.x) + x), y: area.y),
+        at: Position(x: (area.x + x), y: area.y),
         style: x < filled ? filledStyle : emptyStyle
       )
     }
@@ -87,13 +87,13 @@ public struct LineGauge: Widget, Hashable, Sendable {
       style: style,
       maxWidth: area.width
     )
-    let start = min(Int(area.x) + Int(area.width), Int(labelEnd.x) + 1)
-    let end = Int(area.x) + Int(area.width)
+    let start = min(area.x + area.width, labelEnd.x + 1)
+    let end = area.x + area.width
     let filledEnd = start + Int((Double(max(0, end - start)) * ratio).rounded(.down))
     for x in start..<end {
       frame.buffer.setString(
         String(x < filledEnd ? filledSymbol : unfilledSymbol),
-        at: Position(x: UInt16(clamping: x), y: area.y),
+        at: Position(x: x, y: area.y),
         style: x < filledEnd ? filledStyle : unfilledStyle
       )
     }
@@ -190,20 +190,20 @@ public struct Sparkline: Widget, Hashable, Sendable {
 
   public func render(in area: Rect, into frame: inout Frame) {
     guard !area.isEmpty, !values.isEmpty else { return }
-    let visible = Array(values.prefix(Int(area.width)))
+    let visible = Array(values.prefix(area.width))
     let present = visible.compactMap { $0 }
     let range = bounds ?? (present.min() ?? 0)...(present.max() ?? 1)
     let extent = max(Double.ulpOfOne, range.upperBound - range.lowerBound)
     for (index, value) in visible.enumerated() {
       let x =
         direction == .leftToRight
-        ? Int(area.x) + index
-        : Int(area.x) + Int(area.width) - index - 1
+        ? area.x + index
+        : area.x + area.width - index - 1
       guard let value else {
-        for row in 0..<Int(area.height) {
+        for row in 0..<area.height {
           frame.buffer.setString(
             String(absentValueSymbol),
-            at: Position(x: UInt16(clamping: x), y: UInt16(clamping: Int(area.y) + row)),
+            at: Position(x: x, y: (area.y + row)),
             style: style.patching(absentValueStyle)
           )
         }
@@ -215,17 +215,17 @@ public struct Sparkline: Widget, Hashable, Sendable {
         let symbolIndex = min(8, max(0, Int(normalized * 8)))
         frame.buffer.setString(
           String(symbolSet[symbolIndex]),
-          at: Position(x: UInt16(clamping: x), y: area.y),
+          at: Position(x: x, y: area.y),
           style: valueStyle
         )
       } else {
-        var ticks = Int(normalized * Double(Int(area.height) * 8))
-        for row in (0..<Int(area.height)).reversed() {
+        var ticks = Int(normalized * Double(area.height * 8))
+        for row in (0..<area.height).reversed() {
           let rowTicks = min(8, ticks)
           let symbol = String(symbolSet[rowTicks])
           frame.buffer.setString(
             symbol,
-            at: Position(x: UInt16(clamping: x), y: UInt16(clamping: Int(area.y) + row)),
+            at: Position(x: x, y: (area.y + row)),
             style: valueStyle
           )
           ticks = max(0, ticks - 8)
@@ -272,9 +272,9 @@ public enum BarChartDirection: Hashable, Sendable {
 public struct BarChart: Widget, Hashable, Sendable {
   public var groups: [BarGroup]
   public var maximum: Double?
-  public var barWidth: UInt16
-  public var spacing: UInt16
-  public var groupSpacing: UInt16
+  public var barWidth: Int { didSet { barWidth = max(1, barWidth) } }
+  public var spacing: Int { didSet { spacing = max(0, spacing) } }
+  public var groupSpacing: Int { didSet { groupSpacing = max(0, groupSpacing) } }
   public var direction: BarChartDirection
   public var showsValues: Bool
 
@@ -286,16 +286,16 @@ public struct BarChart: Widget, Hashable, Sendable {
   public init(
     _ bars: [Bar],
     maximum: Double? = nil,
-    barWidth: UInt16 = 3,
-    spacing: UInt16 = 1,
+    barWidth: Int = 3,
+    spacing: Int = 1,
     direction: BarChartDirection = .vertical,
     showsValues: Bool = false
   ) {
     groups = [BarGroup(bars: bars)]
     self.maximum = maximum
     self.barWidth = max(1, barWidth)
-    self.spacing = spacing
-    groupSpacing = spacing
+    self.spacing = max(0, spacing)
+    groupSpacing = max(0, spacing)
     self.direction = direction
     self.showsValues = showsValues
   }
@@ -303,17 +303,17 @@ public struct BarChart: Widget, Hashable, Sendable {
   public init(
     groups: [BarGroup],
     maximum: Double? = nil,
-    barWidth: UInt16 = 3,
-    spacing: UInt16 = 1,
-    groupSpacing: UInt16 = 2,
+    barWidth: Int = 3,
+    spacing: Int = 1,
+    groupSpacing: Int = 2,
     direction: BarChartDirection = .vertical,
     showsValues: Bool = false
   ) {
     self.groups = groups
     self.maximum = maximum
     self.barWidth = max(1, barWidth)
-    self.spacing = spacing
-    self.groupSpacing = groupSpacing
+    self.spacing = max(0, spacing)
+    self.groupSpacing = max(0, groupSpacing)
     self.direction = direction
     self.showsValues = showsValues
   }
@@ -347,11 +347,11 @@ public struct BarChart: Widget, Hashable, Sendable {
   ) {
     let hasGroupLabels = groups.contains { $0.label != nil }
     let labelRows = hasGroupLabels ? 2 : 1
-    let plotHeight = max(0, Int(area.height) - labelRows)
+    let plotHeight = max(0, area.height - labelRows)
     guard plotHeight > 0 else { return }
     let partialSymbols = Array("▁▂▃▄▅▆▇")
-    var x = Int(area.x)
-    let end = Int(area.x) + Int(area.width)
+    var x = area.x
+    let end = area.x + area.width
     for (groupIndex, group) in groups.enumerated() where x < end {
       let groupStart = x
       for bar in group.bars where x < end {
@@ -367,8 +367,8 @@ public struct BarChart: Widget, Hashable, Sendable {
             buffer.setString(
               symbol,
               at: Position(
-                x: UInt16(clamping: x + column),
-                y: UInt16(clamping: Int(area.y) + plotHeight - 1 - row)
+                x: (x + column),
+                y: (area.y + plotHeight - 1 - row)
               ),
               style: bar.style
             )
@@ -378,9 +378,9 @@ public struct BarChart: Widget, Hashable, Sendable {
           let value = bar.valueLabel ?? String(format: "%g", bar.value)
           Text(value, style: bar.style, alignment: .center).render(
             in: Rect(
-              x: UInt16(clamping: x),
-              y: UInt16(clamping: max(Int(area.y), Int(area.y) + plotHeight - (ticks + 7) / 8)),
-              width: min(barWidth, UInt16(clamping: end - x)),
+              x: x,
+              y: (max(area.y, area.y + plotHeight - (ticks + 7) / 8)),
+              width: min(barWidth, (end - x)),
               height: 1
             ),
             into: &buffer,
@@ -389,9 +389,9 @@ public struct BarChart: Widget, Hashable, Sendable {
         }
         Text(bar.label, style: bar.style, alignment: .center).render(
           in: Rect(
-            x: UInt16(clamping: x),
-            y: UInt16(clamping: Int(area.y) + plotHeight),
-            width: min(barWidth, UInt16(clamping: end - x)),
+            x: x,
+            y: (area.y + plotHeight),
+            width: min(barWidth, (end - x)),
             height: 1
           ),
           into: &buffer,
@@ -403,9 +403,9 @@ public struct BarChart: Widget, Hashable, Sendable {
       if let label = group.label {
         Text(label, alignment: .center).render(
           in: Rect(
-            x: UInt16(clamping: groupStart),
-            y: UInt16(clamping: Int(area.y) + plotHeight + 1),
-            width: UInt16(clamping: max(0, min(end, x) - groupStart)),
+            x: groupStart,
+            y: (area.y + plotHeight + 1),
+            width: (max(0, min(end, x) - groupStart)),
             height: 1
           ),
           into: &buffer,
@@ -422,18 +422,18 @@ public struct BarChart: Widget, Hashable, Sendable {
     environment: RenderEnvironment,
     maximum: Double
   ) {
-    let visibleBars = Array(bars.prefix(Int(area.height)))
+    let visibleBars = Array(bars.prefix(area.height))
     let labelWidth = min(
-      max(0, Int(area.width) / 3),
+      max(0, area.width / 3),
       visibleBars.map { TerminalWidth.of($0.label) }.max() ?? 0
     )
-    let plotStart = Int(area.x) + (labelWidth > 0 ? labelWidth + 1 : 0)
-    let plotWidth = max(0, Int(area.x) + Int(area.width) - plotStart)
+    let plotStart = area.x + (labelWidth > 0 ? labelWidth + 1 : 0)
+    let plotWidth = max(0, area.x + area.width - plotStart)
     let partialSymbols = Array("▏▎▍▌▋▊▉")
     for (row, bar) in visibleBars.enumerated() {
-      let y = UInt16(clamping: Int(area.y) + row)
+      let y = (area.y + row)
       Text(bar.label, style: bar.style, alignment: .trailing).render(
-        in: Rect(x: area.x, y: y, width: UInt16(clamping: labelWidth), height: 1),
+        in: Rect(x: area.x, y: y, width: labelWidth, height: 1),
         into: &buffer,
         environment: environment
       )
@@ -445,16 +445,16 @@ public struct BarChart: Widget, Hashable, Sendable {
       if full > 0 {
         buffer.setString(
           String(repeating: "█", count: full),
-          at: Position(x: UInt16(clamping: plotStart), y: y),
+          at: Position(x: plotStart, y: y),
           style: bar.style,
-          maxWidth: UInt16(clamping: plotWidth)
+          maxWidth: plotWidth
         )
       }
       let remainder = ticks % 8
       if remainder > 0, full < plotWidth {
         buffer.setString(
           String(partialSymbols[remainder - 1]),
-          at: Position(x: UInt16(clamping: plotStart + full), y: y),
+          at: Position(x: (plotStart + full), y: y),
           style: bar.style
         )
       }
@@ -462,9 +462,9 @@ public struct BarChart: Widget, Hashable, Sendable {
         let value = bar.valueLabel ?? String(format: "%g", bar.value)
         buffer.setString(
           value,
-          at: Position(x: UInt16(clamping: plotStart), y: y),
+          at: Position(x: plotStart, y: y),
           style: bar.style,
-          maxWidth: UInt16(clamping: plotWidth)
+          maxWidth: plotWidth
         )
       }
     }
@@ -551,7 +551,7 @@ public struct Scrollbar: Widget, StatefulWidget, Hashable, Sendable {
     state: inout ScrollbarState
   ) {
     state.scroll(to: state.position)
-    let length = orientation.isVertical ? Int(area.height) : Int(area.width)
+    let length = orientation.isVertical ? area.height : area.width
     guard length > 0 else { return }
     let leading = beginSymbol == nil ? 0 : 1
     let trailing = endSymbol == nil ? 0 : 1
@@ -577,18 +577,18 @@ public struct Scrollbar: Widget, StatefulWidget, Hashable, Sendable {
       let point: Position
       switch orientation {
       case .vertical, .verticalLeft:
-        point = Position(x: area.x, y: UInt16(clamping: Int(area.y) + offset))
+        point = Position(x: area.x, y: (area.y + offset))
       case .verticalRight:
         point = Position(
-          x: UInt16(clamping: Int(area.x) + Int(area.width) - 1),
-          y: UInt16(clamping: Int(area.y) + offset)
+          x: (area.x + area.width - 1),
+          y: (area.y + offset)
         )
       case .horizontal, .horizontalTop:
-        point = Position(x: UInt16(clamping: Int(area.x) + offset), y: area.y)
+        point = Position(x: (area.x + offset), y: area.y)
       case .horizontalBottom:
         point = Position(
-          x: UInt16(clamping: Int(area.x) + offset),
-          y: UInt16(clamping: Int(area.y) + Int(area.height) - 1)
+          x: (area.x + offset),
+          y: (area.y + area.height - 1)
         )
       }
       frame.buffer.setString(

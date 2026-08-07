@@ -5,6 +5,22 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Swift-native terminal geometry
+
+- **Supported breaking migration:** application-facing coordinates and extents now use Swift `Int`. This includes
+  `Position`, `Size`, `Rect`, `Insets`, layout constraints and spacing, buffer widths, paragraph scroll offsets,
+  widget dimensions, viewport heights, backend region movement, and fixed/inline session geometry.
+- **Migration:** remove `UInt16(clamping:)` and `Int(...)` conversion glue from layout and rendering code. Convert only
+  where a real fixed-width boundary requires it, such as `winsize`, terminal-emulator APIs, or a serialized wire
+  protocol. Geometry constructors and mutable geometry fields normalize negative values to zero; rectangle edge and
+  offset arithmetic saturates on integer overflow.
+- **Performance:** `Position` now occupies 16 bytes and `CellUpdate` 48 bytes on 64-bit platforms. The larger hot values
+  are an intentional tradeoff for native collection arithmetic and removal of pervasive client conversions.
+- **Evidence:** native-range and mutation regressions cover negative normalization, mutable rectangle invariants, ANSI
+  serialization, and overflow saturation; extreme constraints, fill weights, and spacing no longer overflow layout arithmetic.
+  Root PTY tests, Postcat, DiffScope, ecosystem packages, Codex, and Herdr
+  validate rendering, lifecycle, inline-history, fixed-viewport, and production-client behavior.
+
 ### Text, line, and empty-block construction ergonomics
 
 - **Supported:** `Text` preserves leading and consecutive empty rows while retaining its established single

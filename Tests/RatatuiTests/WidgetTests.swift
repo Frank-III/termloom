@@ -160,8 +160,8 @@ import Testing
       """
     }
 
-    for y: UInt16 in 0..<3 {
-      for x: UInt16 in 0..<10 {
+    for y: Int in 0..<3 {
+      for x: Int in 0..<10 {
         #expect(buffer.cell(at: Position(x: x, y: y))?.style.background == .green)
       }
     }
@@ -869,7 +869,7 @@ import Testing
     func table(
       selectedRow: Int?,
       spacing: HighlightSpacing,
-      width: UInt16 = 15
+      width: Int = 15
     ) -> Buffer {
       var buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: 2))
       Table(
@@ -1044,8 +1044,8 @@ import Testing
   @Test func tableColumnConstraintsMatchUpstreamSolverBoundaries() {
     func areas(
       _ constraints: [Constraint],
-      width: UInt16,
-      selectionWidth: UInt16 = 0,
+      width: Int,
+      selectionWidth: Int = 0,
       flex: Flex = .start
     ) -> [Rect] {
       Table<TableRow>.resolveColumnAreas(
@@ -1175,7 +1175,7 @@ import Testing
   }
 
   @Test func tableMixedConstraintsRespectUpstreamPriorityOrdering() {
-    func widths(_ constraints: [Constraint], flex: Flex = .legacy) -> [UInt16] {
+    func widths(_ constraints: [Constraint], flex: Flex = .legacy) -> [Int] {
       Table<TableRow>.resolveColumnAreas(
         in: Rect(x: 0, y: 0, width: 100, height: 1),
         constraints: constraints,
@@ -1184,7 +1184,7 @@ import Testing
       ).map(\.width)
     }
 
-    let legacyCases: [([Constraint], [UInt16])] = [
+    let legacyCases: [([Constraint], [Int])] = [
       ([.length(25), .length(25)], [25, 75]),
       ([.length(25), .percentage(25)], [25, 75]),
       ([.percentage(25), .length(25)], [75, 25]),
@@ -1268,8 +1268,8 @@ import Testing
   }
 
   @Test func rowOwnedTableCellsMatchUpstreamSequentialSpanConsumption() {
-    func render(_ rows: [TableRow], width: UInt16, columnCount: Int) -> Buffer {
-      var buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: UInt16(rows.count)))
+    func render(_ rows: [TableRow], width: Int, columnCount: Int) -> Buffer {
+      var buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: rows.count))
       Table(rows, widths: Array(repeating: .length(5), count: columnCount))
         .render(in: buffer.area, into: &buffer)
       return buffer
@@ -1608,7 +1608,7 @@ import Testing
     let clamped = TableRowConfiguration(height: -1, topMargin: -2, bottomMargin: Int.max)
     #expect(clamped.height == 0)
     #expect(clamped.topMargin == 0)
-    #expect(clamped.bottomMargin == Int(UInt16.max))
+    #expect(clamped.bottomMargin == Int.max)
   }
 
   @Test func tableIncludesAPartialTrailingRowLikeUpstream() {
@@ -1905,7 +1905,7 @@ import Testing
       .custom("+"), .dot,
     ]
     var buffer = Buffer(
-      area: Rect(x: 0, y: 0, width: UInt16(markers.count * 5), height: 10),
+      area: Rect(x: 0, y: 0, width: Int(markers.count * 5), height: 10),
       repeating: Cell(symbol: "x")
     )
     for (index, marker) in markers.enumerated() {
@@ -1924,7 +1924,7 @@ import Testing
         ],
         marker: marker
       ).render(
-        in: Rect(x: UInt16(index * 5), y: 0, width: 5, height: 5),
+        in: Rect(x: Int(index * 5), y: 0, width: 5, height: 5),
         into: &buffer
       )
       Canvas(
@@ -1942,7 +1942,7 @@ import Testing
         ],
         marker: marker
       ).render(
-        in: Rect(x: UInt16(index * 5), y: 5, width: 5, height: 5),
+        in: Rect(x: Int(index * 5), y: 5, width: 5, height: 5),
         into: &buffer
       )
     }

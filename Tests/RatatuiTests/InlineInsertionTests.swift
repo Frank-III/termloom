@@ -14,10 +14,10 @@ private struct VisualOnlyHistoryBackend: InlineHistoryBackend {
   mutating func size() throws -> Size { Size(width: 4, height: 1) }
   mutating func draw(_ updates: [CellUpdate]) throws {}
   mutating func clear() throws {}
-  mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws {
+  mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws {
     visualScrollCount += 1
   }
-  mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws {}
+  mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws {}
 }
 
 @Suite struct InlineInsertionTests {
@@ -31,7 +31,7 @@ private struct VisualOnlyHistoryBackend: InlineHistoryBackend {
       for (column, character) in line.enumerated() {
         backend.setScreenCell(
           Cell(symbol: String(character)),
-          at: Position(x: UInt16(column), y: UInt16(row))
+          at: Position(x: column, y: row)
         )
       }
     }
@@ -68,7 +68,7 @@ private struct VisualOnlyHistoryBackend: InlineHistoryBackend {
       for column in 0..<10 {
         backend.setScreenCell(
           Cell(symbol: String(row)),
-          at: Position(x: UInt16(column), y: UInt16(row))
+          at: Position(x: column, y: row)
         )
       }
     }

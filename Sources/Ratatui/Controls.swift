@@ -486,7 +486,7 @@ public struct TextField: Widget, StatefulWidget {
   ) {
     guard !area.isEmpty else { return }
     state.reconcile()
-    state.horizontalOffset = state.resolvedHorizontalOffset(viewportWidth: Int(area.width))
+    state.horizontalOffset = state.resolvedHorizontalOffset(viewportWidth: area.width)
     let isFocused = frame.environment.focusedControl == id
     let activeStyle = isFocused ? style.patching(focusedStyle) : style
     frame.buffer.fill(area, with: Cell(symbol: " ", style: activeStyle))
@@ -506,16 +506,16 @@ public struct TextField: Widget, StatefulWidget {
         let width = TerminalWidth.of(character)
         defer { sourceColumn += width }
         guard sourceColumn + width > state.horizontalOffset else { continue }
-        guard targetColumn + width <= Int(area.width) else { break }
+        guard targetColumn + width <= area.width else { break }
         let selected = state.selection?.contains(index) == true
         frame.buffer.setString(
           String(character),
           at: Position(
-            x: UInt16(clamping: Int(area.x) + targetColumn),
+            x: (area.x + targetColumn),
             y: area.y
           ),
           style: selected ? activeStyle.patching(selectionStyle) : activeStyle,
-          maxWidth: UInt16(clamping: Int(area.width) - targetColumn)
+          maxWidth: (area.width - targetColumn)
         )
         targetColumn += width
       }
@@ -527,7 +527,7 @@ public struct TextField: Widget, StatefulWidget {
         TerminalWidth.of(String(characters.prefix(state.cursor))) - state.horizontalOffset
       frame.placeCursor(
         at: Position(
-          x: UInt16(clamping: Int(area.x) + min(max(0, column), Int(area.width) - 1)),
+          x: (area.x + min(max(0, column), area.width - 1)),
           y: area.y
         ))
     }

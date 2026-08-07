@@ -53,32 +53,32 @@ public struct TextArea: Widget, StatefulWidget {
     if state.lines.count == 1, state.lines[0].isEmpty, !placeholder.isEmpty {
       frame.buffer.setString(
         placeholder,
-        at: Position(x: area.x + UInt16(clamping: gutter), y: area.y),
+        at: Position(x: area.x + gutter, y: area.y),
         style: activeStyle.adding(.dim),
-        maxWidth: UInt16(clamping: max(0, Int(area.width) - gutter)))
+        maxWidth: (max(0, area.width - gutter)))
     } else {
       let visibleRows =
         state
         .verticalOffset..<min(
-          state.lines.count, state.verticalOffset + Int(area.height))
+          state.lines.count, state.verticalOffset + area.height)
       for sourceRow in visibleRows {
-        let targetY = Int(area.y) + sourceRow - state.verticalOffset
+        let targetY = area.y + sourceRow - state.verticalOffset
         if showsLineNumbers {
           let number = String(sourceRow + 1)
           let label = String(repeating: " ", count: max(0, gutter - 1 - number.count)) + number
           frame.buffer.setString(
             label + " ",
-            at: Position(x: area.x, y: UInt16(clamping: targetY)),
+            at: Position(x: area.x, y: targetY),
             style: lineNumberStyle,
-            maxWidth: UInt16(clamping: gutter))
+            maxWidth: gutter)
         }
         renderLine(
           state.lines[sourceRow],
           sourceRow: sourceRow,
           at: Position(
-            x: area.x + UInt16(clamping: gutter),
-            y: UInt16(clamping: targetY)),
-          width: max(0, Int(area.width) - gutter),
+            x: area.x + gutter,
+            y: targetY),
+          width: max(0, area.width - gutter),
           horizontalOffset: state.horizontalOffset,
           selection: state.selectedRange,
           style: activeStyle,
@@ -96,14 +96,13 @@ public struct TextArea: Widget, StatefulWidget {
     let gutter = gutterWidth(for: state)
     state.ensureCursorVisible(viewport: area.size, gutterWidth: gutter)
     let row = state.cursor.row - state.verticalOffset
-    guard row >= 0, row < Int(area.height) else { return nil }
+    guard row >= 0, row < area.height else { return nil }
     let prefix = String(state.lines[state.cursor.row].prefix(state.cursor.column))
     let column = TerminalWidth.of(prefix) - state.horizontalOffset
     return Position(
-      x: UInt16(
-        clamping: Int(area.x) + gutter
-          + min(max(0, column), max(0, Int(area.width) - gutter - 1))),
-      y: UInt16(clamping: Int(area.y) + row))
+      x: (area.x + gutter
+        + min(max(0, column), max(0, area.width - gutter - 1))),
+      y: (area.y + row))
   }
 
   private func gutterWidth(for state: TextAreaState) -> Int {
@@ -132,9 +131,9 @@ public struct TextArea: Widget, StatefulWidget {
       let selected = selection.map { position >= $0.lower && position < $0.upper } ?? false
       buffer.setString(
         String(character),
-        at: Position(x: origin.x + UInt16(clamping: targetColumn), y: origin.y),
+        at: Position(x: origin.x + targetColumn, y: origin.y),
         style: selected ? style.patching(selectionStyle) : style,
-        maxWidth: UInt16(clamping: width - targetColumn))
+        maxWidth: (width - targetColumn))
       targetColumn += characterWidth
     }
   }

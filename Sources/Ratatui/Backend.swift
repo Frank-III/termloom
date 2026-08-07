@@ -69,7 +69,7 @@ public protocol Backend {
 
 /// Optional backend facet for terminals that can append physical lines below the cursor.
 public protocol LineAppendingBackend: Backend {
-  mutating func appendLines(_ count: UInt16) throws
+  mutating func appendLines(_ count: Int) throws
 }
 
 /// Optional backend facet required by inline native-history insertion.
@@ -90,12 +90,12 @@ public protocol InlineHistoryBackend: Backend {
     batchPosition: HistoryInsertionBatchPosition,
     restoring viewport: Buffer?
   ) throws -> Bool
-  mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws
+  mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws
   /// Scroll a top-anchored region while retaining displaced rows in native terminal scrollback.
   /// This is distinct from visual CSI region scrolling, whose discarded rows are not history in
   /// several terminal emulators.
-  mutating func scrollRegionUpIntoScrollback(_ rows: Range<UInt16>, by count: UInt16) throws
-  mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws
+  mutating func scrollRegionUpIntoScrollback(_ rows: Range<Int>, by count: Int) throws
+  mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws
 }
 
 extension Backend {
@@ -131,17 +131,17 @@ extension InlineHistoryBackend {
     guard inserted, finishesBatch, let viewport else { return inserted }
 
     var updates: [CellUpdate] = []
-    updates.reserveCapacity(Int(viewport.area.width) * Int(viewport.area.height))
-    for row in 0..<Int(viewport.area.height) {
-      for column in 0..<Int(viewport.area.width) {
+    updates.reserveCapacity(viewport.area.width * viewport.area.height)
+    for row in 0..<viewport.area.height {
+      for column in 0..<viewport.area.width {
         let source = Position(
-          x: UInt16(clamping: Int(viewport.area.x) + column),
-          y: UInt16(clamping: Int(viewport.area.y) + row)
+          x: (viewport.area.x + column),
+          y: (viewport.area.y + row)
         )
         guard let cell = viewport.cell(at: source) else { continue }
         updates.append(
           CellUpdate(
-            position: Position(x: UInt16(clamping: column), y: UInt16(clamping: row)),
+            position: Position(x: column, y: row),
             cell: cell
           ))
       }
@@ -150,7 +150,7 @@ extension InlineHistoryBackend {
     return true
   }
   public mutating func scrollRegionUpIntoScrollback(
-    _ rows: Range<UInt16>, by count: UInt16
+    _ rows: Range<Int>, by count: Int
   ) throws {
     throw BackendOperationError.unsupported("native scrollback insertion")
   }
@@ -174,7 +174,7 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     inlineViewportArea.map { Position(x: $0.x, y: $0.y) } ?? Position(x: 0, y: 0)
   }
 
-  public init(width: UInt16, height: UInt16) {
+  public init(width: Int, height: Int) {
     buffer = Buffer(
       area: Rect(x: 0, y: 0, width: width, height: height)
     )
@@ -185,7 +185,7 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     inlineViewportArea = nil
   }
 
-  public init(screenWidth: UInt16, screenHeight: UInt16, viewport: Rect) {
+  public init(screenWidth: Int, screenHeight: Int, viewport: Rect) {
     buffer = Buffer(area: Rect(x: 0, y: 0, width: screenWidth, height: screenHeight))
     cursorPosition = nil
     cursorStyle = .defaultUserShape
@@ -214,8 +214,8 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       buffer.setCell(
         update.cell,
         at: Position(
-          x: UInt16(clamping: Int(viewportOrigin.x) + Int(update.position.x)),
-          y: UInt16(clamping: Int(viewportOrigin.y) + Int(update.position.y))
+          x: (viewportOrigin.x + update.position.x),
+          y: (viewportOrigin.y + update.position.y)
         )
       )
     }
@@ -233,10 +233,10 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     guard region != .all else { return try clear() }
     guard buffer.area.width > 0, buffer.area.height > 0 else { return }
     let cursor = cursorPosition ?? Position(x: 0, y: 0)
-    let width = Int(buffer.area.width)
-    let height = Int(buffer.area.height)
-    let cursorX = min(width - 1, Int(cursor.x))
-    let cursorY = min(height - 1, Int(cursor.y))
+    let width = buffer.area.width
+    let height = buffer.area.height
+    let cursorX = min(width - 1, cursor.x)
+    let cursorY = min(height - 1, cursor.y)
 
     func shouldClear(x: Int, y: Int) -> Bool {
       switch region {
@@ -249,7 +249,7 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     }
     for y in 0..<height {
       for x in 0..<width where shouldClear(x: x, y: y) {
-        buffer.setCell(.empty, at: Position(x: UInt16(x), y: UInt16(y)))
+        buffer.setCell(.empty, at: Position(x: x, y: y))
       }
     }
   }
@@ -271,7 +271,7 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     inlineViewportArea = viewport
   }
 
-  public mutating func resize(width: UInt16, height: UInt16) {
+  public mutating func resize(width: Int, height: Int) {
     buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: height))
     inlineViewportArea = nil
   }
@@ -280,22 +280,23 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     buffer.setCell(cell, at: position)
   }
 
-  public mutating func appendLines(_ count: UInt16) throws {
+  public mutating func appendLines(_ count: Int) throws {
     guard count > 0, buffer.area.width > 0, buffer.area.height > 0 else { return }
     let cursor = cursorPosition ?? Position(x: 0, y: 0)
-    let lastRow = Int(buffer.area.height) - 1
-    let linesAfterCursor = max(0, lastRow - Int(cursor.y))
-    let overflow = max(0, Int(count) - linesAfterCursor)
+    let lastRow = buffer.area.height - 1
+    let linesAfterCursor = max(0, lastRow - cursor.y)
+    let overflow = max(0, count - linesAfterCursor)
     if overflow > 0 {
-      try scrollRegionUp(0..<buffer.area.height, by: UInt16(clamping: overflow))
+      try scrollRegionUp(0..<buffer.area.height, by: overflow)
     }
+    let advanced = cursor.offset(by: Offset(x: 1, y: count))
     cursorPosition = Position(
-      x: UInt16(clamping: min(Int(cursor.x) + 1, Int(buffer.area.width) - 1)),
-      y: UInt16(clamping: min(lastRow, Int(cursor.y) + Int(count)))
+      x: min(advanced.x, buffer.area.width - 1),
+      y: min(lastRow, advanced.y)
     )
   }
 
-  public mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws {
+  public mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws {
     let range = clipped(rows)
     guard !range.isEmpty, count > 0 else { return }
     let amount = min(range.count, Int(count))
@@ -315,12 +316,12 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   }
 
   public mutating func scrollRegionUpIntoScrollback(
-    _ rows: Range<UInt16>, by count: UInt16
+    _ rows: Range<Int>, by count: Int
   ) throws {
     try scrollRegionUp(rows, by: count)
   }
 
-  public mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws {
+  public mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws {
     let range = clipped(rows)
     guard !range.isEmpty, count > 0 else { return }
     let amount = min(range.count, Int(count))
@@ -330,35 +331,31 @@ public struct TestBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     }
   }
 
-  private func clipped(_ rows: Range<UInt16>) -> Range<Int> {
-    let lower = min(Int(buffer.area.height), Int(rows.lowerBound))
-    let upper = min(Int(buffer.area.height), Int(rows.upperBound))
+  private func clipped(_ rows: Range<Int>) -> Range<Int> {
+    let lower = min(buffer.area.height, rows.lowerBound)
+    let upper = min(buffer.area.height, rows.upperBound)
     return min(lower, upper)..<max(lower, upper)
   }
 
   private func row(_ y: Int) -> [Cell] {
-    (0..<Int(buffer.area.width)).compactMap {
-      buffer.cell(at: Position(x: UInt16(clamping: $0), y: UInt16(clamping: y)))
+    (0..<buffer.area.width).compactMap {
+      buffer.cell(at: Position(x: ($0), y: y))
     }
   }
 
   private func emptyRow() -> [Cell] {
-    Array(repeating: .empty, count: Int(buffer.area.width))
+    Array(repeating: .empty, count: buffer.area.width)
   }
 
   private mutating func appendToScrollback(_ rows: [[Cell]]) {
     scrollback.append(contentsOf: rows)
-    let overflow = max(0, scrollback.count - Int(UInt16.max))
-    if overflow > 0 {
-      scrollback.removeFirst(overflow)
-    }
   }
 
   private mutating func writeRow(_ cells: [Cell]?, to y: Int) {
-    for x in 0..<Int(buffer.area.width) {
+    for x in 0..<buffer.area.width {
       buffer.setCell(
         cells?[x] ?? .empty,
-        at: Position(x: UInt16(clamping: x), y: UInt16(clamping: y))
+        at: Position(x: x, y: y)
       )
     }
   }

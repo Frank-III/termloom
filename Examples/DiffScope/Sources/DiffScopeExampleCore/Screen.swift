@@ -148,9 +148,8 @@ public struct DiffScopeScreen: Widget, Sendable {
       let prefix = String(query.text.prefix(query.cursor))
       frame.placeCursor(
         at: Position(
-          x: UInt16(
-            clamping: Int(inner.x) + 8
-              + min(TerminalWidth.of(prefix), Int(inner.width) - 9)),
+          x: (inner.x + 8
+            + min(TerminalWidth.of(prefix), inner.width - 9)),
           y: inner.y),
         style: .steadyBar)
     }
@@ -163,10 +162,10 @@ public struct DiffScopeScreen: Widget, Sendable {
         .render(in: content, into: &frame)
       return
     }
-    let viewport = fileViewport(capacity: Int(content.height))
+    let viewport = fileViewport(capacity: content.height)
     for (row, index) in viewport.range.enumerated() {
       let file = files[index]
-      let y = UInt16(clamping: Int(content.y) + row)
+      let y = (content.y + row)
       let isSelected = file.id == selectedFileID
       if !showsHelp {
         frame.addInteraction(
@@ -187,8 +186,8 @@ public struct DiffScopeScreen: Widget, Sendable {
       let prefixWidth = 5
       let statsWidth =
         repository.aggregateStatsAvailable
-        ? min(15, max(0, Int(content.width) - prefixWidth)) : 0
-      let pathWidth = max(0, Int(content.width) - prefixWidth - statsWidth)
+        ? min(15, max(0, content.width - prefixWidth)) : 0
+      let pathWidth = max(0, content.width - prefixWidth - statsWidth)
       Line([
         Span(
           "\(marker) ",
@@ -200,22 +199,22 @@ public struct DiffScopeScreen: Widget, Sendable {
           file.path,
           style: Style(foreground: isSelected ? DiffScopeTheme.foreground : DiffScopeTheme.pale)),
       ]).render(
-        in: Rect(x: content.x, y: y, width: UInt16(clamping: prefixWidth + pathWidth), height: 1),
+        in: Rect(x: content.x, y: y, width: (prefixWidth + pathWidth), height: 1),
         into: &frame)
       if statsWidth > 0 {
         Line(stats, style: Style(foreground: DiffScopeTheme.dim), alignment: .trailing)
           .render(
             in: Rect(
-              x: UInt16(clamping: Int(content.right) - statsWidth),
+              x: (content.right - statsWidth),
               y: y,
-              width: UInt16(clamping: statsWidth),
+              width: statsWidth,
               height: 1),
             into: &frame)
       }
     }
     Scrollbar(
       contentLength: files.count,
-      viewportLength: Int(content.height),
+      viewportLength: content.height,
       position: viewport.range.lowerBound,
       orientation: .verticalRight,
       style: Style(foreground: DiffScopeTheme.border),
@@ -279,17 +278,17 @@ public struct DiffScopeScreen: Widget, Sendable {
         .render(in: content, into: &frame)
     } else {
       let start = min(max(0, diffScroll), diffLines.count)
-      let end = min(diffLines.count, start + Int(content.height))
+      let end = min(diffLines.count, start + content.height)
       let visibleLines = diffLines[start..<end].map(styledDiffLine)
       let paragraph = Paragraph(
         Text(visibleLines),
         wrap: .none,
-        horizontalScroll: UInt16(clamping: horizontalScroll),
+        horizontalScroll: horizontalScroll,
         trimLeadingWhitespace: false)
       paragraph.render(in: content, into: &frame)
       Scrollbar(
         contentLength: diffLines.count,
-        viewportLength: Int(content.height),
+        viewportLength: content.height,
         position: diffScroll,
         orientation: .verticalRight,
         style: Style(foreground: DiffScopeTheme.border),

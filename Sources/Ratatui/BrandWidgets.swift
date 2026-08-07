@@ -41,21 +41,21 @@ public struct RatatuiMascot: Widget, Hashable, Sendable {
 
   public func render(in area: Rect, into frame: inout Frame) {
     guard !area.isEmpty else { return }
-    let left = max(Int(area.x), Int(frame.buffer.area.x))
-    let top = max(Int(area.y), Int(frame.buffer.area.y))
+    let left = max(area.x, frame.buffer.area.x)
+    let top = max(area.y, frame.buffer.area.y)
     let right = min(
-      Int(area.x) + Int(area.width), Int(frame.buffer.area.x) + Int(frame.buffer.area.width))
+      area.x + area.width, frame.buffer.area.x + frame.buffer.area.width)
     let bottom = min(
-      Int(area.y) + Int(area.height), Int(frame.buffer.area.y) + Int(frame.buffer.area.height))
+      area.y + area.height, frame.buffer.area.y + frame.buffer.area.height)
     guard right > left, bottom > top else { return }
 
     for row in stride(from: 0, to: Self.source.count - 1, by: 2) {
-      let outputY = Int(area.y) + row / 2
+      let outputY = area.y + row / 2
       guard outputY >= top, outputY < bottom else { continue }
       for (column, pair) in zip(Self.source[row], Self.source[row + 1]).enumerated() {
-        let outputX = Int(area.x) + column
+        let outputX = area.x + column
         guard outputX >= left, outputX < right else { continue }
-        let position = Position(x: UInt16(clamping: outputX), y: UInt16(clamping: outputY))
+        let position = Position(x: outputX, y: outputY)
         var cell = frame.buffer[position]
         let topPixel = pair.0
         let bottomPixel = pair.1

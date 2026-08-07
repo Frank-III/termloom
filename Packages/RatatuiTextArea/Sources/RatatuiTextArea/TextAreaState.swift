@@ -125,14 +125,14 @@ public struct TextAreaState: Hashable, Sendable {
 
   public mutating func ensureCursorVisible(viewport: Size, gutterWidth: Int = 0) {
     reconcile()
-    let height = max(1, Int(viewport.height))
+    let height = max(1, viewport.height)
     if cursor.row < verticalOffset {
       verticalOffset = cursor.row
     } else if cursor.row >= verticalOffset + height {
       verticalOffset = cursor.row - height + 1
     }
 
-    let width = max(1, Int(viewport.width) - max(0, gutterWidth))
+    let width = max(1, viewport.width - max(0, gutterWidth))
     let cursorColumn = TerminalWidth.of(prefix(lines[cursor.row], through: cursor.column))
     if cursorColumn < horizontalOffset {
       horizontalOffset = cursorColumn

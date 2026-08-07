@@ -216,11 +216,11 @@ public struct PostcatScreen: Widget, Sendable {
     } else if wrapsResponse {
       var paragraph = Paragraph(
         Text(responseLines), wrap: .word, trimLeadingWhitespace: false)
-      paragraph.scroll = UInt16(clamping: responseScroll)
+      paragraph.scroll = responseScroll
       paragraph.render(in: content, into: &frame)
     } else {
       let start = min(responseScroll, max(0, responseLines.count - 1))
-      let end = min(responseLines.count, start + Int(content.height))
+      let end = min(responseLines.count, start + content.height)
       Paragraph(Text(Array(responseLines[start..<end])), wrap: .none, trimLeadingWhitespace: false)
         .render(in: content, into: &frame)
     }

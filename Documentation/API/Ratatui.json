@@ -344,38 +344,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui10ConstraintO10percentageyACs6UInt16VcACmF",
+      "id": "s:7Ratatui10ConstraintO10percentageyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "Constraint",
         "percentage(_:)"
       ],
       "title": "Constraint.percentage(_:)",
-      "declaration": "case percentage(UInt16)",
+      "declaration": "case percentage(Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui10ConstraintO3maxyACs6UInt16VcACmF",
+      "id": "s:7Ratatui10ConstraintO3maxyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "Constraint",
         "max(_:)"
       ],
       "title": "Constraint.max(_:)",
-      "declaration": "case max(UInt16)",
+      "declaration": "case max(Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui10ConstraintO3minyACs6UInt16VcACmF",
+      "id": "s:7Ratatui10ConstraintO3minyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "Constraint",
         "min(_:)"
       ],
       "title": "Constraint.min(_:)",
-      "declaration": "case min(UInt16)",
+      "declaration": "case min(Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -392,38 +392,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui10ConstraintO4flexyACs6UInt16VcACmF",
+      "id": "s:7Ratatui10ConstraintO4flexyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "Constraint",
         "flex(_:)"
       ],
       "title": "Constraint.flex(_:)",
-      "declaration": "case flex(UInt16)",
+      "declaration": "case flex(Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui10ConstraintO5ratioyACs6UInt16V_AFtcACmF",
+      "id": "s:7Ratatui10ConstraintO5ratioyACSi_SitcACmF",
       "kind": "swift.enum.case",
       "path": [
         "Constraint",
         "ratio(numerator:denominator:)"
       ],
       "title": "Constraint.ratio(numerator:denominator:)",
-      "declaration": "case ratio(numerator: UInt16, denominator: UInt16)",
+      "declaration": "case ratio(numerator: Int, denominator: Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui10ConstraintO6lengthyACs6UInt16VcACmF",
+      "id": "s:7Ratatui10ConstraintO6lengthyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "Constraint",
         "length(_:)"
       ],
       "title": "Constraint.length(_:)",
-      "declaration": "case length(UInt16)",
+      "declaration": "case length(Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -914,14 +914,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11ANSIBackendV11appendLinesyys6UInt16VKF",
+      "id": "s:7Ratatui11ANSIBackendV11appendLinesyySiKF",
       "kind": "swift.method",
       "path": [
         "ANSIBackend",
         "appendLines(_:)"
       ],
       "title": "appendLines(_:)",
-      "declaration": "mutating func appendLines(_ count: UInt16) throws",
+      "declaration": "mutating func appendLines(_ count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -986,14 +986,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11ANSIBackendV14scrollRegionUp_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui11ANSIBackendV14scrollRegionUp_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "ANSIBackend",
         "scrollRegionUp(_:by:)"
       ],
       "title": "scrollRegionUp(_:by:)",
-      "declaration": "mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -1022,14 +1022,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11ANSIBackendV16scrollRegionDown_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui11ANSIBackendV16scrollRegionDown_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "ANSIBackend",
         "scrollRegionDown(_:by:)"
       ],
       "title": "scrollRegionDown(_:by:)",
-      "declaration": "mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -1046,14 +1046,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11ANSIBackendV28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui11ANSIBackendV28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "ANSIBackend",
         "scrollRegionUpIntoScrollback(_:by:)"
       ],
       "title": "scrollRegionUpIntoScrollback(_:by:)",
-      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -1106,14 +1106,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11ANSIBackendV6output12fallbackSize14viewportHeight0F6Origin16cursorAddressing13configurationACSo12NSFileHandleC_AA0E0VSgs6UInt16VSgAA8PositionVSgAA06CursorJ0OAA0B13ConfigurationVtcfc",
+      "id": "s:7Ratatui11ANSIBackendV6output12fallbackSize14viewportHeight0F6Origin16cursorAddressing13configurationACSo12NSFileHandleC_AA0E0VSgSiSgAA8PositionVSgAA06CursorJ0OAA0B13ConfigurationVtcfc",
       "kind": "swift.init",
       "path": [
         "ANSIBackend",
         "init(output:fallbackSize:viewportHeight:viewportOrigin:cursorAddressing:configuration:)"
       ],
       "title": "init(output:fallbackSize:viewportHeight:viewportOrigin:cursorAddressing:configuration:)",
-      "declaration": "init(output: FileHandle = .standardOutput, fallbackSize: Size? = nil, viewportHeight: UInt16? = nil, viewportOrigin: Position? = nil, cursorAddressing: CursorAddressing = .absolute, configuration: ANSIBackendConfiguration = .full)",
+      "declaration": "init(output: FileHandle = .standardOutput, fallbackSize: Size? = nil, viewportHeight: Int? = nil, viewportOrigin: Position? = nil, cursorAddressing: CursorAddressing = .absolute, configuration: ANSIBackendConfiguration = .full)",
       "accessLevel": "public",
       "availability": []
     },
@@ -2469,14 +2469,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV11appendLinesyys6UInt16VKF",
+      "id": "s:7Ratatui11TestBackendV11appendLinesyySiKF",
       "kind": "swift.method",
       "path": [
         "TestBackend",
         "appendLines(_:)"
       ],
       "title": "appendLines(_:)",
-      "declaration": "mutating func appendLines(_ count: UInt16) throws",
+      "declaration": "mutating func appendLines(_ count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -2493,14 +2493,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV11screenWidth0D6Height8viewportACs6UInt16V_AhA4RectVtcfc",
+      "id": "s:7Ratatui11TestBackendV11screenWidth0D6Height8viewportACSi_SiAA4RectVtcfc",
       "kind": "swift.init",
       "path": [
         "TestBackend",
         "init(screenWidth:screenHeight:viewport:)"
       ],
       "title": "init(screenWidth:screenHeight:viewport:)",
-      "declaration": "init(screenWidth: UInt16, screenHeight: UInt16, viewport: Rect)",
+      "declaration": "init(screenWidth: Int, screenHeight: Int, viewport: Rect)",
       "accessLevel": "public",
       "availability": []
     },
@@ -2541,14 +2541,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV14scrollRegionUp_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui11TestBackendV14scrollRegionUp_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "TestBackend",
         "scrollRegionUp(_:by:)"
       ],
       "title": "scrollRegionUp(_:by:)",
-      "declaration": "mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -2577,14 +2577,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV16scrollRegionDown_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui11TestBackendV16scrollRegionDown_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "TestBackend",
         "scrollRegionDown(_:by:)"
       ],
       "title": "scrollRegionDown(_:by:)",
-      "declaration": "mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -2601,14 +2601,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui11TestBackendV28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "TestBackend",
         "scrollRegionUpIntoScrollback(_:by:)"
       ],
       "title": "scrollRegionUpIntoScrollback(_:by:)",
-      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -2673,14 +2673,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV5width6heightACs6UInt16V_AGtcfc",
+      "id": "s:7Ratatui11TestBackendV5width6heightACSi_Sitcfc",
       "kind": "swift.init",
       "path": [
         "TestBackend",
         "init(width:height:)"
       ],
       "title": "init(width:height:)",
-      "declaration": "init(width: UInt16, height: UInt16)",
+      "declaration": "init(width: Int, height: Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -2697,14 +2697,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui11TestBackendV6resize5width6heightys6UInt16V_AHtF",
+      "id": "s:7Ratatui11TestBackendV6resize5width6heightySi_SitF",
       "kind": "swift.method",
       "path": [
         "TestBackend",
         "resize(width:height:)"
       ],
       "title": "resize(width:height:)",
-      "declaration": "mutating func resize(width: UInt16, height: UInt16)",
+      "declaration": "mutating func resize(width: Int, height: Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -3349,26 +3349,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui13LayoutSpacingO5spaceyACs6UInt16VcACmF",
+      "id": "s:7Ratatui13LayoutSpacingO5spaceyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "LayoutSpacing",
         "space(_:)"
       ],
       "title": "LayoutSpacing.space(_:)",
-      "declaration": "case space(UInt16)",
+      "declaration": "case space(Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui13LayoutSpacingO7overlapyACs6UInt16VcACmF",
+      "id": "s:7Ratatui13LayoutSpacingO7overlapyACSicACmF",
       "kind": "swift.enum.case",
       "path": [
         "LayoutSpacing",
         "overlap(_:)"
       ],
       "title": "LayoutSpacing.overlap(_:)",
-      "declaration": "case overlap(UInt16)",
+      "declaration": "case overlap(Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -4949,14 +4949,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui15TerminalSessionC26updateInlineViewportHeightySbs6UInt16VKF",
+      "id": "s:7Ratatui15TerminalSessionC26updateInlineViewportHeightySbSiKF",
       "kind": "swift.method",
       "path": [
         "TerminalSession",
         "updateInlineViewportHeight(_:)"
       ],
       "title": "updateInlineViewportHeight(_:)",
-      "declaration": "@discardableResult @MainActor func updateInlineViewportHeight(_ requestedHeight: UInt16) throws -> Bool",
+      "declaration": "@discardableResult @MainActor func updateInlineViewportHeight(_ requestedHeight: Int) throws -> Bool",
       "accessLevel": "public",
       "availability": []
     },
@@ -5173,14 +5173,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui16CursorAddressingO11savedBottomyACs6UInt16V_tcACmF",
+      "id": "s:7Ratatui16CursorAddressingO11savedBottomyACSi_tcACmF",
       "kind": "swift.enum.case",
       "path": [
         "CursorAddressing",
         "savedBottom(viewportHeight:)"
       ],
       "title": "CursorAddressing.savedBottom(viewportHeight:)",
-      "declaration": "case savedBottom(viewportHeight: UInt16)",
+      "declaration": "case savedBottom(viewportHeight: Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -7052,38 +7052,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui20InlineHistoryBackendP14scrollRegionUp_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui20InlineHistoryBackendP14scrollRegionUp_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "InlineHistoryBackend",
         "scrollRegionUp(_:by:)"
       ],
       "title": "scrollRegionUp(_:by:)",
-      "declaration": "mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui20InlineHistoryBackendP16scrollRegionDown_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui20InlineHistoryBackendP16scrollRegionDown_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "InlineHistoryBackend",
         "scrollRegionDown(_:by:)"
       ],
       "title": "scrollRegionDown(_:by:)",
-      "declaration": "mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui20InlineHistoryBackendP28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui20InlineHistoryBackendP28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "InlineHistoryBackend",
         "scrollRegionUpIntoScrollback(_:by:)"
       ],
       "title": "scrollRegionUpIntoScrollback(_:by:)",
-      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -7124,14 +7124,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui20InlineHistoryBackendPAAE28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "id": "s:7Ratatui20InlineHistoryBackendPAAE28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "kind": "swift.method",
       "path": [
         "InlineHistoryBackend",
         "scrollRegionUpIntoScrollback(_:by:)"
       ],
       "title": "scrollRegionUpIntoScrollback(_:by:)",
-      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<UInt16>, by count: UInt16) throws",
+      "declaration": "mutating func scrollRegionUpIntoScrollback(_ rows: Range<Int>, by count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -7147,14 +7147,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui20InlineViewportSizingP07desiredbC6Height4sizes6UInt16VAA4SizeV_tF",
+      "id": "s:7Ratatui20InlineViewportSizingP07desiredbC6Height4sizeSiAA4SizeV_tF",
       "kind": "swift.method",
       "path": [
         "InlineViewportSizing",
         "desiredInlineViewportHeight(size:)"
       ],
       "title": "desiredInlineViewportHeight(size:)",
-      "declaration": "@MainActor func desiredInlineViewportHeight(size: Size) -> UInt16",
+      "declaration": "@MainActor func desiredInlineViewportHeight(size: Size) -> Int",
       "accessLevel": "public",
       "availability": []
     },
@@ -7170,14 +7170,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui20LineAppendingBackendP11appendLinesyys6UInt16VKF",
+      "id": "s:7Ratatui20LineAppendingBackendP11appendLinesyySiKF",
       "kind": "swift.method",
       "path": [
         "LineAppendingBackend",
         "appendLines(_:)"
       ],
       "title": "appendLines(_:)",
-      "declaration": "mutating func appendLines(_ count: UInt16) throws",
+      "declaration": "mutating func appendLines(_ count: Int) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -7394,14 +7394,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui21InlineDocumentRuntimeV9reconcile_5widthSayAA24TerminalHistoryInsertionVGAA0bC0VyxG_s6UInt16VtF",
+      "id": "s:7Ratatui21InlineDocumentRuntimeV9reconcile_5widthSayAA24TerminalHistoryInsertionVGAA0bC0VyxG_SitF",
       "kind": "swift.method",
       "path": [
         "InlineDocumentRuntime",
         "reconcile(_:width:)"
       ],
       "title": "reconcile(_:width:)",
-      "declaration": "mutating func reconcile(_ document: InlineDocument<ID>, width newWidth: UInt16) -> [TerminalHistoryInsertion]",
+      "declaration": "mutating func reconcile(_ document: InlineDocument<ID>, width newWidth: Int) -> [TerminalHistoryInsertion]",
       "accessLevel": "public",
       "availability": []
     },
@@ -9244,50 +9244,50 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV1x1y5width6heightACs6UInt16V_A3Itcfc",
+      "id": "s:7Ratatui4RectV1x1y5width6heightACSi_S3itcfc",
       "kind": "swift.init",
       "path": [
         "Rect",
         "init(x:y:width:height:)"
       ],
       "title": "init(x:y:width:height:)",
-      "declaration": "init(x: UInt16, y: UInt16, width: UInt16, height: UInt16)",
+      "declaration": "init(x: Int, y: Int, width: Int, height: Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV1xs6UInt16Vvp",
+      "id": "s:7Ratatui4RectV1xSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "x"
       ],
       "title": "x",
-      "declaration": "var x: UInt16",
+      "declaration": "var x: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV1ys6UInt16Vvp",
+      "id": "s:7Ratatui4RectV1ySivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "y"
       ],
       "title": "y",
-      "declaration": "var y: UInt16",
+      "declaration": "var y: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV3tops6UInt16Vvp",
+      "id": "s:7Ratatui4RectV3topSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "top"
       ],
       "title": "top",
-      "declaration": "var top: UInt16 { get }",
+      "declaration": "var top: Int { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -9304,14 +9304,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV4lefts6UInt16Vvp",
+      "id": "s:7Ratatui4RectV4leftSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "left"
       ],
       "title": "left",
-      "declaration": "var left: UInt16 { get }",
+      "declaration": "var left: Int { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -9364,14 +9364,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV5rights6UInt16Vvp",
+      "id": "s:7Ratatui4RectV5rightSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "right"
       ],
       "title": "right",
-      "declaration": "var right: UInt16 { get }",
+      "declaration": "var right: Int { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -9400,38 +9400,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV5widths6UInt16Vvp",
+      "id": "s:7Ratatui4RectV5widthSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "width"
       ],
       "title": "width",
-      "declaration": "var width: UInt16",
+      "declaration": "var width: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV6bottoms6UInt16Vvp",
+      "id": "s:7Ratatui4RectV6bottomSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "bottom"
       ],
       "title": "bottom",
-      "declaration": "var bottom: UInt16 { get }",
+      "declaration": "var bottom: Int { get }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4RectV6heights6UInt16Vvp",
+      "id": "s:7Ratatui4RectV6heightSivp",
       "kind": "swift.property",
       "path": [
         "Rect",
         "height"
       ],
       "title": "height",
-      "declaration": "var height: UInt16",
+      "declaration": "var height: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -9579,38 +9579,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui4SizeV5width6heightACs6UInt16V_AGtcfc",
+      "id": "s:7Ratatui4SizeV5width6heightACSi_Sitcfc",
       "kind": "swift.init",
       "path": [
         "Size",
         "init(width:height:)"
       ],
       "title": "init(width:height:)",
-      "declaration": "init(width: UInt16, height: UInt16)",
+      "declaration": "init(width: Int, height: Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4SizeV5widths6UInt16Vvp",
+      "id": "s:7Ratatui4SizeV5widthSivp",
       "kind": "swift.property",
       "path": [
         "Size",
         "width"
       ],
       "title": "width",
-      "declaration": "var width: UInt16",
+      "declaration": "var width: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui4SizeV6heights6UInt16Vvp",
+      "id": "s:7Ratatui4SizeV6heightSivp",
       "kind": "swift.property",
       "path": [
         "Size",
         "height"
       ],
       "title": "height",
-      "declaration": "var height: UInt16",
+      "declaration": "var height: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -10223,14 +10223,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui5BlockV13verticalSpaces6UInt16V3top_AF6bottomtvp",
+      "id": "s:7Ratatui5BlockV13verticalSpaceSi3top_Si6bottomtvp",
       "kind": "swift.property",
       "path": [
         "Block",
         "verticalSpace"
       ],
       "title": "verticalSpace",
-      "declaration": "var verticalSpace: (top: UInt16, bottom: UInt16) { get }",
+      "declaration": "var verticalSpace: (top: Int, bottom: Int) { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -10247,14 +10247,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui5BlockV15horizontalSpaces6UInt16V7leading_AF8trailingtvp",
+      "id": "s:7Ratatui5BlockV15horizontalSpaceSi7leading_Si8trailingtvp",
       "kind": "swift.property",
       "path": [
         "Block",
         "horizontalSpace"
       ],
       "title": "horizontalSpace",
-      "declaration": "var horizontalSpace: (leading: UInt16, trailing: UInt16) { get }",
+      "declaration": "var horizontalSpace: (leading: Int, trailing: Int) { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -11273,26 +11273,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui5StackV7spacings6UInt16Vvp",
+      "id": "s:7Ratatui5StackV7spacingSivp",
       "kind": "swift.property",
       "path": [
         "Stack",
         "spacing"
       ],
       "title": "spacing",
-      "declaration": "var spacing: UInt16",
+      "declaration": "var spacing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui5StackV_7spacing7contentAcA4AxisO_s6UInt16VSayAA0B4ItemVGyXEtcfc",
+      "id": "s:7Ratatui5StackV_7spacing7contentAcA4AxisO_SiSayAA0B4ItemVGyXEtcfc",
       "kind": "swift.init",
       "path": [
         "Stack",
         "init(_:spacing:content:)"
       ],
       "title": "init(_:spacing:content:)",
-      "declaration": "init(_ axis: Axis, spacing: UInt16 = 0, @StackBuilder content: () -> [StackItem])",
+      "declaration": "init(_ axis: Axis, spacing: Int = 0, @StackBuilder content: () -> [StackItem])",
       "accessLevel": "public",
       "availability": []
     },
@@ -11487,14 +11487,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui5TableV10rowSpacings6UInt16Vvp",
+      "id": "s:7Ratatui5TableV10rowSpacingSivp",
       "kind": "swift.property",
       "path": [
         "Table",
         "rowSpacing"
       ],
       "title": "rowSpacing",
-      "declaration": "var rowSpacing: UInt16",
+      "declaration": "var rowSpacing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -11535,14 +11535,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui5TableV13columnSpacings6UInt16Vvp",
+      "id": "s:7Ratatui5TableV13columnSpacingSivp",
       "kind": "swift.property",
       "path": [
         "Table",
         "columnSpacing"
       ],
       "title": "columnSpacing",
-      "declaration": "var columnSpacing: UInt16",
+      "declaration": "var columnSpacing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -11727,26 +11727,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui5TableVA2A0B3RowVRszlE_6widths6header6footer08selectedC05style0E5Style0fI00gI00g6ColumnI00g4CellI015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO0ACyAEGSayAEG_SayAA10ConstraintOGAESgA_SiSgAA0I0VA2_A2_A2_A2_A2_AA4LineVSayA4_GAA09HighlightO0Os6UInt16VAA4FlexOA9_tcfc",
+      "id": "s:7Ratatui5TableVA2A0B3RowVRszlE_6widths6header6footer08selectedC05style0E5Style0fI00gI00g6ColumnI00g4CellI015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO0ACyAEGSayAEG_SayAA10ConstraintOGAESgA_SiSgAA0I0VA2_A2_A2_A2_A2_AA4LineVSayA4_GAA09HighlightO0OSiAA4FlexOSitcfc",
       "kind": "swift.init",
       "path": [
         "Table",
         "init(_:widths:header:footer:selectedRow:style:headerStyle:footerStyle:selectedStyle:selectedColumnStyle:selectedCellStyle:highlightSymbol:highlightSymbols:highlightSpacing:columnSpacing:flex:rowSpacing:)"
       ],
       "title": "init(_:widths:header:footer:selectedRow:style:headerStyle:footerStyle:selectedStyle:selectedColumnStyle:selectedCellStyle:highlightSymbol:highlightSymbols:highlightSpacing:columnSpacing:flex:rowSpacing:)",
-      "declaration": "init(_ rows: [TableRow], widths: [Constraint] = [], header: TableRow? = nil, footer: TableRow? = nil, selectedRow: Int? = nil, style: Style = .plain, headerStyle: Style = .plain, footerStyle: Style = .plain, selectedStyle: Style = .plain, selectedColumnStyle: Style = .plain, selectedCellStyle: Style = .plain, highlightSymbol: Line = Line(\"\"), highlightSymbols: [Line] = [], highlightSpacing: HighlightSpacing = .whenSelected, columnSpacing: UInt16 = 1, flex: Flex = .start, rowSpacing: UInt16 = 0)",
+      "declaration": "init(_ rows: [TableRow], widths: [Constraint] = [], header: TableRow? = nil, footer: TableRow? = nil, selectedRow: Int? = nil, style: Style = .plain, headerStyle: Style = .plain, footerStyle: Style = .plain, selectedStyle: Style = .plain, selectedColumnStyle: Style = .plain, selectedCellStyle: Style = .plain, highlightSymbol: Line = Line(\"\"), highlightSymbols: [Line] = [], highlightSpacing: HighlightSpacing = .whenSelected, columnSpacing: Int = 1, flex: Flex = .start, rowSpacing: Int = 0)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui5TableV_11selectedRow5style11headerStyle06footerG00F13Configuration0hI00cG00c6ColumnG00c4CellG015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO00rG00R6Height0rI07columnsACyxGSayxG_SiSgAA0G0VA_A_AA0bdI0VA1_A_A_A_AA4LineVSayA3_GAA09HighlightO0Os6UInt16VAA4FlexOA8_A_xcSgSixcSgA1_xcSgSayAA0bJ0VyxGGyXEtcfc",
+      "id": "s:7Ratatui5TableV_11selectedRow5style11headerStyle06footerG00F13Configuration0hI00cG00c6ColumnG00c4CellG015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO00rG00R6Height0rI07columnsACyxGSayxG_SiSgAA0G0VA_A_AA0bdI0VA1_A_A_A_AA4LineVSayA3_GAA09HighlightO0OSiAA4FlexOSiA_xcSgSixcSgA1_xcSgSayAA0bJ0VyxGGyXEtcfc",
       "kind": "swift.init",
       "path": [
         "Table",
         "init(_:selectedRow:style:headerStyle:footerStyle:headerConfiguration:footerConfiguration:selectedStyle:selectedColumnStyle:selectedCellStyle:highlightSymbol:highlightSymbols:highlightSpacing:columnSpacing:flex:rowSpacing:rowStyle:rowHeight:rowConfiguration:columns:)"
       ],
       "title": "init(_:selectedRow:style:headerStyle:footerStyle:headerConfiguration:footerConfiguration:selectedStyle:selectedColumnStyle:selectedCellStyle:highlightSymbol:highlightSymbols:highlightSpacing:columnSpacing:flex:rowSpacing:rowStyle:rowHeight:rowConfiguration:columns:)",
-      "declaration": "init(_ rows: [Row], selectedRow: Int? = nil, style: Style = .plain, headerStyle: Style = Style(modifiers: [.bold]), footerStyle: Style = Style(modifiers: [.bold]), headerConfiguration: TableRowConfiguration = TableRowConfiguration(), footerConfiguration: TableRowConfiguration = TableRowConfiguration(), selectedStyle: Style = Style(modifiers: [.reversed]), selectedColumnStyle: Style = .plain, selectedCellStyle: Style = Style(modifiers: [.bold]), highlightSymbol: Line = Line(\"\"), highlightSymbols: [Line] = [], highlightSpacing: HighlightSpacing = .whenSelected, columnSpacing: UInt16 = 1, flex: Flex = .start, rowSpacing: UInt16 = 0, rowStyle: ((Row) -> Style)? = nil, rowHeight: ((Row) -> Int)? = nil, rowConfiguration: ((Row) -> TableRowConfiguration)? = nil, @TableColumnBuilder<Row> columns: () -> [TableColumn<Row>])",
+      "declaration": "init(_ rows: [Row], selectedRow: Int? = nil, style: Style = .plain, headerStyle: Style = Style(modifiers: [.bold]), footerStyle: Style = Style(modifiers: [.bold]), headerConfiguration: TableRowConfiguration = TableRowConfiguration(), footerConfiguration: TableRowConfiguration = TableRowConfiguration(), selectedStyle: Style = Style(modifiers: [.reversed]), selectedColumnStyle: Style = .plain, selectedCellStyle: Style = Style(modifiers: [.bold]), highlightSymbol: Line = Line(\"\"), highlightSymbols: [Line] = [], highlightSpacing: HighlightSpacing = .whenSelected, columnSpacing: Int = 1, flex: Flex = .start, rowSpacing: Int = 0, rowStyle: ((Row) -> Style)? = nil, rowHeight: ((Row) -> Int)? = nil, rowConfiguration: ((Row) -> TableRowConfiguration)? = nil, @TableColumnBuilder<Row> columns: () -> [TableColumn<Row>])",
       "accessLevel": "public",
       "availability": []
     },
@@ -11930,14 +11930,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui6BufferV9setString_2at5style8maxWidthAA8PositionVSS_AiA5StyleVs6UInt16VSgtF",
+      "id": "s:7Ratatui6BufferV9setString_2at5style8maxWidthAA8PositionVSS_AiA5StyleVSiSgtF",
       "kind": "swift.method",
       "path": [
         "Buffer",
         "setString(_:at:style:maxWidth:)"
       ],
       "title": "setString(_:at:style:maxWidth:)",
-      "declaration": "@discardableResult mutating func setString(_ string: String, at position: Position, style: Style = .plain, maxWidth: UInt16? = nil) -> Position",
+      "declaration": "@discardableResult mutating func setString(_ string: String, at position: Position, style: Style = .plain, maxWidth: Int? = nil) -> Position",
       "accessLevel": "public",
       "availability": []
     },
@@ -12287,14 +12287,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui6HStackV7spacing7contentACs6UInt16V_SayAA9StackItemVGyXEtcfc",
+      "id": "s:7Ratatui6HStackV7spacing7contentACSi_SayAA9StackItemVGyXEtcfc",
       "kind": "swift.init",
       "path": [
         "HStack",
         "init(spacing:content:)"
       ],
       "title": "init(spacing:content:)",
-      "declaration": "init(spacing: UInt16 = 0, @StackBuilder content: () -> [StackItem])",
+      "declaration": "init(spacing: Int = 0, @StackBuilder content: () -> [StackItem])",
       "accessLevel": "public",
       "availability": []
     },
@@ -12310,74 +12310,74 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui6InsetsV3allyACs6UInt16VFZ",
+      "id": "s:7Ratatui6InsetsV3allyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Insets",
         "all(_:)"
       ],
       "title": "all(_:)",
-      "declaration": "static func all(_ value: UInt16) -> Insets",
+      "declaration": "static func all(_ value: Int) -> Insets",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui6InsetsV3top7leading6bottom8trailingACs6UInt16V_A3Itcfc",
+      "id": "s:7Ratatui6InsetsV3top7leading6bottom8trailingACSi_S3itcfc",
       "kind": "swift.init",
       "path": [
         "Insets",
         "init(top:leading:bottom:trailing:)"
       ],
       "title": "init(top:leading:bottom:trailing:)",
-      "declaration": "init(top: UInt16 = 0, leading: UInt16 = 0, bottom: UInt16 = 0, trailing: UInt16 = 0)",
+      "declaration": "init(top: Int = 0, leading: Int = 0, bottom: Int = 0, trailing: Int = 0)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui6InsetsV3tops6UInt16Vvp",
+      "id": "s:7Ratatui6InsetsV3topSivp",
       "kind": "swift.property",
       "path": [
         "Insets",
         "top"
       ],
       "title": "top",
-      "declaration": "var top: UInt16",
+      "declaration": "var top: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui6InsetsV6bottoms6UInt16Vvp",
+      "id": "s:7Ratatui6InsetsV6bottomSivp",
       "kind": "swift.property",
       "path": [
         "Insets",
         "bottom"
       ],
       "title": "bottom",
-      "declaration": "var bottom: UInt16",
+      "declaration": "var bottom: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui6InsetsV7leadings6UInt16Vvp",
+      "id": "s:7Ratatui6InsetsV7leadingSivp",
       "kind": "swift.property",
       "path": [
         "Insets",
         "leading"
       ],
       "title": "leading",
-      "declaration": "var leading: UInt16",
+      "declaration": "var leading: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui6InsetsV8trailings6UInt16Vvp",
+      "id": "s:7Ratatui6InsetsV8trailingSivp",
       "kind": "swift.property",
       "path": [
         "Insets",
         "trailing"
       ],
       "title": "trailing",
-      "declaration": "var trailing: UInt16",
+      "declaration": "var trailing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -12726,14 +12726,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui6VStackV7spacing7contentACs6UInt16V_SayAA9StackItemVGyXEtcfc",
+      "id": "s:7Ratatui6VStackV7spacing7contentACSi_SayAA9StackItemVGyXEtcfc",
       "kind": "swift.init",
       "path": [
         "VStack",
         "init(spacing:content:)"
       ],
       "title": "init(spacing:content:)",
-      "declaration": "init(spacing: UInt16 = 0, @StackBuilder content: () -> [StackItem])",
+      "declaration": "init(spacing: Int = 0, @StackBuilder content: () -> [StackItem])",
       "accessLevel": "public",
       "availability": []
     },
@@ -13238,14 +13238,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui7MonthlyV5widths6UInt16Vvp",
+      "id": "s:7Ratatui7MonthlyV5widthSivp",
       "kind": "swift.property",
       "path": [
         "Monthly",
         "width"
       ],
       "title": "width",
-      "declaration": "var width: UInt16 { get }",
+      "declaration": "var width: Int { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -13262,14 +13262,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui7MonthlyV6heights6UInt16Vvp",
+      "id": "s:7Ratatui7MonthlyV6heightSivp",
       "kind": "swift.property",
       "path": [
         "Monthly",
         "height"
       ],
       "title": "height",
-      "declaration": "var height: UInt16 { get }",
+      "declaration": "var height: Int { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -13345,98 +13345,98 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV10horizontalyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV10horizontalyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "horizontal(_:)"
       ],
       "title": "horizontal(_:)",
-      "declaration": "static func horizontal(_ value: UInt16) -> Padding",
+      "declaration": "static func horizontal(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV12proportionalyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV12proportionalyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "proportional(_:)"
       ],
       "title": "proportional(_:)",
-      "declaration": "static func proportional(_ value: UInt16) -> Padding",
+      "declaration": "static func proportional(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV3allyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV3allyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "all(_:)"
       ],
       "title": "all(_:)",
-      "declaration": "static func all(_ value: UInt16) -> Padding",
+      "declaration": "static func all(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV3top7leading6bottom8trailingACs6UInt16V_A3Itcfc",
+      "id": "s:7Ratatui7PaddingV3top7leading6bottom8trailingACSi_S3itcfc",
       "kind": "swift.init",
       "path": [
         "Padding",
         "init(top:leading:bottom:trailing:)"
       ],
       "title": "init(top:leading:bottom:trailing:)",
-      "declaration": "init(top: UInt16 = 0, leading: UInt16 = 0, bottom: UInt16 = 0, trailing: UInt16 = 0)",
+      "declaration": "init(top: Int = 0, leading: Int = 0, bottom: Int = 0, trailing: Int = 0)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV3tops6UInt16Vvp",
+      "id": "s:7Ratatui7PaddingV3topSivp",
       "kind": "swift.property",
       "path": [
         "Padding",
         "top"
       ],
       "title": "top",
-      "declaration": "var top: UInt16",
+      "declaration": "var top: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV3topyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV3topyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "top(_:)"
       ],
       "title": "top(_:)",
-      "declaration": "static func top(_ value: UInt16) -> Padding",
+      "declaration": "static func top(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV4left5right3top6bottomACs6UInt16V_A3Itcfc",
+      "id": "s:7Ratatui7PaddingV4left5right3top6bottomACSi_S3itcfc",
       "kind": "swift.init",
       "path": [
         "Padding",
         "init(left:right:top:bottom:)"
       ],
       "title": "init(left:right:top:bottom:)",
-      "declaration": "init(left: UInt16, right: UInt16, top: UInt16, bottom: UInt16)",
+      "declaration": "init(left: Int, right: Int, top: Int, bottom: Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV4leftyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV4leftyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "left(_:)"
       ],
       "title": "left(_:)",
-      "declaration": "static func left(_ value: UInt16) -> Padding",
+      "declaration": "static func left(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
@@ -13453,38 +13453,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV5rightyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV5rightyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "right(_:)"
       ],
       "title": "right(_:)",
-      "declaration": "static func right(_ value: UInt16) -> Padding",
+      "declaration": "static func right(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV6bottoms6UInt16Vvp",
+      "id": "s:7Ratatui7PaddingV6bottomSivp",
       "kind": "swift.property",
       "path": [
         "Padding",
         "bottom"
       ],
       "title": "bottom",
-      "declaration": "var bottom: UInt16",
+      "declaration": "var bottom: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV6bottomyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV6bottomyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "bottom(_:)"
       ],
       "title": "bottom(_:)",
-      "declaration": "static func bottom(_ value: UInt16) -> Padding",
+      "declaration": "static func bottom(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
@@ -13501,74 +13501,74 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV7leadings6UInt16Vvp",
+      "id": "s:7Ratatui7PaddingV7leadingSivp",
       "kind": "swift.property",
       "path": [
         "Padding",
         "leading"
       ],
       "title": "leading",
-      "declaration": "var leading: UInt16",
+      "declaration": "var leading: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV7uniformyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV7uniformyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "uniform(_:)"
       ],
       "title": "uniform(_:)",
-      "declaration": "static func uniform(_ value: UInt16) -> Padding",
+      "declaration": "static func uniform(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV8trailings6UInt16Vvp",
+      "id": "s:7Ratatui7PaddingV8trailingSivp",
       "kind": "swift.property",
       "path": [
         "Padding",
         "trailing"
       ],
       "title": "trailing",
-      "declaration": "var trailing: UInt16",
+      "declaration": "var trailing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV8verticalyACs6UInt16VFZ",
+      "id": "s:7Ratatui7PaddingV8verticalyACSiFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "vertical(_:)"
       ],
       "title": "vertical(_:)",
-      "declaration": "static func vertical(_ value: UInt16) -> Padding",
+      "declaration": "static func vertical(_ value: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV9symmetric10horizontal8verticalACs6UInt16V_AHtFZ",
+      "id": "s:7Ratatui7PaddingV9symmetric10horizontal8verticalACSi_SitFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "symmetric(horizontal:vertical:)"
       ],
       "title": "symmetric(horizontal:vertical:)",
-      "declaration": "static func symmetric(horizontal: UInt16, vertical: UInt16) -> Padding",
+      "declaration": "static func symmetric(horizontal: Int, vertical: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui7PaddingV9symmetricyACs6UInt16V_AFtFZ",
+      "id": "s:7Ratatui7PaddingV9symmetricyACSi_SitFZ",
       "kind": "swift.type.method",
       "path": [
         "Padding",
         "symmetric(_:_:)"
       ],
       "title": "symmetric(_:_:)",
-      "declaration": "static func symmetric(_ x: UInt16, _ y: UInt16) -> Padding",
+      "declaration": "static func symmetric(_ x: Int, _ y: Int) -> Padding",
       "accessLevel": "public",
       "availability": []
     },
@@ -14275,14 +14275,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8BarChartV12groupSpacings6UInt16Vvp",
+      "id": "s:7Ratatui8BarChartV12groupSpacingSivp",
       "kind": "swift.property",
       "path": [
         "BarChart",
         "groupSpacing"
       ],
       "title": "groupSpacing",
-      "declaration": "var groupSpacing: UInt16",
+      "declaration": "var groupSpacing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -14299,14 +14299,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8BarChartV6groups7maximum8barWidth7spacing12groupSpacing9direction11showsValuesACSayAA0B5GroupVG_SdSgs6UInt16VA2pA0bC9DirectionOSbtcfc",
+      "id": "s:7Ratatui8BarChartV6groups7maximum8barWidth7spacing12groupSpacing9direction11showsValuesACSayAA0B5GroupVG_SdSgS3iAA0bC9DirectionOSbtcfc",
       "kind": "swift.init",
       "path": [
         "BarChart",
         "init(groups:maximum:barWidth:spacing:groupSpacing:direction:showsValues:)"
       ],
       "title": "init(groups:maximum:barWidth:spacing:groupSpacing:direction:showsValues:)",
-      "declaration": "init(groups: [BarGroup], maximum: Double? = nil, barWidth: UInt16 = 3, spacing: UInt16 = 1, groupSpacing: UInt16 = 2, direction: BarChartDirection = .vertical, showsValues: Bool = false)",
+      "declaration": "init(groups: [BarGroup], maximum: Double? = nil, barWidth: Int = 3, spacing: Int = 1, groupSpacing: Int = 2, direction: BarChartDirection = .vertical, showsValues: Bool = false)",
       "accessLevel": "public",
       "availability": []
     },
@@ -14347,26 +14347,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8BarChartV7spacings6UInt16Vvp",
+      "id": "s:7Ratatui8BarChartV7spacingSivp",
       "kind": "swift.property",
       "path": [
         "BarChart",
         "spacing"
       ],
       "title": "spacing",
-      "declaration": "var spacing: UInt16",
+      "declaration": "var spacing: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui8BarChartV8barWidths6UInt16Vvp",
+      "id": "s:7Ratatui8BarChartV8barWidthSivp",
       "kind": "swift.property",
       "path": [
         "BarChart",
         "barWidth"
       ],
       "title": "barWidth",
-      "declaration": "var barWidth: UInt16",
+      "declaration": "var barWidth: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -14383,14 +14383,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8BarChartV_7maximum8barWidth7spacing9direction11showsValuesACSayAA0B0VG_SdSgs6UInt16VAnA0bC9DirectionOSbtcfc",
+      "id": "s:7Ratatui8BarChartV_7maximum8barWidth7spacing9direction11showsValuesACSayAA0B0VG_SdSgS2iAA0bC9DirectionOSbtcfc",
       "kind": "swift.init",
       "path": [
         "BarChart",
         "init(_:maximum:barWidth:spacing:direction:showsValues:)"
       ],
       "title": "init(_:maximum:barWidth:spacing:direction:showsValues:)",
-      "declaration": "init(_ bars: [Bar], maximum: Double? = nil, barWidth: UInt16 = 3, spacing: UInt16 = 1, direction: BarChartDirection = .vertical, showsValues: Bool = false)",
+      "declaration": "init(_ bars: [Bar], maximum: Double? = nil, barWidth: Int = 3, spacing: Int = 1, direction: BarChartDirection = .vertical, showsValues: Bool = false)",
       "accessLevel": "public",
       "availability": []
     },
@@ -14929,38 +14929,38 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8PositionV1x1yACs6UInt16V_AGtcfc",
+      "id": "s:7Ratatui8PositionV1x1yACSi_Sitcfc",
       "kind": "swift.init",
       "path": [
         "Position",
         "init(x:y:)"
       ],
       "title": "init(x:y:)",
-      "declaration": "init(x: UInt16, y: UInt16)",
+      "declaration": "init(x: Int, y: Int)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui8PositionV1xs6UInt16Vvp",
+      "id": "s:7Ratatui8PositionV1xSivp",
       "kind": "swift.property",
       "path": [
         "Position",
         "x"
       ],
       "title": "x",
-      "declaration": "var x: UInt16",
+      "declaration": "var x: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui8PositionV1ys6UInt16Vvp",
+      "id": "s:7Ratatui8PositionV1ySivp",
       "kind": "swift.property",
       "path": [
         "Position",
         "y"
       ],
       "title": "y",
-      "declaration": "var y: UInt16",
+      "declaration": "var y: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -15261,14 +15261,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8TerminalV12insertBefore6height13batchPosition_ys6UInt16V_AA021HistoryInsertionBatchG0OyAA6BufferVzKXEtKAA06InlineI7BackendRzrlF",
+      "id": "s:7Ratatui8TerminalV12insertBefore6height13batchPosition_ySi_AA021HistoryInsertionBatchG0OyAA6BufferVzKXEtKAA06InlineH7BackendRzrlF",
       "kind": "swift.method",
       "path": [
         "Terminal",
         "insertBefore(height:batchPosition:_:)"
       ],
       "title": "insertBefore(height:batchPosition:_:)",
-      "declaration": "mutating func insertBefore(height: UInt16, batchPosition: HistoryInsertionBatchPosition = .single, _ render: (inout Buffer) throws -> Void) throws where BackendType : InlineHistoryBackend",
+      "declaration": "mutating func insertBefore(height: Int, batchPosition: HistoryInsertionBatchPosition = .single, _ render: (inout Buffer) throws -> Void) throws where BackendType : InlineHistoryBackend",
       "accessLevel": "public",
       "availability": []
     },
@@ -15392,14 +15392,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui8ViewportO6inlineyACs6UInt16V_tcACmF",
+      "id": "s:7Ratatui8ViewportO6inlineyACSi_tcACmF",
       "kind": "swift.enum.case",
       "path": [
         "Viewport",
         "inline(height:)"
       ],
       "title": "Viewport.inline(height:)",
-      "declaration": "case inline(height: UInt16)",
+      "declaration": "case inline(height: Int)",
       "accessLevel": "public",
       "availability": []
     },
@@ -16735,14 +16735,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui9ParagraphV16horizontalScrolls6UInt16Vvp",
+      "id": "s:7Ratatui9ParagraphV16horizontalScrollSivp",
       "kind": "swift.property",
       "path": [
         "Paragraph",
         "horizontalScroll"
       ],
       "title": "horizontalScroll",
-      "declaration": "var horizontalScroll: UInt16",
+      "declaration": "var horizontalScroll: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
@@ -16795,14 +16795,14 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui9ParagraphV5style4wrap6scroll16horizontalScroll21trimLeadingWhitespace5linesAcA5StyleV_AA8WrapModeOs6UInt16VAOSbSayAA4LineVGyXEtcfc",
+      "id": "s:7Ratatui9ParagraphV5style4wrap6scroll16horizontalScroll21trimLeadingWhitespace5linesAcA5StyleV_AA8WrapModeOS2iSbSayAA4LineVGyXEtcfc",
       "kind": "swift.init",
       "path": [
         "Paragraph",
         "init(style:wrap:scroll:horizontalScroll:trimLeadingWhitespace:lines:)"
       ],
       "title": "init(style:wrap:scroll:horizontalScroll:trimLeadingWhitespace:lines:)",
-      "declaration": "init(style: Style = .plain, wrap: WrapMode = .none, scroll: UInt16 = 0, horizontalScroll: UInt16 = 0, trimLeadingWhitespace: Bool = true, @LineBuilder lines: () -> [Line])",
+      "declaration": "init(style: Style = .plain, wrap: WrapMode = .none, scroll: Int = 0, horizontalScroll: Int = 0, trimLeadingWhitespace: Bool = true, @LineBuilder lines: () -> [Line])",
       "accessLevel": "public",
       "availability": []
     },
@@ -16831,26 +16831,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui9ParagraphV6scrolls6UInt16Vvp",
+      "id": "s:7Ratatui9ParagraphV6scrollSivp",
       "kind": "swift.property",
       "path": [
         "Paragraph",
         "scroll"
       ],
       "title": "scroll",
-      "declaration": "var scroll: UInt16",
+      "declaration": "var scroll: Int { get set }",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui9ParagraphV9lineCount5widthSis6UInt16V_tF",
+      "id": "s:7Ratatui9ParagraphV9lineCount5widthS2i_tF",
       "kind": "swift.method",
       "path": [
         "Paragraph",
         "lineCount(width:)"
       ],
       "title": "lineCount(width:)",
-      "declaration": "func lineCount(width: UInt16) -> Int",
+      "declaration": "func lineCount(width: Int) -> Int",
       "accessLevel": "public",
       "availability": []
     },
@@ -16867,26 +16867,26 @@
       "availability": []
     },
     {
-      "id": "s:7Ratatui9ParagraphV_4wrap6scroll16horizontalScroll21trimLeadingWhitespaceAcA4TextV_AA8WrapModeOs6UInt16VAMSbtcfc",
+      "id": "s:7Ratatui9ParagraphV_4wrap6scroll16horizontalScroll21trimLeadingWhitespaceAcA4TextV_AA8WrapModeOS2iSbtcfc",
       "kind": "swift.init",
       "path": [
         "Paragraph",
         "init(_:wrap:scroll:horizontalScroll:trimLeadingWhitespace:)"
       ],
       "title": "init(_:wrap:scroll:horizontalScroll:trimLeadingWhitespace:)",
-      "declaration": "init(_ text: Text, wrap: WrapMode = .none, scroll: UInt16 = 0, horizontalScroll: UInt16 = 0, trimLeadingWhitespace: Bool = true)",
+      "declaration": "init(_ text: Text, wrap: WrapMode = .none, scroll: Int = 0, horizontalScroll: Int = 0, trimLeadingWhitespace: Bool = true)",
       "accessLevel": "public",
       "availability": []
     },
     {
-      "id": "s:7Ratatui9ParagraphV_5style4wrap6scroll16horizontalScroll21trimLeadingWhitespaceACSS_AA5StyleVAA8WrapModeOs6UInt16VANSbtcfc",
+      "id": "s:7Ratatui9ParagraphV_5style4wrap6scroll16horizontalScroll21trimLeadingWhitespaceACSS_AA5StyleVAA8WrapModeOS2iSbtcfc",
       "kind": "swift.init",
       "path": [
         "Paragraph",
         "init(_:style:wrap:scroll:horizontalScroll:trimLeadingWhitespace:)"
       ],
       "title": "init(_:style:wrap:scroll:horizontalScroll:trimLeadingWhitespace:)",
-      "declaration": "init(_ content: String, style: Style = .plain, wrap: WrapMode = .none, scroll: UInt16 = 0, horizontalScroll: UInt16 = 0, trimLeadingWhitespace: Bool = true)",
+      "declaration": "init(_ content: String, style: Style = .plain, wrap: WrapMode = .none, scroll: Int = 0, horizontalScroll: Int = 0, trimLeadingWhitespace: Bool = true)",
       "accessLevel": "public",
       "availability": []
     },
@@ -21482,8 +21482,8 @@
     },
     {
       "kind": "defaultImplementationOf",
-      "source": "s:7Ratatui20InlineHistoryBackendPAAE28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
-      "target": "s:7Ratatui20InlineHistoryBackendP28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF"
+      "source": "s:7Ratatui20InlineHistoryBackendPAAE28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
+      "target": "s:7Ratatui20InlineHistoryBackendP28scrollRegionUpIntoScrollback_2byySnySiG_SitKF"
     },
     {
       "kind": "defaultImplementationOf",
@@ -21656,17 +21656,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui10ConstraintO10percentageyACs6UInt16VcACmF",
+      "source": "s:7Ratatui10ConstraintO10percentageyACSicACmF",
       "target": "s:7Ratatui10ConstraintO"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui10ConstraintO3maxyACs6UInt16VcACmF",
+      "source": "s:7Ratatui10ConstraintO3maxyACSicACmF",
       "target": "s:7Ratatui10ConstraintO"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui10ConstraintO3minyACs6UInt16VcACmF",
+      "source": "s:7Ratatui10ConstraintO3minyACSicACmF",
       "target": "s:7Ratatui10ConstraintO"
     },
     {
@@ -21676,17 +21676,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui10ConstraintO4flexyACs6UInt16VcACmF",
+      "source": "s:7Ratatui10ConstraintO4flexyACSicACmF",
       "target": "s:7Ratatui10ConstraintO"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui10ConstraintO5ratioyACs6UInt16V_AFtcACmF",
+      "source": "s:7Ratatui10ConstraintO5ratioyACSi_SitcACmF",
       "target": "s:7Ratatui10ConstraintO"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui10ConstraintO6lengthyACs6UInt16VcACmF",
+      "source": "s:7Ratatui10ConstraintO6lengthyACSicACmF",
       "target": "s:7Ratatui10ConstraintO"
     },
     {
@@ -21861,7 +21861,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11ANSIBackendV11appendLinesyys6UInt16VKF",
+      "source": "s:7Ratatui11ANSIBackendV11appendLinesyySiKF",
       "target": "s:7Ratatui11ANSIBackendV"
     },
     {
@@ -21891,7 +21891,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11ANSIBackendV14scrollRegionUp_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui11ANSIBackendV14scrollRegionUp_2byySnySiG_SitKF",
       "target": "s:7Ratatui11ANSIBackendV"
     },
     {
@@ -21906,7 +21906,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11ANSIBackendV16scrollRegionDown_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui11ANSIBackendV16scrollRegionDown_2byySnySiG_SitKF",
       "target": "s:7Ratatui11ANSIBackendV"
     },
     {
@@ -21916,7 +21916,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11ANSIBackendV28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui11ANSIBackendV28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "target": "s:7Ratatui11ANSIBackendV"
     },
     {
@@ -21941,7 +21941,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11ANSIBackendV6output12fallbackSize14viewportHeight0F6Origin16cursorAddressing13configurationACSo12NSFileHandleC_AA0E0VSgs6UInt16VSgAA8PositionVSgAA06CursorJ0OAA0B13ConfigurationVtcfc",
+      "source": "s:7Ratatui11ANSIBackendV6output12fallbackSize14viewportHeight0F6Origin16cursorAddressing13configurationACSo12NSFileHandleC_AA0E0VSgSiSgAA8PositionVSgAA06CursorJ0OAA0B13ConfigurationVtcfc",
       "target": "s:7Ratatui11ANSIBackendV"
     },
     {
@@ -22431,7 +22431,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV11appendLinesyys6UInt16VKF",
+      "source": "s:7Ratatui11TestBackendV11appendLinesyySiKF",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22441,7 +22441,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV11screenWidth0D6Height8viewportACs6UInt16V_AhA4RectVtcfc",
+      "source": "s:7Ratatui11TestBackendV11screenWidth0D6Height8viewportACSi_SiAA4RectVtcfc",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22461,7 +22461,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV14scrollRegionUp_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui11TestBackendV14scrollRegionUp_2byySnySiG_SitKF",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22476,7 +22476,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV16scrollRegionDown_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui11TestBackendV16scrollRegionDown_2byySnySiG_SitKF",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22486,7 +22486,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui11TestBackendV28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22516,7 +22516,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV5width6heightACs6UInt16V_AGtcfc",
+      "source": "s:7Ratatui11TestBackendV5width6heightACSi_Sitcfc",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22526,7 +22526,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui11TestBackendV6resize5width6heightys6UInt16V_AHtF",
+      "source": "s:7Ratatui11TestBackendV6resize5width6heightySi_SitF",
       "target": "s:7Ratatui11TestBackendV"
     },
     {
@@ -22761,12 +22761,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui13LayoutSpacingO5spaceyACs6UInt16VcACmF",
+      "source": "s:7Ratatui13LayoutSpacingO5spaceyACSicACmF",
       "target": "s:7Ratatui13LayoutSpacingO"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui13LayoutSpacingO7overlapyACs6UInt16VcACmF",
+      "source": "s:7Ratatui13LayoutSpacingO7overlapyACSicACmF",
       "target": "s:7Ratatui13LayoutSpacingO"
     },
     {
@@ -23326,7 +23326,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui15TerminalSessionC26updateInlineViewportHeightySbs6UInt16VKF",
+      "source": "s:7Ratatui15TerminalSessionC26updateInlineViewportHeightySbSiKF",
       "target": "s:7Ratatui15TerminalSessionC"
     },
     {
@@ -23401,7 +23401,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui16CursorAddressingO11savedBottomyACs6UInt16V_tcACmF",
+      "source": "s:7Ratatui16CursorAddressingO11savedBottomyACSi_tcACmF",
       "target": "s:7Ratatui16CursorAddressingO"
     },
     {
@@ -24031,7 +24031,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui21InlineDocumentRuntimeV9reconcile_5widthSayAA24TerminalHistoryInsertionVGAA0bC0VyxG_s6UInt16VtF",
+      "source": "s:7Ratatui21InlineDocumentRuntimeV9reconcile_5widthSayAA24TerminalHistoryInsertionVGAA0bC0VyxG_SitF",
       "target": "s:7Ratatui21InlineDocumentRuntimeV"
     },
     {
@@ -24696,22 +24696,22 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV1x1y5width6heightACs6UInt16V_A3Itcfc",
+      "source": "s:7Ratatui4RectV1x1y5width6heightACSi_S3itcfc",
       "target": "s:7Ratatui4RectV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV1xs6UInt16Vvp",
+      "source": "s:7Ratatui4RectV1xSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV1ys6UInt16Vvp",
+      "source": "s:7Ratatui4RectV1ySivp",
       "target": "s:7Ratatui4RectV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV3tops6UInt16Vvp",
+      "source": "s:7Ratatui4RectV3topSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
@@ -24721,7 +24721,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV4lefts6UInt16Vvp",
+      "source": "s:7Ratatui4RectV4leftSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
@@ -24746,7 +24746,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV5rights6UInt16Vvp",
+      "source": "s:7Ratatui4RectV5rightSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
@@ -24761,17 +24761,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV5widths6UInt16Vvp",
+      "source": "s:7Ratatui4RectV5widthSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV6bottoms6UInt16Vvp",
+      "source": "s:7Ratatui4RectV6bottomSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4RectV6heights6UInt16Vvp",
+      "source": "s:7Ratatui4RectV6heightSivp",
       "target": "s:7Ratatui4RectV"
     },
     {
@@ -24831,17 +24831,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4SizeV5width6heightACs6UInt16V_AGtcfc",
+      "source": "s:7Ratatui4SizeV5width6heightACSi_Sitcfc",
       "target": "s:7Ratatui4SizeV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4SizeV5widths6UInt16Vvp",
+      "source": "s:7Ratatui4SizeV5widthSivp",
       "target": "s:7Ratatui4SizeV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui4SizeV6heights6UInt16Vvp",
+      "source": "s:7Ratatui4SizeV6heightSivp",
       "target": "s:7Ratatui4SizeV"
     },
     {
@@ -25081,7 +25081,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5BlockV13verticalSpaces6UInt16V3top_AF6bottomtvp",
+      "source": "s:7Ratatui5BlockV13verticalSpaceSi3top_Si6bottomtvp",
       "target": "s:7Ratatui5BlockV"
     },
     {
@@ -25091,7 +25091,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5BlockV15horizontalSpaces6UInt16V7leading_AF8trailingtvp",
+      "source": "s:7Ratatui5BlockV15horizontalSpaceSi7leading_Si8trailingtvp",
       "target": "s:7Ratatui5BlockV"
     },
     {
@@ -25491,12 +25491,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5StackV7spacings6UInt16Vvp",
+      "source": "s:7Ratatui5StackV7spacingSivp",
       "target": "s:7Ratatui5StackV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5StackV_7spacing7contentAcA4AxisO_s6UInt16VSayAA0B4ItemVGyXEtcfc",
+      "source": "s:7Ratatui5StackV_7spacing7contentAcA4AxisO_SiSayAA0B4ItemVGyXEtcfc",
       "target": "s:7Ratatui5StackV"
     },
     {
@@ -25571,7 +25571,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5TableV10rowSpacings6UInt16Vvp",
+      "source": "s:7Ratatui5TableV10rowSpacingSivp",
       "target": "s:7Ratatui5TableV"
     },
     {
@@ -25591,7 +25591,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5TableV13columnSpacings6UInt16Vvp",
+      "source": "s:7Ratatui5TableV13columnSpacingSivp",
       "target": "s:7Ratatui5TableV"
     },
     {
@@ -25671,12 +25671,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5TableVA2A0B3RowVRszlE_6widths6header6footer08selectedC05style0E5Style0fI00gI00g6ColumnI00g4CellI015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO0ACyAEGSayAEG_SayAA10ConstraintOGAESgA_SiSgAA0I0VA2_A2_A2_A2_A2_AA4LineVSayA4_GAA09HighlightO0Os6UInt16VAA4FlexOA9_tcfc",
+      "source": "s:7Ratatui5TableVA2A0B3RowVRszlE_6widths6header6footer08selectedC05style0E5Style0fI00gI00g6ColumnI00g4CellI015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO0ACyAEGSayAEG_SayAA10ConstraintOGAESgA_SiSgAA0I0VA2_A2_A2_A2_A2_AA4LineVSayA4_GAA09HighlightO0OSiAA4FlexOSitcfc",
       "target": "s:7Ratatui5TableV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui5TableV_11selectedRow5style11headerStyle06footerG00F13Configuration0hI00cG00c6ColumnG00c4CellG015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO00rG00R6Height0rI07columnsACyxGSayxG_SiSgAA0G0VA_A_AA0bdI0VA1_A_A_A_AA4LineVSayA3_GAA09HighlightO0Os6UInt16VAA4FlexOA8_A_xcSgSixcSgA1_xcSgSayAA0bJ0VyxGGyXEtcfc",
+      "source": "s:7Ratatui5TableV_11selectedRow5style11headerStyle06footerG00F13Configuration0hI00cG00c6ColumnG00c4CellG015highlightSymbol0L7Symbols0L7Spacing06columnO04flex03rowO00rG00R6Height0rI07columnsACyxGSayxG_SiSgAA0G0VA_A_AA0bdI0VA1_A_A_A_AA4LineVSayA3_GAA09HighlightO0OSiAA4FlexOSiA_xcSgSixcSgA1_xcSgSayAA0bJ0VyxGGyXEtcfc",
       "target": "s:7Ratatui5TableV"
     },
     {
@@ -25751,7 +25751,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6BufferV9setString_2at5style8maxWidthAA8PositionVSS_AiA5StyleVs6UInt16VSgtF",
+      "source": "s:7Ratatui6BufferV9setString_2at5style8maxWidthAA8PositionVSS_AiA5StyleVSiSgtF",
       "target": "s:7Ratatui6BufferV"
     },
     {
@@ -25886,37 +25886,37 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6HStackV7spacing7contentACs6UInt16V_SayAA9StackItemVGyXEtcfc",
+      "source": "s:7Ratatui6HStackV7spacing7contentACSi_SayAA9StackItemVGyXEtcfc",
       "target": "s:7Ratatui6HStackV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6InsetsV3allyACs6UInt16VFZ",
+      "source": "s:7Ratatui6InsetsV3allyACSiFZ",
       "target": "s:7Ratatui6InsetsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6InsetsV3top7leading6bottom8trailingACs6UInt16V_A3Itcfc",
+      "source": "s:7Ratatui6InsetsV3top7leading6bottom8trailingACSi_S3itcfc",
       "target": "s:7Ratatui6InsetsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6InsetsV3tops6UInt16Vvp",
+      "source": "s:7Ratatui6InsetsV3topSivp",
       "target": "s:7Ratatui6InsetsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6InsetsV6bottoms6UInt16Vvp",
+      "source": "s:7Ratatui6InsetsV6bottomSivp",
       "target": "s:7Ratatui6InsetsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6InsetsV7leadings6UInt16Vvp",
+      "source": "s:7Ratatui6InsetsV7leadingSivp",
       "target": "s:7Ratatui6InsetsV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6InsetsV8trailings6UInt16Vvp",
+      "source": "s:7Ratatui6InsetsV8trailingSivp",
       "target": "s:7Ratatui6InsetsV"
     },
     {
@@ -26046,7 +26046,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui6VStackV7spacing7contentACs6UInt16V_SayAA9StackItemVGyXEtcfc",
+      "source": "s:7Ratatui6VStackV7spacing7contentACSi_SayAA9StackItemVGyXEtcfc",
       "target": "s:7Ratatui6VStackV"
     },
     {
@@ -26141,7 +26141,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7MonthlyV5widths6UInt16Vvp",
+      "source": "s:7Ratatui7MonthlyV5widthSivp",
       "target": "s:7Ratatui7MonthlyV"
     },
     {
@@ -26151,7 +26151,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7MonthlyV6heights6UInt16Vvp",
+      "source": "s:7Ratatui7MonthlyV6heightSivp",
       "target": "s:7Ratatui7MonthlyV"
     },
     {
@@ -26181,42 +26181,42 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV10horizontalyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV10horizontalyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV12proportionalyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV12proportionalyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV3allyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV3allyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV3top7leading6bottom8trailingACs6UInt16V_A3Itcfc",
+      "source": "s:7Ratatui7PaddingV3top7leading6bottom8trailingACSi_S3itcfc",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV3tops6UInt16Vvp",
+      "source": "s:7Ratatui7PaddingV3topSivp",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV3topyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV3topyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV4left5right3top6bottomACs6UInt16V_A3Itcfc",
+      "source": "s:7Ratatui7PaddingV4left5right3top6bottomACSi_S3itcfc",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV4leftyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV4leftyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
@@ -26226,17 +26226,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV5rightyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV5rightyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV6bottoms6UInt16Vvp",
+      "source": "s:7Ratatui7PaddingV6bottomSivp",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV6bottomyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV6bottomyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
@@ -26246,32 +26246,32 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV7leadings6UInt16Vvp",
+      "source": "s:7Ratatui7PaddingV7leadingSivp",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV7uniformyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV7uniformyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV8trailings6UInt16Vvp",
+      "source": "s:7Ratatui7PaddingV8trailingSivp",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV8verticalyACs6UInt16VFZ",
+      "source": "s:7Ratatui7PaddingV8verticalyACSiFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV9symmetric10horizontal8verticalACs6UInt16V_AHtFZ",
+      "source": "s:7Ratatui7PaddingV9symmetric10horizontal8verticalACSi_SitFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui7PaddingV9symmetricyACs6UInt16V_AFtFZ",
+      "source": "s:7Ratatui7PaddingV9symmetricyACSi_SitFZ",
       "target": "s:7Ratatui7PaddingV"
     },
     {
@@ -26536,7 +26536,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8BarChartV12groupSpacings6UInt16Vvp",
+      "source": "s:7Ratatui8BarChartV12groupSpacingSivp",
       "target": "s:7Ratatui8BarChartV"
     },
     {
@@ -26546,7 +26546,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8BarChartV6groups7maximum8barWidth7spacing12groupSpacing9direction11showsValuesACSayAA0B5GroupVG_SdSgs6UInt16VA2pA0bC9DirectionOSbtcfc",
+      "source": "s:7Ratatui8BarChartV6groups7maximum8barWidth7spacing12groupSpacing9direction11showsValuesACSayAA0B5GroupVG_SdSgS3iAA0bC9DirectionOSbtcfc",
       "target": "s:7Ratatui8BarChartV"
     },
     {
@@ -26566,12 +26566,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8BarChartV7spacings6UInt16Vvp",
+      "source": "s:7Ratatui8BarChartV7spacingSivp",
       "target": "s:7Ratatui8BarChartV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8BarChartV8barWidths6UInt16Vvp",
+      "source": "s:7Ratatui8BarChartV8barWidthSivp",
       "target": "s:7Ratatui8BarChartV"
     },
     {
@@ -26581,7 +26581,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8BarChartV_7maximum8barWidth7spacing9direction11showsValuesACSayAA0B0VG_SdSgs6UInt16VAnA0bC9DirectionOSbtcfc",
+      "source": "s:7Ratatui8BarChartV_7maximum8barWidth7spacing9direction11showsValuesACSayAA0B0VG_SdSgS2iAA0bC9DirectionOSbtcfc",
       "target": "s:7Ratatui8BarChartV"
     },
     {
@@ -26781,17 +26781,17 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8PositionV1x1yACs6UInt16V_AGtcfc",
+      "source": "s:7Ratatui8PositionV1x1yACSi_Sitcfc",
       "target": "s:7Ratatui8PositionV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8PositionV1xs6UInt16Vvp",
+      "source": "s:7Ratatui8PositionV1xSivp",
       "target": "s:7Ratatui8PositionV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8PositionV1ys6UInt16Vvp",
+      "source": "s:7Ratatui8PositionV1ySivp",
       "target": "s:7Ratatui8PositionV"
     },
     {
@@ -26896,7 +26896,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8TerminalV12insertBefore6height13batchPosition_ys6UInt16V_AA021HistoryInsertionBatchG0OyAA6BufferVzKXEtKAA06InlineI7BackendRzrlF",
+      "source": "s:7Ratatui8TerminalV12insertBefore6height13batchPosition_ySi_AA021HistoryInsertionBatchG0OyAA6BufferVzKXEtKAA06InlineH7BackendRzrlF",
       "target": "s:7Ratatui8TerminalV"
     },
     {
@@ -26946,7 +26946,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui8ViewportO6inlineyACs6UInt16V_tcACmF",
+      "source": "s:7Ratatui8ViewportO6inlineyACSi_tcACmF",
       "target": "s:7Ratatui8ViewportO"
     },
     {
@@ -27446,7 +27446,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui9ParagraphV16horizontalScrolls6UInt16Vvp",
+      "source": "s:7Ratatui9ParagraphV16horizontalScrollSivp",
       "target": "s:7Ratatui9ParagraphV"
     },
     {
@@ -27471,7 +27471,7 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui9ParagraphV5style4wrap6scroll16horizontalScroll21trimLeadingWhitespace5linesAcA5StyleV_AA8WrapModeOs6UInt16VAOSbSayAA4LineVGyXEtcfc",
+      "source": "s:7Ratatui9ParagraphV5style4wrap6scroll16horizontalScroll21trimLeadingWhitespace5linesAcA5StyleV_AA8WrapModeOS2iSbSayAA4LineVGyXEtcfc",
       "target": "s:7Ratatui9ParagraphV"
     },
     {
@@ -27486,12 +27486,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui9ParagraphV6scrolls6UInt16Vvp",
+      "source": "s:7Ratatui9ParagraphV6scrollSivp",
       "target": "s:7Ratatui9ParagraphV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui9ParagraphV9lineCount5widthSis6UInt16V_tF",
+      "source": "s:7Ratatui9ParagraphV9lineCount5widthS2i_tF",
       "target": "s:7Ratatui9ParagraphV"
     },
     {
@@ -27501,12 +27501,12 @@
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui9ParagraphV_4wrap6scroll16horizontalScroll21trimLeadingWhitespaceAcA4TextV_AA8WrapModeOs6UInt16VAMSbtcfc",
+      "source": "s:7Ratatui9ParagraphV_4wrap6scroll16horizontalScroll21trimLeadingWhitespaceAcA4TextV_AA8WrapModeOS2iSbtcfc",
       "target": "s:7Ratatui9ParagraphV"
     },
     {
       "kind": "memberOf",
-      "source": "s:7Ratatui9ParagraphV_5style4wrap6scroll16horizontalScroll21trimLeadingWhitespaceACSS_AA5StyleVAA8WrapModeOs6UInt16VANSbtcfc",
+      "source": "s:7Ratatui9ParagraphV_5style4wrap6scroll16horizontalScroll21trimLeadingWhitespaceACSS_AA5StyleVAA8WrapModeOS2iSbtcfc",
       "target": "s:7Ratatui9ParagraphV"
     },
     {
@@ -27835,27 +27835,27 @@
     },
     {
       "kind": "requirementOf",
-      "source": "s:7Ratatui20InlineHistoryBackendP14scrollRegionUp_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui20InlineHistoryBackendP14scrollRegionUp_2byySnySiG_SitKF",
       "target": "s:7Ratatui20InlineHistoryBackendP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:7Ratatui20InlineHistoryBackendP16scrollRegionDown_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui20InlineHistoryBackendP16scrollRegionDown_2byySnySiG_SitKF",
       "target": "s:7Ratatui20InlineHistoryBackendP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:7Ratatui20InlineHistoryBackendP28scrollRegionUpIntoScrollback_2byySnys6UInt16VG_AGtKF",
+      "source": "s:7Ratatui20InlineHistoryBackendP28scrollRegionUpIntoScrollback_2byySnySiG_SitKF",
       "target": "s:7Ratatui20InlineHistoryBackendP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:7Ratatui20InlineViewportSizingP07desiredbC6Height4sizes6UInt16VAA4SizeV_tF",
+      "source": "s:7Ratatui20InlineViewportSizingP07desiredbC6Height4sizeSiAA4SizeV_tF",
       "target": "s:7Ratatui20InlineViewportSizingP"
     },
     {
       "kind": "requirementOf",
-      "source": "s:7Ratatui20LineAppendingBackendP11appendLinesyys6UInt16VKF",
+      "source": "s:7Ratatui20LineAppendingBackendP11appendLinesyySiKF",
       "target": "s:7Ratatui20LineAppendingBackendP"
     },
     {

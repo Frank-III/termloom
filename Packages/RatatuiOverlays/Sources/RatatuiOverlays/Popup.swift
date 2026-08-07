@@ -1,16 +1,18 @@
 import Ratatui
 
 public enum PopupDimension: Hashable, Sendable {
-  case cells(UInt16)
-  case percentage(UInt16)
+  case cells(Int)
+  case percentage(Int)
   case fill
 
-  func resolve(available: UInt16) -> UInt16 {
+  func resolve(available: Int) -> Int {
+    let available = max(0, available)
     switch self {
-    case .cells(let cells): min(cells, available)
+    case .cells(let cells): return min(max(0, cells), available)
     case .percentage(let percent):
-      UInt16(clamping: Int(available) * min(100, Int(percent)) / 100)
-    case .fill: available
+      let percent = min(100, max(0, percent))
+      return available / 100 * percent + available % 100 * percent / 100
+    case .fill: return available
     }
   }
 }
@@ -24,11 +26,11 @@ public struct PopupSize: Hashable, Sendable {
     self.height = height
   }
 
-  public static func cells(width: UInt16, height: UInt16) -> Self {
+  public static func cells(width: Int, height: Int) -> Self {
     Self(width: .cells(width), height: .cells(height))
   }
 
-  public static func percentage(width: UInt16, height: UInt16) -> Self {
+  public static func percentage(width: Int, height: Int) -> Self {
     Self(width: .percentage(width), height: .percentage(height))
   }
 }
@@ -65,25 +67,25 @@ public struct PopupLayout: Hashable, Sendable {
     guard !available.isEmpty else { return available }
     let width = max(1, size.width.resolve(available: available.width))
     let height = max(1, size.height.resolve(available: available.height))
-    let centeredX = Int(available.x) + (Int(available.width) - Int(width)) / 2
-    let centeredY = Int(available.y) + (Int(available.height) - Int(height)) / 2
-    let trailingX = Int(available.right) - Int(width)
-    let bottomY = Int(available.bottom) - Int(height)
+    let centeredX = available.x + (available.width - width) / 2
+    let centeredY = available.y + (available.height - height) / 2
+    let trailingX = available.right - width
+    let bottomY = available.bottom - height
     let point: (x: Int, y: Int) =
       switch placement {
       case .center: (centeredX, centeredY)
-      case .top: (centeredX, Int(available.y))
+      case .top: (centeredX, available.y)
       case .bottom: (centeredX, bottomY)
-      case .leading: (Int(available.x), centeredY)
+      case .leading: (available.x, centeredY)
       case .trailing: (trailingX, centeredY)
-      case .topLeading: (Int(available.x), Int(available.y))
-      case .topTrailing: (trailingX, Int(available.y))
-      case .bottomLeading: (Int(available.x), bottomY)
+      case .topLeading: (available.x, available.y)
+      case .topTrailing: (trailingX, available.y)
+      case .bottomLeading: (available.x, bottomY)
       case .bottomTrailing: (trailingX, bottomY)
       }
     return Rect(
-      x: UInt16(clamping: point.x),
-      y: UInt16(clamping: point.y),
+      x: point.x,
+      y: point.y,
       width: width,
       height: height)
   }

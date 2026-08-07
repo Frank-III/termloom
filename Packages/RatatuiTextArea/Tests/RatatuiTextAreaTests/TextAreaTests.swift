@@ -95,7 +95,7 @@ import Testing
     #expect(frame.cursorStyle == .steadyBar)
   }
 
-  private func line(in buffer: Buffer, row: UInt16) -> String {
+  private func line(in buffer: Buffer, row: Int) -> String {
     (buffer.area.x..<buffer.area.right).map { x in
       buffer[Position(x: x, y: row)].symbol
     }.joined()

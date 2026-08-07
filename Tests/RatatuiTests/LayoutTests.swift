@@ -4,6 +4,25 @@ import Testing
 @testable import Ratatui
 
 @Suite struct LayoutTests {
+  @Test func nativeIntegerConstraintsNormalizeAndSaturateExtremeValues() {
+    let area = Rect(x: Int.max - 10, y: 0, width: 10, height: 1)
+    let areas = Layout.horizontal(
+      .min(.max),
+      .length(-1),
+      .percentage(.max),
+      .ratio(numerator: .max, denominator: 1),
+      .flex(.max),
+      spacing: .overlap(.max)
+    ).split(area)
+
+    #expect(areas.count == 5)
+    #expect(areas.allSatisfy { $0.x >= 0 && $0.width >= 0 && $0.right <= Int.max })
+
+    let literalMinimum = LayoutSpacing(integerLiteral: .min)
+    #expect(literalMinimum == .overlap(.max))
+    #expect(Layout.horizontal(.length(1), spacing: literalMinimum).split(.zero).count == 1)
+  }
+
   @Test func repeatedSplitsUseTheBoundedCacheAndReuseSpacerGeometry() {
     Layout.configureCache(capacity: 500)
     defer { Layout.configureCache() }
@@ -116,7 +135,7 @@ import Testing
   }
 
   @Test func flexPositionsEveryConstraintFamilyLikeUpstream() {
-    typealias Case = (constraints: [Constraint], flex: Flex, expected: [(UInt16, UInt16)])
+    typealias Case = (constraints: [Constraint], flex: Flex, expected: [(Int, Int)])
     let cases: [Case] = [
       ([.length(50)], .legacy, [(0, 100)]),
       ([.length(50)], .start, [(0, 50)]),
@@ -227,7 +246,7 @@ import Testing
 
   @Test func legacyPrioritiesMatchUpstreamPathologicalConstraints() {
     let area = Rect(x: 0, y: 0, width: 100, height: 1)
-    func widths(_ constraints: [Constraint]) -> [UInt16] {
+    func widths(_ constraints: [Constraint]) -> [Int] {
       Layout(.horizontal, constraints: constraints, flex: .legacy).split(area).map(\.width)
     }
 
@@ -246,7 +265,7 @@ import Testing
   }
 
   @Test func fillWeightsMatchTheUpstreamConstraintCorpus() {
-    typealias Case = (constraints: [Constraint], expected: [(UInt16, UInt16)])
+    typealias Case = (constraints: [Constraint], expected: [(Int, Int)])
     let cases: [Case] = [
       ([.flex(1), .flex(2), .flex(1), .flex(1)], [(0, 20), (20, 40), (60, 20), (80, 20)]),
       ([.flex(1), .flex(2), .flex(3), .flex(4)], [(0, 10), (10, 20), (30, 30), (60, 40)]),
@@ -287,7 +306,7 @@ import Testing
   @Test func flexSpacingAndOverlapMatchTheUpstreamMatrix() {
     typealias Case = (
       constraints: [Constraint], flex: Flex, spacing: LayoutSpacing,
-      expected: [(UInt16, UInt16)]
+      expected: [(Int, Int)]
     )
     let fixed: [Constraint] = [.length(20), .length(20), .length(20)]
     let cases: [Case] = [

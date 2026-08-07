@@ -1,21 +1,21 @@
 import Foundation
 
 public enum LayoutSpacing: Hashable, Sendable, ExpressibleByIntegerLiteral {
-  case space(UInt16)
-  case overlap(UInt16)
+  case space(Int)
+  case overlap(Int)
 
   public init(integerLiteral value: Int) {
     if value < 0 {
-      self = .overlap(UInt16(clamping: value.magnitude))
+      self = .overlap(value == .min ? .max : -value)
     } else {
-      self = .space(UInt16(clamping: value))
+      self = .space(value)
     }
   }
 
   fileprivate var signedValue: Int {
     switch self {
-    case .space(let value): Int(value)
-    case .overlap(let value): -Int(value)
+    case .space(let value): max(0, value)
+    case .overlap(let value): -max(0, value)
     }
   }
 }
@@ -92,25 +92,21 @@ public struct Layout: Hashable, Sendable {
 
     let area = area.inset(by: margin)
 
-    let extent = axis == .horizontal ? Int(area.width) : Int(area.height)
+    let extent = axis == .horizontal ? area.width : area.height
     let baseSpacers = initialSpacers()
-    let totalSpacing = baseSpacers.reduce(0, +)
-    let available = max(0, extent - totalSpacing)
+    let totalSpacing = saturatingSum(baseSpacers)
+    let available = max(0, saturatingSubtract(extent, totalSpacing))
     if usesCommonSolver {
       return splitCommonConstraints(area, available: available)
     }
     var lengths = constraints.map { constraint -> Int in
       switch constraint {
       case .min(let value), .max(let value), .length(let value):
-        Int(value)
+        min(available, max(0, value))
       case .percentage(let value):
-        Int((Double(available) * Double(value) / 100).rounded())
+        proportionalRequest(available, numerator: value, denominator: 100)
       case .ratio(let numerator, let denominator):
-        denominator == 0
-          ? 0
-          : Int(
-            (Double(available) * Double(numerator) / Double(denominator)).rounded()
-          )
+        proportionalRequest(available, numerator: numerator, denominator: denominator)
       case .flex:
         0
       }
@@ -118,7 +114,7 @@ public struct Layout: Hashable, Sendable {
 
     // Relax lower-priority constraints first. A minimum is the only hard lower
     // bound; every returned segment is still clipped to the available area.
-    var overflow = max(0, lengths.reduce(0, +) - available)
+    var overflow = max(0, saturatingSubtract(saturatingSum(lengths), available))
     let shrinkOrder: [[Int]] = [
       indices(matching: { if case .max = $0 { true } else { false } }),
       indices(matching: { if case .flex = $0 { true } else { false } }),
@@ -143,7 +139,7 @@ public struct Layout: Hashable, Sendable {
       }
     }
 
-    var remaining = max(0, available - lengths.reduce(0, +))
+    var remaining = max(0, saturatingSubtract(available, saturatingSum(lengths)))
     let hasPositiveFill = constraints.contains {
       if case .flex(let weight) = $0 { return weight > 0 }
       return false
@@ -162,63 +158,71 @@ public struct Layout: Hashable, Sendable {
     if !growers.isEmpty {
       let shares = distribute(remaining, weights: growers.map(\.1))
       for (grower, share) in zip(growers, shares) {
-        lengths[grower.0] += share
+        lengths[grower.0] = saturatingAdd(lengths[grower.0], share)
       }
       remaining = 0
     } else if flex == .legacy, remaining > 0 {
-      lengths[legacyGrowthRecipient()] += remaining
+      lengths[legacyGrowthRecipient()] = saturatingAdd(lengths[legacyGrowthRecipient()], remaining)
       remaining = 0
     }
 
     var spacers = baseSpacers
-    let excess = max(0, extent - lengths.reduce(0, +) - spacers.reduce(0, +))
+    let excess = max(
+      0,
+      saturatingSubtract(saturatingSubtract(extent, saturatingSum(lengths)), saturatingSum(spacers))
+    )
     switch flex {
     case .legacy, .start:
-      spacers[spacers.count - 1] += excess
+      spacers[spacers.count - 1] = saturatingAdd(spacers[spacers.count - 1], excess)
     case .end:
-      spacers[0] += excess
+      spacers[0] = saturatingAdd(spacers[0], excess)
     case .center:
-      spacers[0] += excess - excess / 2
-      spacers[spacers.count - 1] += excess / 2
+      spacers[0] = saturatingAdd(spacers[0], excess) - excess / 2
+      spacers[spacers.count - 1] = saturatingAdd(spacers[spacers.count - 1], excess) / 2
     case .spaceBetween:
       if constraints.count > 1 {
         let shares = distribute(
           excess,
           weights: Array(repeating: 1, count: constraints.count - 1)
         )
-        for (index, share) in shares.enumerated() { spacers[index + 1] += share }
+        for (index, share) in shares.enumerated() {
+          spacers[index + 1] = saturatingAdd(spacers[index + 1], share)
+        }
       } else {
-        lengths[0] += excess
+        lengths[0] = saturatingAdd(lengths[0], excess)
       }
     case .spaceEvenly:
       let shares = distribute(excess, weights: Array(repeating: 1, count: spacers.count))
-      for index in spacers.indices { spacers[index] += shares[index] }
+      for index in spacers.indices { spacers[index] = saturatingAdd(spacers[index], shares[index]) }
     case .spaceAround:
       let weights =
         constraints.count == 1
         ? [1, 1]
         : [1] + Array(repeating: 2, count: max(0, constraints.count - 1)) + [1]
       let shares = distribute(excess, weights: weights)
-      for index in spacers.indices { spacers[index] += shares[index] }
+      for index in spacers.indices { spacers[index] = saturatingAdd(spacers[index], shares[index]) }
     }
 
-    var cursor = (axis == .horizontal ? Int(area.x) : Int(area.y)) + spacers[0]
+    var cursor = saturatingOffset(
+      axis == .horizontal ? area.x : area.y,
+      by: spacers[0]
+    )
     return lengths.enumerated().map { index, length in
-      defer { cursor += length + spacers[index + 1] }
+      defer { cursor = saturatingOffset(cursor, by: saturatingAdd(length, spacers[index + 1])) }
       switch axis {
       case .horizontal:
         return Rect(
-          x: UInt16(clamping: cursor),
+          x: cursor,
           y: area.y,
-          width: UInt16(clamping: length),
+          width: length,
           height: area.height
         )
       case .vertical:
         return Rect(
           x: area.x,
-          y: UInt16(clamping: cursor),
+          y: cursor,
           width: area.width,
-          height: UInt16(clamping: length)
+          height: length
         )
       }
     }
@@ -254,17 +258,17 @@ public struct Layout: Hashable, Sendable {
       switch axis {
       case .horizontal:
         Rect(
-          x: UInt16(clamping: start),
+          x: start,
           y: inner.y,
-          width: UInt16(clamping: max(0, length)),
+          width: max(0, length),
           height: inner.height
         )
       case .vertical:
         Rect(
           x: inner.x,
-          y: UInt16(clamping: start),
+          y: start,
           width: inner.width,
-          height: UInt16(clamping: max(0, length))
+          height: max(0, length)
         )
       }
     }
@@ -301,21 +305,22 @@ public struct Layout: Hashable, Sendable {
       if case .flex(let weight) = $0 { return weight > 0 }
       return false
     }
-    var flexWeight = 0
+    var flexWeight = 0.0
     for (index, constraint) in constraints.enumerated() {
       let requested: Int
       switch constraint {
       case .length(let value):
-        requested = Int(value)
+        requested = min(available, max(0, value))
       case .percentage(let value):
-        requested = Int((Double(available) * Double(value) / 100).rounded())
+        requested = proportionalRequest(available, numerator: value, denominator: 100)
       case .ratio(let numerator, let denominator):
-        requested =
-          denominator == 0
-          ? 0
-          : Int((Double(available) * Double(numerator) / Double(denominator)).rounded())
+        requested = proportionalRequest(
+          available,
+          numerator: numerator,
+          denominator: denominator
+        )
       case .flex(let weight):
-        flexWeight += hasPositiveFill ? Int(weight) : 1
+        flexWeight += Double(max(0, hasPositiveFill ? weight : 1))
         continue
       case .min, .max:
         preconditionFailure("minimum and maximum constraints use the general layout path")
@@ -326,14 +331,14 @@ public struct Layout: Hashable, Sendable {
     }
 
     if flexWeight > 0 {
-      var consumedWeight = 0
+      var consumedWeight = 0.0
       var consumedLength = 0
       for (index, constraint) in constraints.enumerated() {
         guard case .flex(let rawWeight) = constraint else { continue }
-        let weight = hasPositiveFill ? Int(rawWeight) : 1
+        let weight = hasPositiveFill ? rawWeight : 1
         guard weight > 0 else { continue }
-        consumedWeight += weight
-        let target = remaining * consumedWeight / flexWeight
+        consumedWeight += Double(weight)
+        let target = Int((Double(remaining) * consumedWeight / flexWeight).rounded(.down))
         lengths[index] = target - consumedLength
         consumedLength = target
       }
@@ -347,9 +352,9 @@ public struct Layout: Hashable, Sendable {
       case .horizontal:
         result.append(
           Rect(
-            x: UInt16(clamping: cursor),
+            x: cursor,
             y: area.y,
-            width: UInt16(clamping: length),
+            width: length,
             height: area.height
           )
         )
@@ -357,13 +362,13 @@ public struct Layout: Hashable, Sendable {
         result.append(
           Rect(
             x: area.x,
-            y: UInt16(clamping: cursor),
+            y: cursor,
             width: area.width,
-            height: UInt16(clamping: length)
+            height: length
           )
         )
       }
-      cursor += length + spacing.signedValue
+      cursor = saturatingOffset(cursor, by: saturatingAdd(length, spacing.signedValue))
     }
     return result
   }
@@ -392,15 +397,15 @@ public struct Layout: Hashable, Sendable {
   /// Integer weighted apportionment with stable cumulative rounding. The result
   /// always sums to `total`, so a split never leaks a terminal cell.
   private func distribute(_ total: Int, weights: [Int]) -> [Int] {
-    let weightTotal = weights.reduce(0) { $0 + max(0, $1) }
+    let weightTotal = weights.reduce(0.0) { $0 + Double(max(0, $1)) }
     guard total > 0, weightTotal > 0 else {
       return Array(repeating: 0, count: weights.count)
     }
-    var consumedWeight = 0
+    var consumedWeight = 0.0
     var consumedTotal = 0
     return weights.map { weight in
-      consumedWeight += max(0, weight)
-      let target = (total * consumedWeight + weightTotal / 2) / weightTotal
+      consumedWeight += Double(max(0, weight))
+      let target = Int((Double(total) * consumedWeight / weightTotal).rounded())
       defer { consumedTotal = target }
       return target - consumedTotal
     }
@@ -539,4 +544,31 @@ extension Rect {
   ) -> [Rect] {
     Layout(axis, constraints: constraints, spacing: spacing, flex: flex, margin: margin).split(self)
   }
+}
+
+private func saturatingAdd(_ lhs: Int, _ rhs: Int) -> Int {
+  let result = lhs.addingReportingOverflow(rhs)
+  guard result.overflow else { return result.partialValue }
+  return rhs >= 0 ? .max : .min
+}
+
+private func saturatingSubtract(_ lhs: Int, _ rhs: Int) -> Int {
+  let result = lhs.subtractingReportingOverflow(rhs)
+  guard result.overflow else { return result.partialValue }
+  return rhs < 0 ? .max : .min
+}
+
+private func saturatingOffset(_ value: Int, by offset: Int) -> Int {
+  max(0, saturatingAdd(value, offset))
+}
+
+private func saturatingSum(_ values: [Int]) -> Int {
+  values.reduce(0, saturatingAdd)
+}
+
+private func proportionalRequest(_ available: Int, numerator: Int, denominator: Int) -> Int {
+  guard available > 0, numerator > 0, denominator > 0 else { return 0 }
+  let value = (Double(available) * Double(numerator) / Double(denominator)).rounded()
+  guard value.isFinite, value < Double(available) else { return available }
+  return max(0, Int(value))
 }

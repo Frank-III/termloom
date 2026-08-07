@@ -53,7 +53,7 @@ public struct InlineDocumentRuntime<ID: Hashable & Sendable>: Sendable {
 
   private var documentID: ID?
   private var revision: UInt64?
-  private var width: UInt16?
+  private var width: Int?
   private var emitted: [EmittedBlock] = []
 
   public init() {}
@@ -70,7 +70,7 @@ public struct InlineDocumentRuntime<ID: Hashable & Sendable>: Sendable {
   }
 
   public mutating func reconcile(
-    _ document: InlineDocument<ID>, width newWidth: UInt16
+    _ document: InlineDocument<ID>, width newWidth: Int
   ) -> [TerminalHistoryInsertion] {
     if documentID == document.id, width == newWidth, let newRevision = document.revision,
       revision == newRevision
@@ -119,7 +119,7 @@ public struct InlineDocumentRuntime<ID: Hashable & Sendable>: Sendable {
   }
 
   private func requiresReplay(
-    document: InlineDocument<ID>, active: [InlineDocumentBlock<ID>], width newWidth: UInt16
+    document: InlineDocument<ID>, active: [InlineDocumentBlock<ID>], width newWidth: Int
   ) -> Bool {
     guard documentID != nil else { return false }
     guard documentID == document.id, width == newWidth, emitted.count <= active.count else {

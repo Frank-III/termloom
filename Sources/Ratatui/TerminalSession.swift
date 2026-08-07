@@ -10,7 +10,7 @@ import Foundation
 
 public enum Viewport: Hashable, Sendable {
   /// A retained full-width region embedded in normal terminal output.
-  case inline(height: UInt16)
+  case inline(height: Int)
   /// The terminal's alternate screen, automatically following the physical window size.
   case fullscreen
   /// An exact region in terminal coordinates. It never follows physical resizes automatically.
@@ -363,7 +363,7 @@ public final class TerminalSession {
     }
 
     let clampedY = min(
-      viewportOrigin.y, UInt16(clamping: max(0, Int(size.height) - Int(height))))
+      viewportOrigin.y, (max(0, size.height - height)))
     guard clampedY != viewportOrigin.y else { return .unchanged }
     viewportOrigin = Position(x: 0, y: clampedY)
     return .viewportChanged
@@ -402,7 +402,7 @@ public final class TerminalSession {
   /// owned. The caller must recreate its backend so buffer dimensions and input coordinates use the
   /// new viewport.
   @discardableResult
-  public func updateInlineViewportHeight(_ requestedHeight: UInt16) throws -> Bool {
+  public func updateInlineViewportHeight(_ requestedHeight: Int) throws -> Bool {
     guard lifecycleState == .active, case .inline(let previousRequestedHeight) = viewport else {
       return false
     }
@@ -412,19 +412,19 @@ public final class TerminalSession {
     guard height != previousHeight else { return false }
 
     let overflowingRows = max(
-      0, Int(viewportOrigin.y) + Int(height) - Int(max(1, screen.height)))
+      0, viewportOrigin.y + height - Int(max(1, screen.height)))
     if overflowingRows > 0 {
       let bottomRow = max(1, screen.height)
       let lineFeeds = String(repeating: "\r\n", count: overflowingRows)
       try terminalOutput.write(Data("\u{1B}[\(bottomRow);1H\(lineFeeds)".utf8))
-      viewportOrigin.y = UInt16(clamping: max(0, Int(viewportOrigin.y) - overflowingRows))
+      viewportOrigin.y = (max(0, viewportOrigin.y - overflowingRows))
     }
 
-    let rowsToClear = max(Int(previousHeight), Int(height))
+    let rowsToClear = max(previousHeight, height)
     if rowsToClear > 0 {
       var sequence = "\u{1B}[?25l"
       for offset in 0..<rowsToClear {
-        let row = Int(viewportOrigin.y) + offset + 1
+        let row = viewportOrigin.y + offset + 1
         sequence += "\u{1B}[\(row);1H\u{1B}[2K"
       }
       try terminalOutput.write(Data(sequence.utf8))
@@ -550,11 +550,10 @@ public final class TerminalSession {
       return
     }
 
-    let availableLines = UInt16(
-      clamping: max(0, Int(screen.height) - Int(observed.y) - 1))
-    let missingLines = UInt16(clamping: max(0, Int(linesAfterCursor) - Int(availableLines)))
+    let availableLines = (max(0, screen.height - observed.y - 1))
+    let missingLines = (max(0, linesAfterCursor - availableLines))
     viewportOrigin = Position(
-      x: 0, y: UInt16(clamping: max(0, Int(observed.y) - Int(missingLines))))
+      x: 0, y: (max(0, observed.y - missingLines)))
 
     if linesAfterCursor > 0 {
       try terminalOutput.write(
@@ -567,7 +566,7 @@ public final class TerminalSession {
     guard ioctl(output.fileDescriptor, UInt(TIOCGWINSZ), &window) == 0,
       window.ws_col > 0, window.ws_row > 0
     else { return fallbackSize }
-    return Size(width: window.ws_col, height: window.ws_row)
+    return Size(width: Int(window.ws_col), height: Int(window.ws_row))
   }
 
   private var restoreSequence: String {
@@ -577,7 +576,7 @@ public final class TerminalSession {
       let screen = terminalWindowSize()
       let height = min(max(1, requestedHeight), max(1, screen.height))
       let bottom = min(
-        max(1, screen.height), UInt16(clamping: Int(viewportOrigin.y) + Int(height)))
+        max(1, screen.height), (viewportOrigin.y + height))
       let positionAfterViewport = "\u{1B}[\(bottom);1H"
       return defensiveModeReset
         + "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\(positionAfterViewport)\u{1B}[0 q\u{1B}[?25h\r\n"
@@ -593,9 +592,9 @@ public final class TerminalSession {
   private static func clearFixedRegionSequence(_ area: Rect) -> String {
     guard !area.isEmpty else { return "" }
     return "\u{1B}[0m"
-      + (0..<Int(area.height)).map { offset in
-        let row = Int(area.y) + offset + 1
-        let column = Int(area.x) + 1
+      + (0..<area.height).map { offset in
+        let row = area.y + offset + 1
+        let column = area.x + 1
         return "\u{1B}[\(row);\(column)H\u{1B}[\(area.width)X"
       }.joined()
   }
@@ -662,8 +661,8 @@ public final class TerminalSession {
       guard row > 0, column > 0 else { continue }
       return (
         Position(
-          x: UInt16(clamping: column - 1),
-          y: UInt16(clamping: row - 1)
+          x: (column - 1),
+          y: (row - 1)
         ),
         start..<(cursor + 1)
       )
@@ -817,8 +816,8 @@ public struct TerminalInput {
   private func localize(_ event: TerminalEvent) -> TerminalEvent {
     guard case .mouse(var mouse) = event else { return event }
     mouse.position = Position(
-      x: UInt16(clamping: max(0, Int(mouse.position.x) - Int(coordinateOrigin.x))),
-      y: UInt16(clamping: max(0, Int(mouse.position.y) - Int(coordinateOrigin.y)))
+      x: (max(0, mouse.position.x - coordinateOrigin.x)),
+      y: (max(0, mouse.position.y - coordinateOrigin.y))
     )
     return .mouse(mouse)
   }
@@ -827,7 +826,7 @@ public struct TerminalInput {
     var window = winsize()
     guard ioctl(outputDescriptor, UInt(TIOCGWINSZ), &window) == 0 else { return nil }
     guard window.ws_col > 0, window.ws_row > 0 else { return nil }
-    return Size(width: window.ws_col, height: window.ws_row)
+    return Size(width: Int(window.ws_col), height: Int(window.ws_row))
   }
 
   private func systemPoll(_ descriptors: inout [pollfd], timeout: Int32) -> Int32 {

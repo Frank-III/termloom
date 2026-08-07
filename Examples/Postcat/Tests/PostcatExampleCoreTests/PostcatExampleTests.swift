@@ -100,7 +100,7 @@ import Testing
     #expect(app.renderedResponse.map(\.content).joined().contains("x-one"))
   }
 
-  private func render<W: Widget>(_ screen: W, width: UInt16, height: UInt16) -> String {
+  private func render<W: Widget>(_ screen: W, width: Int, height: Int) -> String {
     let area = Rect(x: 0, y: 0, width: width, height: height)
     var buffer = Buffer(area: area)
     screen.render(in: area, into: &buffer, environment: RenderEnvironment())

@@ -1,16 +1,16 @@
 public struct Position: Hashable, Sendable {
-  public var x: UInt16
-  public var y: UInt16
+  public var x: Int { didSet { x = max(0, x) } }
+  public var y: Int { didSet { y = max(0, y) } }
 
-  public init(x: UInt16, y: UInt16) {
-    self.x = x
-    self.y = y
+  public init(x: Int, y: Int) {
+    self.x = max(0, x)
+    self.y = max(0, y)
   }
 
   public func offset(by offset: Offset) -> Self {
     Self(
-      x: UInt16(clamping: Int(x) + offset.x),
-      y: UInt16(clamping: Int(y) + offset.y)
+      x: saturatingOffset(x, by: offset.x),
+      y: saturatingOffset(y, by: offset.y)
     )
   }
 }
@@ -28,30 +28,44 @@ public struct Offset: Hashable, Sendable {
 }
 
 public struct Size: Hashable, Sendable {
-  public var width: UInt16
-  public var height: UInt16
+  public var width: Int { didSet { width = max(0, width) } }
+  public var height: Int { didSet { height = max(0, height) } }
 
-  public init(width: UInt16, height: UInt16) {
-    self.width = width
-    self.height = height
+  public init(width: Int, height: Int) {
+    self.width = max(0, width)
+    self.height = max(0, height)
   }
 
   public static let zero = Self(width: 0, height: 0)
 
-  public var area: Int { Int(width) * Int(height) }
+  public var area: Int {
+    width.multipliedReportingOverflow(by: height).overflow ? Int.max : width * height
+  }
 }
 
 public struct Rect: Hashable, Sendable {
-  public var x: UInt16
-  public var y: UInt16
-  public var width: UInt16
-  public var height: UInt16
+  public var x: Int {
+    didSet {
+      x = max(0, x)
+      width = min(max(0, width), Int.max - x)
+    }
+  }
+  public var y: Int {
+    didSet {
+      y = max(0, y)
+      height = min(max(0, height), Int.max - y)
+    }
+  }
+  public var width: Int { didSet { width = min(max(0, width), Int.max - x) } }
+  public var height: Int { didSet { height = min(max(0, height), Int.max - y) } }
 
-  public init(x: UInt16, y: UInt16, width: UInt16, height: UInt16) {
+  public init(x: Int, y: Int, width: Int, height: Int) {
+    let x = max(0, x)
+    let y = max(0, y)
     self.x = x
     self.y = y
-    self.width = min(width, UInt16.max - x)
-    self.height = min(height, UInt16.max - y)
+    self.width = min(max(0, width), Int.max - x)
+    self.height = min(max(0, height), Int.max - y)
   }
 
   public init(origin: Position = Position(x: 0, y: 0), size: Size) {
@@ -65,55 +79,51 @@ public struct Rect: Hashable, Sendable {
   }
 
   public var area: Int {
-    Int(width) * Int(height)
+    width.multipliedReportingOverflow(by: height).overflow ? Int.max : width * height
   }
 
   public var isEmpty: Bool {
-    width == 0 || height == 0
+    width <= 0 || height <= 0
   }
 
-  public var left: UInt16 { x }
-  public var top: UInt16 { y }
-  public var right: UInt16 { UInt16(clamping: Int(x) + Int(width)) }
-  public var bottom: UInt16 { UInt16(clamping: Int(y) + Int(height)) }
+  public var left: Int { x }
+  public var top: Int { y }
+  public var right: Int { saturatingAdd(max(0, x), max(0, width)) }
+  public var bottom: Int { saturatingAdd(max(0, y), max(0, height)) }
 
   public func contains(_ position: Position) -> Bool {
-    position.x >= x
-      && position.y >= y
-      && Int(position.x) < Int(x) + Int(width)
-      && Int(position.y) < Int(y) + Int(height)
+    position.x >= x && position.y >= y && position.x < right && position.y < bottom
   }
 
   public func inset(by insets: Insets) -> Rect {
-    let horizontal = min(Int(width), Int(insets.leading) + Int(insets.trailing))
-    let vertical = min(Int(height), Int(insets.top) + Int(insets.bottom))
+    let leading = max(0, insets.leading)
+    let trailing = max(0, insets.trailing)
+    let top = max(0, insets.top)
+    let bottom = max(0, insets.bottom)
+    let horizontal = min(max(0, width), saturatingAdd(leading, trailing))
+    let vertical = min(max(0, height), saturatingAdd(top, bottom))
     return Rect(
-      x: UInt16(clamping: Int(x) + Int(insets.leading)),
-      y: UInt16(clamping: Int(y) + Int(insets.top)),
-      width: UInt16(clamping: Int(width) - horizontal),
-      height: UInt16(clamping: Int(height) - vertical)
+      x: saturatingAdd(max(0, x), leading),
+      y: saturatingAdd(max(0, y), top),
+      width: max(0, width) - horizontal,
+      height: max(0, height) - vertical
     )
   }
 
   public func outset(by insets: Insets) -> Rect {
-    let left = max(0, Int(x) - Int(insets.leading))
-    let top = max(0, Int(y) - Int(insets.top))
-    let right = min(Int(UInt16.max), Int(self.right) + Int(insets.trailing))
-    let bottom = min(Int(UInt16.max), Int(self.bottom) + Int(insets.bottom))
-    return Rect(
-      x: UInt16(left),
-      y: UInt16(top),
-      width: UInt16(right - left),
-      height: UInt16(bottom - top)
-    )
+    let left = max(0, x - min(max(0, x), max(0, insets.leading)))
+    let top = max(0, y - min(max(0, y), max(0, insets.top)))
+    let right = saturatingAdd(self.right, max(0, insets.trailing))
+    let bottom = saturatingAdd(self.bottom, max(0, insets.bottom))
+    return Rect(x: left, y: top, width: right - left, height: bottom - top)
   }
 
   public func offset(by offset: Offset) -> Rect {
-    let maxX = Int(UInt16.max) - Int(width)
-    let maxY = Int(UInt16.max) - Int(height)
+    let maxX = Int.max - max(0, width)
+    let maxY = Int.max - max(0, height)
     return Rect(
-      x: UInt16(clamping: min(max(0, Int(x) + offset.x), maxX)),
-      y: UInt16(clamping: min(max(0, Int(y) + offset.y), maxY)),
+      x: min(saturatingOffset(max(0, x), by: offset.x), maxX),
+      y: min(saturatingOffset(max(0, y), by: offset.y), maxY),
       width: width,
       height: height
     )
@@ -124,32 +134,22 @@ public struct Rect: Hashable, Sendable {
   }
 
   public func union(_ other: Rect) -> Rect {
-    let left = min(Int(x), Int(other.x))
-    let top = min(Int(y), Int(other.y))
-    let right = max(Int(self.right), Int(other.right))
-    let bottom = max(Int(self.bottom), Int(other.bottom))
-    return Rect(
-      x: UInt16(left),
-      y: UInt16(top),
-      width: UInt16(right - left),
-      height: UInt16(bottom - top)
-    )
+    let left = min(x, other.x)
+    let top = min(y, other.y)
+    let right = max(self.right, other.right)
+    let bottom = max(self.bottom, other.bottom)
+    return Rect(x: left, y: top, width: right - left, height: bottom - top)
   }
 
   public func intersection(_ other: Rect) -> Rect {
-    let left = max(Int(x), Int(other.x))
-    let top = max(Int(y), Int(other.y))
-    let right = min(Int(self.right), Int(other.right))
-    let bottom = min(Int(self.bottom), Int(other.bottom))
+    let left = max(x, other.x)
+    let top = max(y, other.y)
+    let right = min(self.right, other.right)
+    let bottom = min(self.bottom, other.bottom)
     guard right > left, bottom > top else {
-      return Rect(x: UInt16(clamping: left), y: UInt16(clamping: top), width: 0, height: 0)
+      return Rect(x: left, y: top, width: 0, height: 0)
     }
-    return Rect(
-      x: UInt16(left),
-      y: UInt16(top),
-      width: UInt16(right - left),
-      height: UInt16(bottom - top)
-    )
+    return Rect(x: left, y: top, width: right - left, height: bottom - top)
   }
 
   public func intersects(_ other: Rect) -> Bool {
@@ -157,10 +157,10 @@ public struct Rect: Hashable, Sendable {
   }
 
   public func clamped(to bounds: Rect) -> Rect {
-    let width = min(width, bounds.width)
-    let height = min(height, bounds.height)
-    let x = min(max(x, bounds.x), bounds.right - width)
-    let y = min(max(y, bounds.y), bounds.bottom - height)
+    let width = min(max(0, width), max(0, bounds.width))
+    let height = min(max(0, height), max(0, bounds.height))
+    let x = min(max(self.x, bounds.x), bounds.right - width)
+    let y = min(max(self.y, bounds.y), bounds.bottom - height)
     return Rect(x: x, y: y, width: width, height: height)
   }
 
@@ -171,7 +171,7 @@ public struct Rect: Hashable, Sendable {
 
 public struct RectRows: Sequence, IteratorProtocol, Sendable {
   private let rect: Rect
-  private var row: UInt16 = 0
+  private var row = 0
 
   fileprivate init(_ rect: Rect) { self.rect = rect }
 
@@ -184,7 +184,7 @@ public struct RectRows: Sequence, IteratorProtocol, Sendable {
 
 public struct RectColumns: Sequence, IteratorProtocol, Sendable {
   private let rect: Rect
-  private var column: UInt16 = 0
+  private var column = 0
 
   fileprivate init(_ rect: Rect) { self.rect = rect }
 
@@ -204,32 +204,24 @@ public struct RectPositions: Sequence, IteratorProtocol, Sendable {
   public mutating func next() -> Position? {
     guard rect.width > 0, index < rect.area else { return nil }
     defer { index += 1 }
-    return Position(
-      x: UInt16(clamping: Int(rect.x) + index % Int(rect.width)),
-      y: UInt16(clamping: Int(rect.y) + index / Int(rect.width))
-    )
+    return Position(x: rect.x + index % rect.width, y: rect.y + index / rect.width)
   }
 }
 
 public struct Insets: Hashable, Sendable {
-  public var top: UInt16
-  public var leading: UInt16
-  public var bottom: UInt16
-  public var trailing: UInt16
+  public var top: Int { didSet { top = max(0, top) } }
+  public var leading: Int { didSet { leading = max(0, leading) } }
+  public var bottom: Int { didSet { bottom = max(0, bottom) } }
+  public var trailing: Int { didSet { trailing = max(0, trailing) } }
 
-  public init(
-    top: UInt16 = 0,
-    leading: UInt16 = 0,
-    bottom: UInt16 = 0,
-    trailing: UInt16 = 0
-  ) {
-    self.top = top
-    self.leading = leading
-    self.bottom = bottom
-    self.trailing = trailing
+  public init(top: Int = 0, leading: Int = 0, bottom: Int = 0, trailing: Int = 0) {
+    self.top = max(0, top)
+    self.leading = max(0, leading)
+    self.bottom = max(0, bottom)
+    self.trailing = max(0, trailing)
   }
 
-  public static func all(_ value: UInt16) -> Self {
+  public static func all(_ value: Int) -> Self {
     Self(top: value, leading: value, bottom: value, trailing: value)
   }
 }
@@ -240,18 +232,16 @@ public enum Axis: Hashable, Sendable {
 }
 
 public enum Constraint: Hashable, Sendable {
-  case min(UInt16)
-  case max(UInt16)
-  case length(UInt16)
-  case percentage(UInt16)
-  case ratio(numerator: UInt16, denominator: UInt16)
+  case min(Int)
+  case max(Int)
+  case length(Int)
+  case percentage(Int)
+  case ratio(numerator: Int, denominator: Int)
   /// Distributes remaining space by weight. This is Ratatui's `Fill`
   /// constraint, spelled `flex` to read naturally at Swift call sites.
-  case flex(UInt16)
+  case flex(Int)
 
-  public static var fill: Self {
-    .flex(1)
-  }
+  public static var fill: Self { .flex(1) }
 }
 
 /// Positions constrained segments when they do not consume the full layout area.
@@ -263,4 +253,15 @@ public enum Flex: Hashable, Sendable {
   case spaceBetween
   case spaceEvenly
   case spaceAround
+}
+
+private func saturatingAdd(_ lhs: Int, _ rhs: Int) -> Int {
+  let result = lhs.addingReportingOverflow(rhs)
+  return result.overflow ? Int.max : result.partialValue
+}
+
+private func saturatingOffset(_ value: Int, by offset: Int) -> Int {
+  let result = value.addingReportingOverflow(offset)
+  if result.overflow { return offset >= 0 ? Int.max : 0 }
+  return max(0, result.partialValue)
 }

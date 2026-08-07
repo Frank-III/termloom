@@ -153,7 +153,7 @@ import Testing
       (.trailing, 7, "4🦀7890"),
     ]
     for (alignment, width, expected) in ordinaryCases {
-      var buffer = Buffer(area: Rect(x: 0, y: 0, width: UInt16(width), height: 1))
+      var buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: 1))
       Line("1234🦀7890", alignment: alignment).render(in: buffer.area, into: &buffer)
       #expect(buffer.lines() == [expected])
     }
@@ -167,7 +167,7 @@ import Testing
     ]
     for (width, expected) in multiSpanCases {
       var buffer = Buffer(
-        area: Rect(x: 0, y: 0, width: UInt16(width), height: 1),
+        area: Rect(x: 0, y: 0, width: width, height: 1),
         repeating: Cell(symbol: "X")
       )
       Line(alignment: .trailing) {
@@ -187,7 +187,7 @@ import Testing
       (7, "🇺🇸1234 "),
     ]
     for (width, expected) in flagCases {
-      var buffer = Buffer(area: Rect(x: 0, y: 0, width: UInt16(width), height: 1))
+      var buffer = Buffer(area: Rect(x: 0, y: 0, width: width, height: 1))
       Line("🇺🇸1234").render(in: buffer.area, into: &buffer)
       #expect(buffer.lines() == [expected])
     }

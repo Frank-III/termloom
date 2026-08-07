@@ -328,7 +328,7 @@ public struct InputParser: Sendable {
         .split(separator: ";", omittingEmptySubsequences: false)
         .compactMap { UInt16($0) }
       if values.count == 2, values[0] > 0, values[1] > 0 {
-        return .cursorPositionReport(Position(x: values[1] - 1, y: values[0] - 1))
+        return .cursorPositionReport(Position(x: Int(values[1]) - 1, y: Int(values[0]) - 1))
       }
     }
     if isCSI, final == 0x79, parameters.last == 0x24 {
@@ -536,8 +536,8 @@ public struct InputParser: Sendable {
       MouseEvent(
         kind,
         at: Position(
-          x: UInt16(clamping: values[1] - 1),
-          y: UInt16(clamping: values[2] - 1)
+          x: max(0, values[1] - 1),
+          y: max(0, values[2] - 1)
         ),
         modifiers: modifiers
       )

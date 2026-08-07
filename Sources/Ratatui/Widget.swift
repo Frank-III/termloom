@@ -106,10 +106,10 @@ public struct Text: Widget, Hashable, Sendable, Stylable {
   public func render(in area: Rect, into frame: inout Frame) {
     guard !area.isEmpty else { return }
     if style != .plain { frame.buffer.setStyle(style, in: area) }
-    let renderedLineCount = min(lines.count, Int(area.height))
+    let renderedLineCount = min(lines.count, area.height)
     for index in 0..<renderedLineCount {
       lines[index].render(
-        in: Rect(x: area.x, y: area.y + UInt16(index), width: area.width, height: 1),
+        in: Rect(x: area.x, y: area.y + index, width: area.width, height: 1),
         into: &frame.buffer,
         parentStyle: style,
         parentAlignment: alignment)

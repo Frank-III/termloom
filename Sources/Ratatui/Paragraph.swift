@@ -96,7 +96,7 @@ public struct Line: Hashable, Sendable, ExpressibleByStringLiteral, Stylable, Wi
     let lineWidth = width
     guard lineWidth > 0 else { return }
     if style != .plain { buffer.setStyle(style, in: row) }
-    let areaWidth = Int(row.width)
+    let areaWidth = row.width
     let resolvedAlignment = alignment ?? parentAlignment ?? .leading
     let leadingSkip: Int
     let indent: Int
@@ -120,25 +120,23 @@ public struct Line: Hashable, Sendable, ExpressibleByStringLiteral, Stylable, Wi
 
     var skipped = 0
     var position = Position(
-      x: UInt16(clamping: Int(row.x) + indent),
+      x: (row.x + indent),
       y: row.y
     )
-    let end = Int(row.x) + Int(row.width)
+    let end = row.x + row.width
     for span in spans {
       for character in span.content {
         let characterWidth = TerminalWidth.of(character)
         if skipped < leadingSkip {
           let endOfCharacter = skipped + characterWidth
           if endOfCharacter > leadingSkip {
-            position.x = UInt16(
-              clamping: Int(position.x) + endOfCharacter - leadingSkip
-            )
+            position.x = (position.x + endOfCharacter - leadingSkip)
           }
           skipped = endOfCharacter
           continue
         }
         guard characterWidth > 0 else { continue }
-        guard Int(position.x) + characterWidth <= end else { return }
+        guard position.x + characterWidth <= end else { return }
         let inherited =
           buffer.cell(at: position)?.style
           ?? parentStyle.patching(style)
@@ -146,7 +144,7 @@ public struct Line: Hashable, Sendable, ExpressibleByStringLiteral, Stylable, Wi
           String(character),
           at: position,
           style: inherited.patching(span.style),
-          maxWidth: UInt16(clamping: end - Int(position.x))
+          maxWidth: (end - position.x)
         )
       }
     }
@@ -174,16 +172,16 @@ public struct Paragraph: Widget, Hashable, Sendable {
   public var lines: [Line]
   public var style: Style
   public var wrap: WrapMode
-  public var scroll: UInt16
-  public var horizontalScroll: UInt16
+  public var scroll: Int { didSet { scroll = max(0, scroll) } }
+  public var horizontalScroll: Int { didSet { horizontalScroll = max(0, horizontalScroll) } }
   public var trimLeadingWhitespace: Bool
 
   public init(
     _ content: String,
     style: Style = .plain,
     wrap: WrapMode = .none,
-    scroll: UInt16 = 0,
-    horizontalScroll: UInt16 = 0,
+    scroll: Int = 0,
+    horizontalScroll: Int = 0,
     trimLeadingWhitespace: Bool = true
   ) {
     lines = content.split(separator: "\n", omittingEmptySubsequences: false).map {
@@ -191,32 +189,32 @@ public struct Paragraph: Widget, Hashable, Sendable {
     }
     self.style = style
     self.wrap = wrap
-    self.scroll = scroll
-    self.horizontalScroll = horizontalScroll
+    self.scroll = max(0, scroll)
+    self.horizontalScroll = max(0, horizontalScroll)
     self.trimLeadingWhitespace = trimLeadingWhitespace
   }
 
   public init(
     style: Style = .plain,
     wrap: WrapMode = .none,
-    scroll: UInt16 = 0,
-    horizontalScroll: UInt16 = 0,
+    scroll: Int = 0,
+    horizontalScroll: Int = 0,
     trimLeadingWhitespace: Bool = true,
     @LineBuilder lines: () -> [Line]
   ) {
     self.lines = lines()
     self.style = style
     self.wrap = wrap
-    self.scroll = scroll
-    self.horizontalScroll = horizontalScroll
+    self.scroll = max(0, scroll)
+    self.horizontalScroll = max(0, horizontalScroll)
     self.trimLeadingWhitespace = trimLeadingWhitespace
   }
 
   public init(
     _ text: Text,
     wrap: WrapMode = .none,
-    scroll: UInt16 = 0,
-    horizontalScroll: UInt16 = 0,
+    scroll: Int = 0,
+    horizontalScroll: Int = 0,
     trimLeadingWhitespace: Bool = true
   ) {
     lines = text.lines.map { line in
@@ -225,8 +223,8 @@ public struct Paragraph: Widget, Hashable, Sendable {
     }
     style = text.style
     self.wrap = wrap
-    self.scroll = scroll
-    self.horizontalScroll = horizontalScroll
+    self.scroll = max(0, scroll)
+    self.horizontalScroll = max(0, horizontalScroll)
     self.trimLeadingWhitespace = trimLeadingWhitespace
   }
 
@@ -235,8 +233,8 @@ public struct Paragraph: Widget, Hashable, Sendable {
     if style != .plain {
       frame.buffer.setStyle(style, in: area)
     }
-    let width = Int(area.width)
-    let height = Int(area.height)
+    let width = area.width
+    let height = area.height
     if wrap == .none {
       for (row, sourceLine) in lines.dropFirst(Int(scroll)).prefix(height).enumerated() {
         guard let visualLine = visualLines(for: sourceLine, width: width).first else { continue }
@@ -275,7 +273,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
     }
   }
 
-  public func lineCount(width: UInt16) -> Int {
+  public func lineCount(width: Int) -> Int {
     guard width > 0 else { return 0 }
     return lines.reduce(0) { $0 + visualLines(for: $1, width: Int(width)).count }
   }
@@ -306,8 +304,8 @@ public struct Paragraph: Widget, Hashable, Sendable {
     case .trailing: offset = max(0, width - usedWidth)
     }
     var position = Position(
-      x: UInt16(clamping: Int(area.x) + offset),
-      y: UInt16(clamping: Int(area.y) + row)
+      x: (area.x + offset),
+      y: (area.y + row)
     )
     for glyph in line {
       guard TerminalWidth.of(glyph.character) > 0 else { continue }
@@ -315,7 +313,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
         String(glyph.character),
         at: position,
         style: glyph.style,
-        maxWidth: UInt16(clamping: Int(area.x) + width - Int(position.x))
+        maxWidth: (area.x + width - position.x)
       )
     }
   }

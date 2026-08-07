@@ -130,26 +130,24 @@ public struct Monthly<Events: DateStyler>: IntrinsicSizeWidget {
     )
   }
 
-  public var width: UInt16 { 21 }
+  public var width: Int { 21 }
 
   public var intrinsicSize: Size { Size(width: width, height: height) }
 
-  public var height: UInt16 {
+  public var height: Int {
     guard let firstDate, let days = calendar.range(of: .day, in: .month, for: firstDate)?.count
     else {
       return 0
     }
     let offset = weekdayOffset(for: firstDate)
     let weeks = (offset + days + 6) / 7
-    return UInt16(
-      clamping: weeks + (monthHeaderStyle == nil ? 0 : 1) + (weekdayHeaderStyle == nil ? 0 : 1)
-    )
+    return (weeks + (monthHeaderStyle == nil ? 0 : 1) + (weekdayHeaderStyle == nil ? 0 : 1))
   }
 
   public func render(in area: Rect, into frame: inout Frame) {
     guard !area.isEmpty, let firstDate else { return }
-    var y = Int(area.y)
-    let bottom = Int(area.y) + Int(area.height)
+    var y = area.y
+    let bottom = area.y + area.height
 
     if let monthHeaderStyle, y < bottom {
       Text(
@@ -157,7 +155,7 @@ public struct Monthly<Events: DateStyler>: IntrinsicSizeWidget {
         style: monthHeaderStyle,
         alignment: .center
       ).render(
-        in: Rect(x: area.x, y: UInt16(clamping: y), width: area.width, height: 1),
+        in: Rect(x: area.x, y: y, width: area.width, height: 1),
         into: &frame.buffer,
         environment: frame.environment
       )
@@ -166,7 +164,7 @@ public struct Monthly<Events: DateStyler>: IntrinsicSizeWidget {
     if let weekdayHeaderStyle, y < bottom {
       frame.buffer.setString(
         weekdayHeader,
-        at: Position(x: area.x, y: UInt16(clamping: y)),
+        at: Position(x: area.x, y: y),
         style: weekdayHeaderStyle,
         maxWidth: area.width
       )
@@ -193,11 +191,11 @@ public struct Monthly<Events: DateStyler>: IntrinsicSizeWidget {
         frame.buffer.setString(
           number,
           at: Position(
-            x: UInt16(clamping: Int(area.x) + weekday * 3 + 1),
-            y: UInt16(clamping: y + week)
+            x: (area.x + weekday * 3 + 1),
+            y: (y + week)
           ),
           style: style,
-          maxWidth: UInt16(clamping: max(0, Int(area.width) - weekday * 3 - 1))
+          maxWidth: (max(0, area.width - weekday * 3 - 1))
         )
       }
     }

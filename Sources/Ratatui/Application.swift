@@ -98,16 +98,16 @@ public final class ObservationInvalidationTracker: @unchecked Sendable {
 
 struct PreparedHistoryInsertion {
   var insertion: TerminalHistoryInsertion
-  var height: UInt16
+  var height: Int
   var batchPosition: HistoryInsertionBatchPosition
 }
 
 func prepareHistoryInsertions(
-  _ insertions: [TerminalHistoryInsertion], width: UInt16,
+  _ insertions: [TerminalHistoryInsertion], width: Int,
   targetChunkHeight: Int = 512
 ) -> [PreparedHistoryInsertion] {
   guard width > 0 else { return [] }
-  var chunks: [(insertion: TerminalHistoryInsertion, height: UInt16)] = []
+  var chunks: [(insertion: TerminalHistoryInsertion, height: Int)] = []
   var pendingLines: [Line] = []
   var pendingWrap: WrapMode?
   var pendingHeight = 0
@@ -121,7 +121,7 @@ func prepareHistoryInsertions(
     chunks.append(
       (
         TerminalHistoryInsertion(text: Text(pendingLines), wrap: wrap),
-        UInt16(clamping: pendingHeight)
+        pendingHeight
       ))
     pendingLines.removeAll(keepingCapacity: true)
     pendingWrap = nil
@@ -210,7 +210,7 @@ public protocol PeriodicallyRedrawingTerminalApplication: AnyObject {
 /// Optional capability for inline applications whose retained region follows content height.
 @MainActor
 public protocol InlineViewportSizing: AnyObject {
-  func desiredInlineViewportHeight(size: Size) -> UInt16
+  func desiredInlineViewportHeight(size: Size) -> Int
 }
 
 @MainActor

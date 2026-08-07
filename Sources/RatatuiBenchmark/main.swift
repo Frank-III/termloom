@@ -76,8 +76,8 @@ private struct InteractionGrid: Widget {
         InteractionRegion(
           control: ControlID("item-\(index)"),
           area: Rect(
-            x: area.x &+ UInt16(index % Int(area.width)),
-            y: area.y &+ UInt16((index / Int(area.width)) % Int(area.height)),
+            x: area.x &+ Int(index % area.width),
+            y: area.y &+ Int((index / area.width) % area.height),
             width: 1,
             height: 1),
           action: ActionID("activate-\(index)"),
@@ -213,7 +213,7 @@ private func frameBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
       try cursorTerminal.draw { frame in
         frame.render(Fill(" "))
         frame.placeCursor(
-          at: Position(x: UInt16(iteration % 120), y: UInt16((iteration / 120) % 40)),
+          at: Position(x: Int(iteration % 120), y: Int((iteration / 120) % 40)),
           style: .steadyBar)
       }.updates
     })
@@ -244,7 +244,7 @@ private func primitiveBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
     ) { _ in
       let buffer = Buffer(
         area: Rect(
-          x: 0, y: 0, width: UInt16(dimension), height: UInt16(dimension)))
+          x: 0, y: 0, width: dimension, height: dimension))
       retainedCellCount ^= buffer.count
       return 0
     }

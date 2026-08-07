@@ -22,9 +22,9 @@ private struct RecordingNativeHistoryBackend: InlineHistoryBackend {
     batchPosition: HistoryInsertionBatchPosition
   ) throws -> Bool {
     positions.append(batchPosition)
-    let rows = (0..<Int(buffer.area.height)).map { row in
-      (0..<Int(buffer.area.width)).compactMap { column in
-        buffer.cell(at: Position(x: UInt16(column), y: UInt16(row)))?.symbol
+    let rows = (0..<buffer.area.height).map { row in
+      (0..<buffer.area.width).compactMap { column in
+        buffer.cell(at: Position(x: column, y: row))?.symbol
       }.joined()
     }
     switch batchPosition {
@@ -43,12 +43,12 @@ private struct RecordingNativeHistoryBackend: InlineHistoryBackend {
     return true
   }
 
-  mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws {}
+  mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws {}
   mutating func scrollRegionUpIntoScrollback(
-    _ rows: Range<UInt16>,
-    by count: UInt16
+    _ rows: Range<Int>,
+    by count: Int
   ) throws {}
-  mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws {}
+  mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws {}
 }
 
 @Suite struct HistoryPreparationTests {

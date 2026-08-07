@@ -15,6 +15,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 005 | Honor mapped buffer origins in ANSI history output | P1 | S | 004 | DONE |
 | 006 | Preserve fragmented input and suppress stale semantic events | P1 | S | 001–005 | DONE (`85319e1`) |
 | 007 | Remove proven text and block construction workarounds | P1 | S–M | 006 | DONE |
+| 008 | Migrate public terminal geometry to Swift-native `Int` | P0 | XL | 006, 007 | DONE |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
@@ -26,6 +27,7 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reas
 - 004 and 005 then tighten the provisional history backend without mixing lifecycle and backend failures in one change.
 - 006 is an independent correctness pass over input routing and Observation wakeups.
 - 007 follows 006 so its consumer matrix validates on the corrected runtime baseline.
+- 008 is the dedicated source-breaking geometry milestone after the lower-risk correctness and ergonomics work.
 
 ## Required final matrix
 
@@ -56,7 +58,6 @@ Expected hashes:
 
 These are not part of plans 001–005:
 
-- migrate public geometry from `UInt16` to Swift-native `Int` after a dedicated design/review gate;
 - slim `TerminalApplication` into core requirements plus explicit inline-history and suspended-operation capabilities;
 - lazy/full-row-styled large collections exposed by DiffScope;
 - fixed-height/top-offset viewport convenience APIs;

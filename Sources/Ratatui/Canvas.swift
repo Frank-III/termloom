@@ -266,20 +266,20 @@ public struct Canvas: Widget, Hashable, Sendable {
   public func render(in area: Rect, into frame: inout Frame) {
     guard !area.isEmpty else { return }
     if let backgroundColor {
-      let left = max(Int(area.x), Int(frame.buffer.area.x))
-      let top = max(Int(area.y), Int(frame.buffer.area.y))
+      let left = max(area.x, frame.buffer.area.x)
+      let top = max(area.y, frame.buffer.area.y)
       let right = min(
-        Int(area.x) + Int(area.width),
-        Int(frame.buffer.area.x) + Int(frame.buffer.area.width)
+        area.x + area.width,
+        frame.buffer.area.x + frame.buffer.area.width
       )
       let bottom = min(
-        Int(area.y) + Int(area.height),
-        Int(frame.buffer.area.y) + Int(frame.buffer.area.height)
+        area.y + area.height,
+        frame.buffer.area.y + frame.buffer.area.height
       )
       if right > left, bottom > top {
         for y in top..<bottom {
           for x in left..<right {
-            let position = Position(x: UInt16(clamping: x), y: UInt16(clamping: y))
+            let position = Position(x: x, y: y)
             var cell = frame.buffer[position]
             cell.style.background = backgroundColor
             frame.buffer[position] = cell
@@ -313,19 +313,19 @@ public struct Canvas: Widget, Hashable, Sendable {
 
     for label in labels where xBounds.contains(label.x) && yBounds.contains(label.y) {
       let x = Int(
-        (label.x - xBounds.lowerBound) / xExtent * Double(max(0, Int(area.width) - 1))
+        (label.x - xBounds.lowerBound) / xExtent * Double(max(0, area.width - 1))
       )
       let y = Int(
-        (yBounds.upperBound - label.y) / yExtent * Double(max(0, Int(area.height) - 1))
+        (yBounds.upperBound - label.y) / yExtent * Double(max(0, area.height - 1))
       )
       let position = Position(
-        x: UInt16(clamping: Int(area.x) + x),
-        y: UInt16(clamping: Int(area.y) + y)
+        x: (area.x + x),
+        y: (area.y + y)
       )
       let labelArea = Rect(
         x: position.x,
         y: position.y,
-        width: UInt16(clamping: Int(area.x) + Int(area.width) - Int(position.x)),
+        width: (area.x + area.width - position.x),
         height: 1
       )
       Paragraph(wrap: .none) { label.content }
@@ -352,8 +352,8 @@ public struct Canvas: Widget, Hashable, Sendable {
       case .octant: (2, 4)
       case .dot, .block, .bar, .custom: (1, 1)
       }
-    let dotWidth = Int(area.width) * resolution.x
-    let dotHeight = Int(area.height) * resolution.y
+    let dotWidth = area.width * resolution.x
+    let dotHeight = area.height * resolution.y
     guard dotWidth > 0, dotHeight > 0 else { return }
     var dots = Array(repeating: UInt8(0), count: area.area)
     var styles = Array(repeating: Style.plain, count: area.area)
@@ -435,7 +435,7 @@ public struct Canvas: Widget, Hashable, Sendable {
       guard x >= 0, y >= 0, x < dotWidth, y < dotHeight else { return }
       let cellX = x / resolution.x
       let cellY = y / resolution.y
-      let index = cellY * Int(area.width) + cellX
+      let index = cellY * area.width + cellX
       let bit: UInt8 =
         switch marker {
         case .braille:
@@ -583,8 +583,8 @@ public struct Canvas: Widget, Hashable, Sendable {
 
     for index in dots.indices where dots[index] != 0 {
       let position = Position(
-        x: UInt16(clamping: Int(area.x) + index % Int(area.width)),
-        y: UInt16(clamping: Int(area.y) + index / Int(area.width))
+        x: (area.x + index % area.width),
+        y: (area.y + index / area.width)
       )
       let underlyingStyle = buffer.cell(at: position)?.style ?? .plain
       var style = underlyingStyle.patching(styles[index])
@@ -889,10 +889,10 @@ public struct Chart: Widget, Hashable, Sendable {
 
   private func chartLayout(in area: Rect) -> ChartLayout? {
     guard !area.isEmpty else { return nil }
-    let top = Int(area.y)
-    let right = Int(area.x) + Int(area.width)
-    var x = Int(area.x)
-    var y = top + Int(area.height) - 1
+    let top = area.y
+    let right = area.x + area.width
+    var x = area.x
+    var y = top + area.height - 1
     let hasXLabels = xAxis?.labels.isEmpty == false
     let hasYLabels = yAxis?.labels.isEmpty == false
 
@@ -919,17 +919,17 @@ public struct Chart: Widget, Hashable, Sendable {
       }
 
     let graphArea = Rect(
-      x: UInt16(clamping: x),
+      x: x,
       y: area.y,
-      width: UInt16(clamping: right - x),
-      height: UInt16(clamping: y - top + 1)
+      width: (right - x),
+      height: (y - top + 1)
     )
     guard !graphArea.isEmpty else { return nil }
 
     let xTitlePosition = titlePosition(
       xAxis?.title,
       fitting: graphArea,
-      at: Position(x: UInt16(clamping: right), y: UInt16(clamping: y)),
+      at: Position(x: right, y: y),
       trailing: true
     )
     let yTitlePosition = titlePosition(
@@ -972,7 +972,7 @@ public struct Chart: Widget, Hashable, Sendable {
         }
       width = max(width, leftWidth)
     }
-    return min(width, Int(area.width) / 3)
+    return min(width, area.width / 3)
   }
 
   private func titlePosition(
@@ -981,9 +981,9 @@ public struct Chart: Widget, Hashable, Sendable {
     at anchor: Position,
     trailing: Bool
   ) -> Position? {
-    guard let title, title.width < Int(graphArea.width), graphArea.height > 2 else { return nil }
+    guard let title, title.width < graphArea.width, graphArea.height > 2 else { return nil }
     return Position(
-      x: trailing ? UInt16(clamping: Int(anchor.x) - title.width) : anchor.x,
+      x: trailing ? (anchor.x - title.width) : anchor.x,
       y: anchor.y
     )
   }
@@ -995,13 +995,13 @@ public struct Chart: Widget, Hashable, Sendable {
     environment: RenderEnvironment
   ) {
     let graphArea = layout.graphArea
-    let graphRight = Int(graphArea.x) + Int(graphArea.width)
-    let graphBottom = Int(graphArea.y) + Int(graphArea.height)
+    let graphRight = graphArea.x + graphArea.width
+    let graphBottom = graphArea.y + graphArea.height
     if let yAxis, let axisX = layout.yAxisColumn {
-      for y in Int(graphArea.y)..<graphBottom {
+      for y in graphArea.y..<graphBottom {
         buffer.setString(
           "│",
-          at: Position(x: UInt16(clamping: axisX), y: UInt16(clamping: y)),
+          at: Position(x: axisX, y: y),
           style: yAxis.style
         )
       }
@@ -1009,13 +1009,13 @@ public struct Chart: Widget, Hashable, Sendable {
         for (index, label) in yAxis.labels.enumerated() {
           let y =
             graphBottom - 1
-            - (max(0, Int(graphArea.height) - 1) * index / (yAxis.labels.count - 1))
+            - (max(0, graphArea.height - 1) * index / (yAxis.labels.count - 1))
           render(
             label.patchStyle(yAxis.style).alignment(yAxis.labelsAlignment),
             in: Rect(
-              x: UInt16(clamping: labelX),
-              y: UInt16(clamping: y),
-              width: UInt16(clamping: max(0, Int(graphArea.x) - Int(area.x) - 1)),
+              x: labelX,
+              y: y,
+              width: (max(0, graphArea.x - area.x - 1)),
               height: 1
             ),
             into: &buffer,
@@ -1025,17 +1025,17 @@ public struct Chart: Widget, Hashable, Sendable {
       }
     }
     if let xAxis, let axisY = layout.xAxisRow {
-      for x in Int(graphArea.x)..<graphRight {
+      for x in graphArea.x..<graphRight {
         buffer.setString(
           "─",
-          at: Position(x: UInt16(clamping: x), y: UInt16(clamping: axisY)),
+          at: Position(x: x, y: axisY),
           style: xAxis.style
         )
       }
       if let axisX = layout.yAxisColumn {
         buffer.setString(
           "└",
-          at: Position(x: UInt16(clamping: axisX), y: UInt16(clamping: axisY)),
+          at: Position(x: axisX, y: axisY),
           style: xAxis.style.patching(yAxis?.style ?? .plain)
         )
       }
@@ -1061,20 +1061,20 @@ public struct Chart: Widget, Hashable, Sendable {
     environment: RenderEnvironment
   ) {
     let count = axis.labels.count
-    let tickWidth = Int(graphArea.width) / count
+    let tickWidth = graphArea.width / count
     let first = axis.labels[0].patchStyle(axis.style)
     let firstBounds: (Int, Int) =
       switch axis.labelsAlignment {
-      case .leading: (Int(chartArea.x), Int(graphArea.x))
-      case .center: (Int(chartArea.x), Int(graphArea.x) + min(tickWidth, first.width))
-      case .trailing: (max(Int(chartArea.x), Int(graphArea.x) - 1), Int(graphArea.x) + tickWidth)
+      case .leading: (chartArea.x, graphArea.x)
+      case .center: (chartArea.x, graphArea.x + min(tickWidth, first.width))
+      case .trailing: (max(chartArea.x, graphArea.x - 1), graphArea.x + tickWidth)
       }
     render(
       first.alignment(opposite(axis.labelsAlignment)),
       in: Rect(
-        x: UInt16(clamping: firstBounds.0),
-        y: UInt16(clamping: row),
-        width: UInt16(clamping: firstBounds.1 - firstBounds.0),
+        x: firstBounds.0,
+        y: row,
+        width: (firstBounds.1 - firstBounds.0),
         height: 1
       ),
       into: &buffer,
@@ -1084,9 +1084,9 @@ public struct Chart: Widget, Hashable, Sendable {
       render(
         label.patchStyle(axis.style).alignment(.center),
         in: Rect(
-          x: UInt16(clamping: Int(graphArea.x) + (index + 1) * tickWidth + 1),
-          y: UInt16(clamping: row),
-          width: UInt16(clamping: max(0, tickWidth - 1)),
+          x: (graphArea.x + (index + 1) * tickWidth + 1),
+          y: row,
+          width: (max(0, tickWidth - 1)),
           height: 1
         ),
         into: &buffer,
@@ -1096,9 +1096,9 @@ public struct Chart: Widget, Hashable, Sendable {
     render(
       axis.labels[count - 1].patchStyle(axis.style).alignment(.trailing),
       in: Rect(
-        x: UInt16(clamping: graphRight(graphArea) - tickWidth),
-        y: UInt16(clamping: row),
-        width: UInt16(clamping: tickWidth),
+        x: (graphRight(graphArea) - tickWidth),
+        y: row,
+        width: tickWidth,
         height: 1
       ),
       into: &buffer,
@@ -1114,7 +1114,7 @@ public struct Chart: Widget, Hashable, Sendable {
     }
   }
 
-  private func graphRight(_ area: Rect) -> Int { Int(area.x) + Int(area.width) }
+  private func graphRight(_ area: Rect) -> Int { area.x + area.width }
 
   private func renderTitles(
     _ layout: ChartLayout,
@@ -1127,7 +1127,7 @@ public struct Chart: Widget, Hashable, Sendable {
         in: Rect(
           x: position.x,
           y: position.y,
-          width: UInt16(clamping: min(title.width, graphRight(layout.graphArea) - Int(position.x))),
+          width: (min(title.width, graphRight(layout.graphArea) - position.x)),
           height: 1
         ),
         into: &buffer,
@@ -1140,7 +1140,7 @@ public struct Chart: Widget, Hashable, Sendable {
         in: Rect(
           x: position.x,
           y: position.y,
-          width: UInt16(clamping: min(title.width, graphRight(layout.graphArea) - Int(position.x))),
+          width: (min(title.width, graphRight(layout.graphArea) - position.x)),
           height: 1
         ),
         into: &buffer,
@@ -1169,51 +1169,51 @@ public struct Chart: Widget, Hashable, Sendable {
     let innerWidth = named.map(\.width).max() ?? 0
     let width = innerWidth + 2
     let height = named.count + 2
-    let maximumWidth = legendLimit(legendConstraints.width, extent: Int(graphArea.width))
-    let maximumHeight = legendLimit(legendConstraints.height, extent: Int(graphArea.height))
+    let maximumWidth = legendLimit(legendConstraints.width, extent: graphArea.width)
+    let maximumHeight = legendLimit(legendConstraints.height, extent: graphArea.height)
     guard innerWidth > 0, width <= maximumWidth, height <= maximumHeight else { return nil }
-    var verticalMargin = Int(graphArea.height) - height
+    var verticalMargin = graphArea.height - height
     if xTitleWidth > 0 { verticalMargin -= 1 }
     if yTitleWidth > 0 { verticalMargin -= 1 }
     guard verticalMargin >= 0 else { return nil }
 
-    let horizontalCenter = Int(graphArea.x) + (Int(graphArea.width) - width) / 2
+    let horizontalCenter = graphArea.x + (graphArea.width - width) / 2
     let x: Int
     switch legendPosition {
-    case .topLeading, .leading, .bottomLeading: x = Int(graphArea.x)
+    case .topLeading, .leading, .bottomLeading: x = graphArea.x
     case .top, .bottom: x = horizontalCenter
     case .topTrailing, .trailing, .bottomTrailing:
-      x = Int(graphArea.x) + Int(graphArea.width) - width
+      x = graphArea.x + graphArea.width - width
     }
     let y: Int
     switch legendPosition {
     case .topLeading:
-      y = Int(graphArea.y) + (yTitleWidth > 0 ? 1 : 0)
+      y = graphArea.y + (yTitleWidth > 0 ? 1 : 0)
     case .topTrailing:
-      y = Int(graphArea.y) + (width + yTitleWidth > Int(graphArea.width) ? 1 : 0)
+      y = graphArea.y + (width + yTitleWidth > graphArea.width ? 1 : 0)
     case .top:
-      y = Int(graphArea.y) + (Int(graphArea.x) + yTitleWidth > horizontalCenter ? 1 : 0)
+      y = graphArea.y + (graphArea.x + yTitleWidth > horizontalCenter ? 1 : 0)
     case .leading, .trailing:
-      var offset = (Int(graphArea.height) - height) / 2
+      var offset = (graphArea.height - height) / 2
       if yTitleWidth > 0 { offset += 1 }
       if xTitleWidth > 0 { offset = max(0, offset - 1) }
-      y = Int(graphArea.y) + offset
+      y = graphArea.y + offset
     case .bottomLeading:
       y =
-        Int(graphArea.y) + Int(graphArea.height) - height
-        - (xTitleWidth + width > Int(graphArea.width) ? 1 : 0)
+        graphArea.y + graphArea.height - height
+        - (xTitleWidth + width > graphArea.width ? 1 : 0)
     case .bottomTrailing:
-      y = Int(graphArea.y) + Int(graphArea.height) - height - (xTitleWidth > 0 ? 1 : 0)
+      y = graphArea.y + graphArea.height - height - (xTitleWidth > 0 ? 1 : 0)
     case .bottom:
       y =
-        Int(graphArea.y) + Int(graphArea.height) - height
+        graphArea.y + graphArea.height - height
         - (horizontalCenter + width > graphRight(graphArea) - xTitleWidth ? 1 : 0)
     }
     return Rect(
-      x: UInt16(clamping: x),
-      y: UInt16(clamping: y),
-      width: UInt16(clamping: width),
-      height: UInt16(clamping: height)
+      x: x,
+      y: y,
+      width: width,
+      height: height
     )
   }
 
@@ -1230,7 +1230,7 @@ public struct Chart: Widget, Hashable, Sendable {
         entry.0.patchStyle(entry.1),
         in: Rect(
           x: legendArea.x + 1,
-          y: UInt16(clamping: Int(legendArea.y) + row + 1),
+          y: (legendArea.y + row + 1),
           width: legendArea.width - 2,
           height: 1
         ),

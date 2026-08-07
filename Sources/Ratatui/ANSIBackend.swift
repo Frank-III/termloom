@@ -15,7 +15,7 @@ public enum ANSIBackendError: Error {
 public enum CursorAddressing: Hashable, Sendable {
   case absolute
   case savedOrigin
-  case savedBottom(viewportHeight: UInt16)
+  case savedBottom(viewportHeight: Int)
   case absoluteOrigin(Position)
 }
 
@@ -87,8 +87,8 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private var output: FileHandle
   var outputWriter: (Data) throws -> Void
   private var fallbackSize: Size?
-  private var viewportHeight: UInt16?
-  private var effectiveViewportHeight: UInt16?
+  private var viewportHeight: Int?
+  private var effectiveViewportHeight: Int?
   private var reportedViewportOrigin: Position?
   private var cursorAddressing: CursorAddressing
   private var historyBatchOrigin: Position?
@@ -113,7 +113,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   public init(
     output: FileHandle = .standardOutput,
     fallbackSize: Size? = nil,
-    viewportHeight: UInt16? = nil,
+    viewportHeight: Int? = nil,
     viewportOrigin: Position? = nil,
     cursorAddressing: CursorAddressing = .absolute,
     configuration: ANSIBackendConfiguration = .full
@@ -121,6 +121,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     self.output = output
     outputWriter = { data in try output.write(contentsOf: data) }
     self.fallbackSize = fallbackSize
+    let viewportHeight = viewportHeight.map { max(0, $0) }
     self.viewportHeight = viewportHeight
     effectiveViewportHeight =
       viewportHeight.map {
@@ -138,16 +139,17 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
         window.ws_col > 0,
         window.ws_row > 0
       {
-        let height = viewportHeight.map { min($0, window.ws_row) } ?? window.ws_row
+        let physicalHeight = Int(window.ws_row)
+        let height = viewportHeight.map { min($0, physicalHeight) } ?? physicalHeight
         effectiveViewportHeight = height
         if case .absoluteOrigin(let origin) = cursorAddressing {
           let clamped = Position(
             x: 0,
-            y: min(origin.y, UInt16(clamping: max(0, Int(window.ws_row) - Int(height)))))
+            y: min(origin.y, (max(0, Int(window.ws_row) - height))))
           cursorAddressing = .absoluteOrigin(clamped)
           reportedViewportOrigin = clamped
         }
-        return Size(width: window.ws_col, height: height)
+        return Size(width: Int(window.ws_col), height: height)
       }
     #endif
     if let fallbackSize {
@@ -156,7 +158,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       if case .absoluteOrigin(let origin) = cursorAddressing {
         let clamped = Position(
           x: 0,
-          y: min(origin.y, UInt16(clamping: max(0, Int(fallbackSize.height) - Int(height)))))
+          y: min(origin.y, (max(0, fallbackSize.height - height))))
         cursorAddressing = .absoluteOrigin(clamped)
         reportedViewportOrigin = clamped
       }
@@ -172,10 +174,10 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
         window.ws_col > 0,
         window.ws_row > 0
       {
-        let cells = Size(width: window.ws_col, height: window.ws_row)
+        let cells = Size(width: Int(window.ws_col), height: Int(window.ws_row))
         let pixels =
           window.ws_xpixel > 0 && window.ws_ypixel > 0
-          ? Size(width: window.ws_xpixel, height: window.ws_ypixel)
+          ? Size(width: Int(window.ws_xpixel), height: Int(window.ws_ypixel))
           : nil
         return WindowSize(cells: cells, pixels: pixels)
       }
@@ -203,9 +205,8 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
         activeStyle = update.cell.style
       }
       bytes.append(contentsOf: update.cell.symbol.utf8)
-      expectedPosition = Position(
-        x: UInt16(clamping: Int(update.position.x) + max(1, Int(update.cell.width))),
-        y: update.position.y
+      expectedPosition = update.position.offset(
+        by: Offset(x: max(1, Int(update.cell.width)), y: 0)
       )
     }
     bytes.append(contentsOf: "\u{1B}[0m".utf8)
@@ -263,7 +264,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     }
   }
 
-  public mutating func appendLines(_ count: UInt16) throws {
+  public mutating func appendLines(_ count: Int) throws {
     guard count > 0 else { return }
     try outputWriter(Data(String(repeating: "\n", count: Int(count)).utf8))
   }
@@ -326,16 +327,16 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     var bytes: [UInt8] = []
     if startsBatch {
       if viewport != nil { bytes.append(contentsOf: clearSequence().utf8) }
-      bytes.append(contentsOf: "\u{1B}[r\u{1B}[?7l\u{1B}[\(Int(origin.y) + 1);1H".utf8)
+      bytes.append(contentsOf: "\u{1B}[r\u{1B}[?7l\u{1B}[\(origin.y + 1);1H".utf8)
     } else {
       bytes.append(contentsOf: "\r\n".utf8)
     }
-    for row in 0..<Int(buffer.area.height) {
+    for row in 0..<buffer.area.height {
       if row > 0 { bytes.append(contentsOf: "\r\n".utf8) }
       bytes.append(contentsOf: "\u{1B}[2K".utf8)
       appendHistoryRow(row, from: buffer, to: &bytes)
     }
-    historyBatchRowCount += Int(buffer.area.height)
+    historyBatchRowCount = saturatingANSIAdd(historyBatchRowCount, buffer.area.height)
 
     var completedOrigin: Position?
     if finishesBatch {
@@ -344,8 +345,8 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       }
       bytes.append(contentsOf: "\u{1B}[0m\u{1B}[?7h".utf8)
       let nextY = min(
-        Int(origin.y) + historyBatchRowCount, max(0, Int(screen.height) - Int(liveHeight)))
-      let nextOrigin = Position(x: 0, y: UInt16(clamping: nextY))
+        saturatingANSIAdd(origin.y, historyBatchRowCount), max(0, screen.height - liveHeight))
+      let nextOrigin = Position(x: 0, y: nextY)
       completedOrigin = nextOrigin
       if let viewport {
         appendViewportRestoration(viewport, at: nextOrigin, to: &bytes)
@@ -363,12 +364,12 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     return true
   }
 
-  public mutating func scrollRegionUp(_ rows: Range<UInt16>, by count: UInt16) throws {
+  public mutating func scrollRegionUp(_ rows: Range<Int>, by count: Int) throws {
     try scrollRegion(rows, by: count, command: "S")
   }
 
   public mutating func scrollRegionUpIntoScrollback(
-    _ rows: Range<UInt16>, by count: UInt16
+    _ rows: Range<Int>, by count: Int
   ) throws {
     guard cursorAddressing != .savedOrigin else {
       throw BackendOperationError.unsupported("scrollback insertion from a saved origin")
@@ -385,13 +386,13 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     try outputWriter(Data(sequence.utf8))
   }
 
-  public mutating func scrollRegionDown(_ rows: Range<UInt16>, by count: UInt16) throws {
+  public mutating func scrollRegionDown(_ rows: Range<Int>, by count: Int) throws {
     try scrollRegion(rows, by: count, command: "T")
   }
 
   private mutating func scrollRegion(
-    _ rows: Range<UInt16>,
-    by count: UInt16,
+    _ rows: Range<Int>,
+    by count: Int,
     command: Character
   ) throws {
     guard cursorAddressing != .savedOrigin else {
@@ -412,9 +413,9 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     if configuration.supportsSynchronizedOutput {
       bytes.append(contentsOf: "\u{1B}[?2026h".utf8)
     }
-    for row in 0..<Int(viewport.area.height) {
+    for row in 0..<viewport.area.height {
       bytes.append(
-        contentsOf: "\u{1B}[\(Int(origin.y) + row + 1);\(Int(origin.x) + 1)H\u{1B}[2K".utf8)
+        contentsOf: "\u{1B}[\(origin.y + row + 1);\(origin.x + 1)H\u{1B}[2K".utf8)
       appendHistoryRow(row, from: viewport, to: &bytes)
     }
     if configuration.supportsSynchronizedOutput {
@@ -428,7 +429,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       "\u{1B}[2J\u{1B}[H"
     case .savedOrigin, .savedBottom, .absoluteOrigin:
       (0..<Int(max(1, effectiveViewportHeight ?? fallbackSize?.height ?? 1))).map { row in
-        "\(cursor(position: Position(x: 0, y: UInt16(clamping: row))))\u{1B}[2K"
+        "\(cursor(position: Position(x: 0, y: row)))\u{1B}[2K"
       }.joined()
     }
   }
@@ -436,25 +437,26 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private func cursor(position: Position) -> String {
     switch cursorAddressing {
     case .absolute:
-      return "\u{1B}[\(Int(position.y) + 1);\(Int(position.x) + 1)H"
+      return "\u{1B}[\(oneBasedANSI(position.y));\(oneBasedANSI(position.x))H"
     case .savedOrigin:
       let vertical = position.y == 0 ? "" : "\u{1B}[\(position.y)B"
-      return "\u{1B}8\(vertical)\u{1B}[\(Int(position.x) + 1)G"
+      return "\u{1B}8\(vertical)\u{1B}[\(oneBasedANSI(position.x))G"
+
     case .savedBottom(let viewportHeight):
-      let rowsUp = max(0, Int(viewportHeight) - 1 - Int(position.y))
+      let rowsUp = max(0, viewportHeight - 1 - position.y)
       let vertical = rowsUp == 0 ? "" : "\u{1B}[\(rowsUp)A"
-      return "\u{1B}8\(vertical)\u{1B}[\(Int(position.x) + 1)G"
+      return "\u{1B}8\(vertical)\u{1B}[\(oneBasedANSI(position.x))G"
     case .absoluteOrigin(let origin):
-      return "\u{1B}[\(Int(origin.y) + Int(position.y) + 1);\(Int(origin.x) + Int(position.x) + 1)H"
+      return "\u{1B}[\(oneBasedANSI(origin.y, position.y));\(oneBasedANSI(origin.x, position.x))H"
     }
   }
 
   private func appendHistoryRow(_ row: Int, from buffer: Buffer, to bytes: inout [UInt8]) {
-    let cells = (0..<Int(buffer.area.width)).compactMap { column in
+    let cells = (0..<buffer.area.width).compactMap { column in
       buffer.cell(
         at: Position(
-          x: UInt16(clamping: Int(buffer.area.x) + column),
-          y: UInt16(clamping: Int(buffer.area.y) + row)
+          x: (buffer.area.x + column),
+          y: (buffer.area.y + row)
         ))
     }
     let lastMeaningful = cells.lastIndex {
@@ -625,7 +627,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private func nearestXtermIndex(_ rgb: (UInt8, UInt8, UInt8)) -> UInt8 {
     var best: UInt8 = 0
     var bestDistance = Int.max
-    for candidate in UInt16(0)...255 {
+    for candidate in Int(0)...255 {
       let palette = xtermRGB(UInt8(candidate))
       let distance = colorDistance(rgb, palette)
       if distance < bestDistance {
@@ -662,4 +664,14 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
     ]
   }
+}
+
+private func saturatingANSIAdd(_ lhs: Int, _ rhs: Int) -> Int {
+  let result = lhs.addingReportingOverflow(rhs)
+  return result.overflow ? Int.max : max(0, result.partialValue)
+}
+
+private func oneBasedANSI(_ components: Int...) -> Int {
+  let zeroBased = components.reduce(0, saturatingANSIAdd)
+  return saturatingANSIAdd(zeroBased, 1)
 }

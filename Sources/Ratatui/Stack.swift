@@ -47,16 +47,16 @@ public enum StackBuilder {
 
 public struct Stack: Widget {
   public var axis: Axis
-  public var spacing: UInt16
+  public var spacing: Int { didSet { spacing = max(0, spacing) } }
   public var items: [StackItem]
 
   public init(
     _ axis: Axis,
-    spacing: UInt16 = 0,
+    spacing: Int = 0,
     @StackBuilder content: () -> [StackItem]
   ) {
     self.axis = axis
-    self.spacing = spacing
+    self.spacing = max(0, spacing)
     items = content()
   }
 
@@ -79,7 +79,7 @@ public struct Stack: Widget {
 public struct VStack: Widget {
   private var stack: Stack
 
-  public init(spacing: UInt16 = 0, @StackBuilder content: () -> [StackItem]) {
+  public init(spacing: Int = 0, @StackBuilder content: () -> [StackItem]) {
     stack = Stack(.vertical, spacing: spacing, content: content)
   }
 
@@ -91,7 +91,7 @@ public struct VStack: Widget {
 public struct HStack: Widget {
   private var stack: Stack
 
-  public init(spacing: UInt16 = 0, @StackBuilder content: () -> [StackItem]) {
+  public init(spacing: Int = 0, @StackBuilder content: () -> [StackItem]) {
     stack = Stack(.horizontal, spacing: spacing, content: content)
   }
 
