@@ -986,6 +986,39 @@
       #expect(!output.contains("STALE-BEFORE-RESET"))
     }
 
+    @Test func wakeupDoesNotFlushAPendingEscapeSequence() throws {
+      var master: Int32 = -1
+      var slave: Int32 = -1
+      var window = winsize(ws_row: 8, ws_col: 20, ws_xpixel: 0, ws_ypixel: 0)
+      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
+      guard master >= 0, slave >= 0 else { return }
+      defer {
+        close(master)
+        close(slave)
+      }
+
+      let session = try TerminalSession(
+        viewport: .fixed(Rect(x: 0, y: 0, width: 20, height: 8)),
+        inputDescriptor: slave,
+        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false)
+      )
+      var input = session.makeInput()
+      let wakeup = TerminalWakeup()
+      let escape: [UInt8] = [0x1B]
+      #expect(
+        escape.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == escape.count)
+      #expect(try input.readEvent(timeoutMilliseconds: 50, wakeup: wakeup) == nil)
+
+      wakeup.signal()
+      #expect(try input.readEvent(timeoutMilliseconds: 50, wakeup: wakeup) == nil)
+
+      let suffix = Array("[A".utf8)
+      #expect(
+        suffix.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == suffix.count)
+      #expect(try input.readEvent(timeoutMilliseconds: 50, wakeup: wakeup) == .key(KeyEvent(.up)))
+      try session.restore()
+    }
+
     @Test func observationWakeupInterruptsAWaitingInputPoll() async throws {
       var master: Int32 = -1
       var slave: Int32 = -1

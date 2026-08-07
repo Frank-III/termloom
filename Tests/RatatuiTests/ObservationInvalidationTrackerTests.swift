@@ -37,4 +37,20 @@ private final class LockedCounter: @unchecked Sendable {
     model.value = 3
     #expect(callbacks.value == 2)
   }
+
+  @Test func ignoresCallbacksFromObsoleteDependencyGenerations() {
+    let first = ObservedValue()
+    let second = ObservedValue()
+    let callbacks = LockedCounter()
+    let tracker = ObservationInvalidationTracker { callbacks.increment() }
+
+    #expect(tracker.track { first.value } == 0)
+    #expect(tracker.track(refresh: true) { second.value } == 0)
+
+    first.value = 1
+    #expect(callbacks.value == 0)
+
+    second.value = 1
+    #expect(callbacks.value == 1)
+  }
 }

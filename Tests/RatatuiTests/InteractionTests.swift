@@ -130,6 +130,43 @@ private struct StatefulCursorProbe: StatefulWidget {
     )
   }
 
+  @Test func routerForwardsReleasesWithoutFocusingOrActivatingAndRoutesRepeats() {
+    let interactions = InteractionMap(regions: [
+      InteractionRegion(control: "save", area: .zero, action: "save"),
+      InteractionRegion(control: "cancel", area: .zero, action: "cancel"),
+    ])
+    var router = InteractionRouter()
+    _ = router.reconcile(with: interactions)
+
+    let tabRelease = TerminalEvent.key(KeyEvent(.tab, kind: .release))
+    expectNoDifference(
+      router.route(tabRelease, through: interactions),
+      RoutedInteraction(events: [tabRelease])
+    )
+    #expect(router.focus.focusedControl == "save")
+
+    let enterRelease = TerminalEvent.key(KeyEvent(.enter, kind: .release))
+    expectNoDifference(
+      router.route(enterRelease, through: interactions),
+      RoutedInteraction(events: [enterRelease])
+    )
+    let spaceRelease = TerminalEvent.key(KeyEvent(.character(" "), kind: .release))
+    expectNoDifference(
+      router.route(spaceRelease, through: interactions),
+      RoutedInteraction(events: [spaceRelease])
+    )
+    #expect(router.focus.focusedControl == "save")
+
+    expectNoDifference(
+      router.route(.key(KeyEvent(.tab, kind: .repeat)), through: interactions),
+      RoutedInteraction(events: [.focusChanged("cancel")], focusChanged: true)
+    )
+    expectNoDifference(
+      router.route(.key(KeyEvent(.enter, kind: .repeat)), through: interactions),
+      RoutedInteraction(events: [.action("cancel")])
+    )
+  }
+
   @Test func textFieldStateEditsGraphemesSelectionsWordsAndPaste() {
     var state = TextFieldState(text: "Swift")
 

@@ -795,17 +795,16 @@ public struct TerminalInput {
     let result = systemPoll(&descriptors, timeout: timeoutMilliseconds)
     guard result >= 0 else { throw TerminalSessionError.cannotReadInput }
     let input = descriptors[0]
-    if descriptors.count > 1, descriptors[1].revents & Int16(POLLIN) != 0 {
-      wakeup?.drain()
-    }
-    if result > 0, input.revents & Int16(POLLHUP) != 0,
+    let wakeupFired =
+      descriptors.count > 1 && descriptors[1].revents & Int16(POLLIN) != 0
+    if wakeupFired { wakeup?.drain() }
+    if result == 0 { return parser.flushEscape().map(localize) }
+    if input.revents & Int16(POLLHUP) != 0,
       input.revents & Int16(POLLIN) == 0
     {
       return .endOfInput
     }
-    guard result > 0, input.revents & Int16(POLLIN) != 0 else {
-      return parser.flushEscape().map(localize)
-    }
+    guard input.revents & Int16(POLLIN) != 0 else { return nil }
 
     var buffer = [UInt8](repeating: 0, count: 4096)
     let count = systemRead(inputDescriptor, into: &buffer)

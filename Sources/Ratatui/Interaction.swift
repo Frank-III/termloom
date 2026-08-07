@@ -169,6 +169,9 @@ public struct InteractionRouter: Hashable, Sendable {
     through interactions: InteractionMap
   ) -> RoutedInteraction {
     switch event {
+    case .key(let keyEvent) where keyEvent.kind == .release:
+      return RoutedInteraction(events: [event])
+
     case .key(let keyEvent) where keyEvent.key == .tab:
       guard !interactions.focusableControls.isEmpty else {
         return RoutedInteraction(events: [event])

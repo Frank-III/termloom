@@ -87,10 +87,12 @@ public final class ObservationInvalidationTracker: @unchecked Sendable {
   }
 
   private func observedChange(generation changedGeneration: Int) {
-    lock.withLock {
-      if generation == changedGeneration { isArmed = false }
+    let isCurrent = lock.withLock {
+      guard generation == changedGeneration else { return false }
+      isArmed = false
+      return true
     }
-    onChange()
+    if isCurrent { onChange() }
   }
 }
 

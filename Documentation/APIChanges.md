@@ -5,6 +5,14 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Input routing and invalidation correctness
+
+- **Supported behavioral corrections:** wakeup-only input polls preserve pending fragmented Escape sequences; key-release
+  events remain observable without driving focus traversal or control activation; and obsolete Observation dependency
+  callbacks no longer request frames.
+- **Migration:** none. Repeated Tab, Enter, and Space events retain their existing interaction behavior.
+- **Evidence:** focused PTY, interaction-router, and Observation-generation regressions cover each correction.
+
 ### Main-actor terminal-session lifecycle
 
 - **Supported concurrency correction:** `TerminalSession` is now `@MainActor` instead of
