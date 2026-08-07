@@ -86,14 +86,21 @@ func withTerminalCleanup<Value>(
   return try completeTerminalScope(outcome, cleanup: cleanup)
 }
 
-private final class TransactionalTerminalOutput: @unchecked Sendable {
-  private let output: FileHandle
+final class TransactionalTerminalOutput: @unchecked Sendable {
+  static let emergencyRecoverySequence = Data(
+    "\u{1B}[?2026l\u{1B}[r\u{1B}[0m\u{1B}[?7h\u{1B}[?25h".utf8)
+
+  private let directWrite: (Data) throws -> Void
   private let lock = NSLock()
   private var isBuffering = false
   private var buffer = Data()
 
-  init(output: FileHandle) {
-    self.output = output
+  convenience init(output: FileHandle) {
+    self.init { data in try output.write(contentsOf: data) }
+  }
+
+  init(directWrite: @escaping (Data) throws -> Void) {
+    self.directWrite = directWrite
   }
 
   func write(_ data: Data) throws {
@@ -101,7 +108,7 @@ private final class TransactionalTerminalOutput: @unchecked Sendable {
       if isBuffering {
         buffer.append(data)
       } else {
-        try output.write(contentsOf: data)
+        try directWrite(data)
       }
     }
   }
@@ -112,17 +119,10 @@ private final class TransactionalTerminalOutput: @unchecked Sendable {
       isBuffering = true
       buffer.removeAll(keepingCapacity: true)
     }
+
+    let result: Result
     do {
-      let result = try operation()
-      try lock.withLock {
-        isBuffering = false
-        let completed = buffer
-        buffer.removeAll(keepingCapacity: true)
-        if !completed.isEmpty {
-          try output.write(contentsOf: completed)
-        }
-      }
-      return result
+      result = try operation()
     } catch {
       lock.withLock {
         isBuffering = false
@@ -130,6 +130,26 @@ private final class TransactionalTerminalOutput: @unchecked Sendable {
       }
       throw error
     }
+
+    do {
+      try lock.withLock {
+        isBuffering = false
+        let completed = buffer
+        buffer.removeAll(keepingCapacity: true)
+        if !completed.isEmpty { try directWrite(completed) }
+      }
+    } catch {
+      let commitError = error
+      do {
+        try lock.withLock {
+          try directWrite(Self.emergencyRecoverySequence)
+        }
+      } catch {
+        throw TerminalScopeError(operationError: commitError, cleanupError: error)
+      }
+      throw commitError
+    }
+    return result
   }
 }
 
@@ -141,7 +161,7 @@ private final class TransactionalTerminalOutput: @unchecked Sendable {
 public final class TerminalSession {
   private let inputDescriptor: Int32
   private let output: FileHandle
-  private let terminalOutput: TransactionalTerminalOutput
+  var terminalOutput: TransactionalTerminalOutput
   private var viewport: Viewport
   public let capturesMouse: Bool
   private let fallbackSize: Size
@@ -154,6 +174,13 @@ public final class TerminalSession {
   private var prefetchedInput = Data()
   private var lastWindowSize: Size
   public private(set) var viewportOrigin = Position(x: 0, y: 0)
+
+  private struct FrameTransactionSnapshot {
+    var viewport: Viewport
+    var prefetchedInput: Data
+    var lastWindowSize: Size
+    var viewportOrigin: Position
+  }
 
   public init(
     viewport: Viewport = .inline(height: 10),
@@ -258,7 +285,20 @@ public final class TerminalSession {
   /// update. We use write coalescing rather than an outer synchronized-output scope because native
   /// scrollback-producing line feeds must remain outside synchronized output on Ghostty-family hosts.
   func withFrameOutputTransaction<Result>(_ operation: () throws -> Result) throws -> Result {
-    try terminalOutput.withTransaction(operation)
+    let snapshot = FrameTransactionSnapshot(
+      viewport: viewport,
+      prefetchedInput: prefetchedInput,
+      lastWindowSize: lastWindowSize,
+      viewportOrigin: viewportOrigin)
+    do {
+      return try terminalOutput.withTransaction(operation)
+    } catch {
+      viewport = snapshot.viewport
+      prefetchedInput = snapshot.prefetchedInput
+      lastWindowSize = snapshot.lastWindowSize
+      viewportOrigin = snapshot.viewportOrigin
+      throw error
+    }
   }
 
   public func makeInput() -> TerminalInput {
@@ -512,6 +552,7 @@ public final class TerminalSession {
   }
 
   private var restoreSequence: String {
+    let defensiveModeReset = "\u{1B}[?2026l\u{1B}[r\u{1B}[0m\u{1B}[?7h"
     switch viewport {
     case .inline(let requestedHeight):
       let screen = terminalWindowSize()
@@ -519,14 +560,14 @@ public final class TerminalSession {
       let bottom = min(
         max(1, screen.height), UInt16(clamping: Int(viewportOrigin.y) + Int(height)))
       let positionAfterViewport = "\u{1B}[\(bottom);1H"
-      return
-        "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\(positionAfterViewport)\u{1B}[0 q\u{1B}[?25h\r\n"
+      return defensiveModeReset
+        + "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\(positionAfterViewport)\u{1B}[0 q\u{1B}[?25h\r\n"
     case .fullscreen:
-      return
-        "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\u{1B}[0 q\u{1B}[?25h\u{1B}[?1049l"
+      return defensiveModeReset
+        + "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\u{1B}[0 q\u{1B}[?25h\u{1B}[?1049l"
     case .fixed:
-      return
-        "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\u{1B}[0 q\u{1B}[?25h\u{1B}8"
+      return defensiveModeReset
+        + "\u{1B}[<u\u{1B}[?1004l\u{1B}[?1006l\u{1B}[?1002l\u{1B}[?2004l\u{1B}[0 q\u{1B}[?25h\u{1B}8"
     }
   }
 

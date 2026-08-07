@@ -94,11 +94,11 @@ Expected: both pass.
 
 ## Done criteria
 
-- [ ] Commit failure attempts an unbuffered defensive epilogue.
-- [ ] Original commit error remains authoritative.
-- [ ] Failed logical terminal/history state is not treated as committed.
-- [ ] A subsequent retry is complete and valid.
-- [ ] Successful byte ordering and native-scrollback invariants are unchanged.
+- [x] Commit failure attempts an unbuffered defensive epilogue.
+- [x] Original commit error remains authoritative.
+- [x] Failed logical terminal/history state is not treated as committed.
+- [x] A subsequent retry is complete and valid.
+- [x] Successful byte ordering and native-scrollback invariants are unchanged.
 
 ## STOP conditions
 

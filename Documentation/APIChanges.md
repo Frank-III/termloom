@@ -26,6 +26,19 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Evidence:** deterministic tests cover all four body/cleanup outcomes and the asynchronous path; real-PTY lifecycle
   tests cover ordinary session restoration and suspend/resume behavior.
 
+### Frame-transaction failure recovery
+
+- **Supported:** a failed physical frame commit now performs one unbuffered emergency epilogue that ends synchronized
+  output, resets scrolling margins and SGR, reenables autowrap, and shows the cursor. If that epilogue also fails,
+  `TerminalScopeError` preserves both failures.
+- Session viewport state and the application runtime's terminal/backend and inline-document state are restored to their
+  pre-transaction snapshots before the commit error escapes. A later retry therefore emits a complete frame instead of
+  trusting logical state that may not have reached the terminal.
+- Final session restoration emits the same defensive mode reset. Native-scrollback-producing line feeds remain outside
+  synchronized output, and successful frame transactions still use one physical write.
+- **Evidence:** deterministic partial-write tests verify the unbuffered epilogue, dual-failure reporting, and retry;
+  backend and real-PTY tests preserve successful byte ordering, history restoration, and lifecycle balance.
+
 ### One-pass widget presentation and fixed viewports
 
 - **Supported breaking redesign:** `Widget` now has one presentation requirement,

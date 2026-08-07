@@ -97,7 +97,9 @@ concurrency work compose naturally. A detached, lock-isolated input pump is the 
 piece. The runtime owns raw-mode scope, event polling, resize-triggered redraws, cursor state, and
 terminal restoration. Scoped session and suspension helpers run cleanup exactly once: cleanup failure replaces a
 successful body, while `TerminalScopeError` preserves both errors when the body and cleanup fail. Deinitialization
-remains best-effort because it cannot report errors. Idle applications remain event-driven.
+remains best-effort because it cannot report errors. Frame output is buffered into one physical write; failed commits
+perform an unbuffered terminal-mode recovery epilogue and roll session, terminal/backend, and inline-document state
+back to their pre-transaction snapshots before propagating the error. Idle applications remain event-driven.
 
 Presentation and widget-render reads are wrapped in Swift Observation access tracking. A mutation of an
 `@Observable` model marks the next complete frame dirty and signals an internal nonblocking pipe included in

@@ -327,6 +327,7 @@ extension TerminalApplication {
           tracksObservableState
           ? presentationObservation.track(refresh: refreshTracking, makePresentation)
           : makePresentation()
+        let inlineDocumentRuntimeBeforeFrame = inlineDocumentRuntime
         var historyInsertions: [TerminalHistoryInsertion] = []
         if session.supportsInlineHistory, let document = presentation.1 {
           historyInsertions += inlineDocumentRuntime.reconcile(
@@ -380,7 +381,16 @@ extension TerminalApplication {
             : renderFrame()
           return try completedResult.get()
         }
-        let completed = try session.withFrameOutputTransaction(updateViewportHistoryAndDraw)
+        let terminalBeforeFrame = terminal
+        let completed: CompletedFrame
+        do {
+          completed = try session.withFrameOutputTransaction(updateViewportHistoryAndDraw)
+        } catch {
+          terminal = terminalBeforeFrame
+          inlineDocumentRuntime = inlineDocumentRuntimeBeforeFrame
+          input.synchronize(with: session)
+          throw error
+        }
         interactions = completed.interactions
         needsRedraw = false
         periodicRedrawWasActive =

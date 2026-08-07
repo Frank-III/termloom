@@ -10,7 +10,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 |---|---|---:|---:|---|---|
 | 001 | Main-actor isolate terminal-session lifecycle | P1 | M | — | DONE |
 | 002 | Propagate scoped restoration and resume failures | P1 | S–M | 001 | DONE |
-| 003 | Recover terminal modes after transaction commit failure | P1 | M | 001, 002 | TODO |
+| 003 | Recover terminal modes after transaction commit failure | P1 | M | 001, 002 | DONE |
 | 004 | Enforce native-scrollback backend semantics | P1 | S | 001–003 | TODO |
 | 005 | Honor mapped buffer origins in ANSI history output | P1 | S | 004 | TODO |
 

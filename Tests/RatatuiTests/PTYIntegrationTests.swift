@@ -234,6 +234,7 @@
 
       try session.restore()
       let restore = String(decoding: drain(master), as: UTF8.self)
+      #expect(restore.contains("\u{1B}[?2026l\u{1B}[r\u{1B}[0m\u{1B}[?7h"))
       #expect(restore.contains("\u{1B}8"))
       #expect(!restore.contains("\u{1B}[?1049l"))
     }
@@ -329,6 +330,7 @@
       #expect(protocolOutput.contains("\u{1B}[?25l\u{1B}[3J\u{1B}[2J\u{1B}[H"))
       #expect(protocolOutput.contains("\u{1B}[5;1H"))
       #expect(!protocolOutput.contains("\u{1B}[5;7H"))
+      #expect(protocolOutput.contains("\u{1B}[?2026l\u{1B}[r\u{1B}[0m\u{1B}[?7h"))
       #expect(protocolOutput.contains("\u{1B}[<u"))
       #expect(protocolOutput.contains("\u{1B}[?2004l"))
       #expect(protocolOutput.contains("\u{1B}[?1006l"))
