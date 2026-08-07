@@ -252,10 +252,15 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   }
 
   public mutating func setViewportOrigin(_ origin: Position) throws {
-    guard case .absoluteOrigin = cursorAddressing else {
+    switch cursorAddressing {
+    case .absolute:
+      reportedViewportOrigin = origin
+    case .absoluteOrigin:
+      cursorAddressing = .absoluteOrigin(origin)
+      reportedViewportOrigin = origin
+    case .savedOrigin, .savedBottom:
       throw BackendOperationError.unsupported("viewport origin")
     }
-    cursorAddressing = .absoluteOrigin(origin)
   }
 
   public mutating func appendLines(_ count: UInt16) throws {

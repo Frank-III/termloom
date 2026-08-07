@@ -58,6 +58,16 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Evidence:** mapped multi-row, styled, and wide-cell history and restoration regressions verify source offsets and
   continuation-cell handling.
 
+### Synchronized fixed-viewport ownership
+
+- **Supported:** `TerminalSession.resizeFixedViewport(to:terminal:)` explicitly resizes a caller-owned fixed
+  `Terminal<ANSIBackend>` and publishes the same rectangle to session reset, backend reconstruction, and lifecycle state
+  only after the terminal resize succeeds.
+- `ANSIBackend.setViewportOrigin(_:)` now updates fixed absolute-addressing metadata as well as inline absolute-origin
+  addressing. Cursor destination coordinates remain absolute.
+- **Evidence:** a real PTY verifies the terminal, session, backend origin, host-resize policy, and scoped reset all retain
+  the replacement non-zero rectangle.
+
 ### One-pass widget presentation and fixed viewports
 
 - **Supported breaking redesign:** `Widget` now has one presentation requirement,

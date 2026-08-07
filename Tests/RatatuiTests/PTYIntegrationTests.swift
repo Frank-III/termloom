@@ -240,11 +240,18 @@
         try input.readEvent(timeoutMilliseconds: 50)
           == .mouse(MouseEvent(.down(.left), at: Position(x: 4, y: 3))))
 
+      let resizedArea = Rect(x: 8, y: 5, width: 4, height: 2)
+      try session.resizeFixedViewport(to: resizedArea, terminal: &terminal)
+      #expect(session.configuredViewport == .fixed(resizedArea))
+      #expect(session.viewportOrigin == Position(x: 8, y: 5))
+      #expect(terminal.viewport == .fixed(resizedArea))
+      #expect(terminal.backend.viewportOrigin == Position(x: 8, y: 5))
+
       #expect(try session.reanchorAfterResize(Size(width: 12, height: 6)) == .unchanged)
-      #expect(session.viewportOrigin == Position(x: 3, y: 2))
+      #expect(session.viewportOrigin == Position(x: 8, y: 5))
       try session.clearScrollbackAndResetViewport()
       let reset = String(decoding: drain(master), as: UTF8.self)
-      #expect(reset.contains("\u{1B}[3;4H\u{1B}[5X"))
+      #expect(reset.contains("\u{1B}[6;9H\u{1B}[4X"))
       #expect(!reset.contains("\u{1B}[3J"))
       #expect(!reset.contains("\u{1B}[2J"))
 

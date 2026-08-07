@@ -135,6 +135,10 @@ for metadata queries. Stateful widgets can derive cursor position and style whil
 state. Terminal resets and dynamic inline-height changes preserve stable focus identity instead of treating backend
 reconstruction as a new application.
 
+Fixed rendering uses exact terminal coordinates without owning the alternate screen or inline history. Caller-owned
+fixed terminals resize through `TerminalSession.resizeFixedViewport(to:terminal:)`, which keeps terminal buffers, ANSI
+backend origin metadata, and the session lifecycle rectangle synchronized.
+
 Inline rendering keeps widget coordinates local `(0, 0)` while the backend stores an explicit
 physical viewport origin. `Terminal.insertBefore(height:_:)` uses scrolling regions to insert log
 or history rows above the live viewport without clearing it. Its generic fallback still requires a genuine
@@ -214,8 +218,6 @@ framework boundary is making an application repeat mechanics:
 
 ### Remaining architectural risks
 
-- A caller-owned fixed `TerminalSession` retains its configured rectangle when `Terminal.resize(to:)` changes the
-  terminal's fixed region. A follow-up ownership API must update both values atomically or make one the sole owner.
 - `InlineHistoryBackend` remains provisional until a second production backend validates its batching and native
   scrollback transaction vocabulary.
 - `resetTerminalHistory` deliberately emits `CSI 3 J`; ordinary clearing cannot invoke it, but an explicit

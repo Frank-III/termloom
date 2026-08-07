@@ -4878,6 +4878,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui15TerminalSessionC19resizeFixedViewport2to8terminalyAA4RectV_AA0B0VyAA11ANSIBackendVGztKF",
+      "kind": "swift.method",
+      "path": [
+        "TerminalSession",
+        "resizeFixedViewport(to:terminal:)"
+      ],
+      "title": "resizeFixedViewport(to:terminal:)",
+      "declaration": "@MainActor func resizeFixedViewport(to area: Rect, terminal: inout Terminal<ANSIBackend>) throws",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui15TerminalSessionC21supportsInlineHistorySbvp",
       "kind": "swift.property",
       "path": [
@@ -23197,6 +23209,11 @@
     {
       "kind": "memberOf",
       "source": "s:7Ratatui15TerminalSessionC19reanchorAfterResizeyAA0bF11DispositionOAA4SizeVKF",
+      "target": "s:7Ratatui15TerminalSessionC"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui15TerminalSessionC19resizeFixedViewport2to8terminalyAA4RectV_AA0B0VyAA11ANSIBackendVGztKF",
       "target": "s:7Ratatui15TerminalSessionC"
     },
     {

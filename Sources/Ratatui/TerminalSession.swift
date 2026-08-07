@@ -376,6 +376,25 @@ public final class TerminalSession {
     viewportOrigin = Position(x: 0, y: origin.y)
   }
 
+  /// Resize a caller-owned fixed terminal and keep this session's lifecycle region synchronized.
+  ///
+  /// The terminal clears its previous region before adopting the replacement. Session reset, backend
+  /// reconstruction, and restoration state use the new rectangle only after that resize succeeds.
+  public func resizeFixedViewport(
+    to area: Rect,
+    terminal: inout Terminal<ANSIBackend>
+  ) throws {
+    guard case .fixed = viewport, case .fixed = terminal.viewport else {
+      throw TerminalViewportError.requiresFixedViewport
+    }
+    try terminal.resize(to: area)
+    try terminal.withBackend { backend in
+      try backend.setViewportOrigin(Position(x: area.x, y: area.y))
+    }
+    viewport = .fixed(area)
+    viewportOrigin = Position(x: area.x, y: area.y)
+  }
+
   /// Resize the retained inline viewport without reserving a fixed-height pane up front.
   ///
   /// The origin remains attached to the preceding terminal output. Growing beyond the physical
