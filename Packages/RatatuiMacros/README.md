@@ -20,7 +20,7 @@ struct EmptyState {
 }
 ```
 
-`@WidgetComponent` synthesizes `Widget` conformance and forwards rendering, interactions, cursor position, and
-cursor style to `body`. It deliberately does not synthesize state, event handling, layout policy, or an
-application runtime. Result builders remain the primary view-construction API; the macro only removes protocol
-forwarding boilerplate.
+`@WidgetComponent` synthesizes `Widget` conformance and forwards the single `Frame` presentation pass to `body`.
+Cells, interactions, and cursor metadata therefore follow the same pass automatically. The macro deliberately does
+not synthesize state, event handling, layout policy, or an application runtime. Result builders remain the primary
+view-construction API; the macro only removes protocol forwarding boilerplate.

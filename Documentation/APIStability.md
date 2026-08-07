@@ -16,11 +16,11 @@ The supported nucleus is:
 
 - geometry and layout: `Position`, `Size`, `Rect`, `Insets`, `Constraint`, `Flex`, and `Layout`;
 - rendering values: `Color`, `Modifier`, `Style`, `Cell`, `Buffer`, `Span`, `Line`, and `Text`;
-- composition: `Widget`, `StatefulWidget`, `RenderEnvironment`, `WidgetBuilder`, `Block`, `Paragraph`, and stack
-  primitives;
+- composition: the single-pass `Widget`/`Frame` contract, independent `StatefulWidget`, `RenderEnvironment`,
+  `WidgetBuilder`, `Block`, `Paragraph`, and stack primitives;
 - ordinary input: `TerminalEvent`, `KeyEvent`, `MouseEvent`, paste, resize, and focus events;
-- application control: `TerminalApplication`, `ApplicationUpdate`, fullscreen and inline viewport selection, and
-  the automatic-Observation opt-out;
+- application control: `TerminalApplication`, `ApplicationUpdate`, fullscreen, inline, and fixed viewport selection,
+  explicit fixed-region resizing, and the automatic-Observation opt-out;
 - ordinary terminal/backend operations: drawing, sizing, clearing, cursor position/style, `Backend`, and
   `LineAppendingBackend`.
 
@@ -84,8 +84,9 @@ Run:
 Scripts/check-api.sh
 ```
 
-The check permits additive symbols and rejects removed or changed declarations, conformances, inheritance, and
-availability. For an intentional reviewed change:
+During ordinary development the check permits additive symbols and rejects removed or changed declarations,
+conformances, inheritance, and availability. A release candidate must deliberately refresh the reviewed baseline and
+then report zero additive symbols. For an intentional reviewed change:
 
 1. classify the affected API using this document;
 2. preserve a deprecated forwarding API when the affected surface is supported;
@@ -112,6 +113,7 @@ Until all six are true, keep the capability provisional or in a sibling package.
 
 ## Release posture
 
-The next milestone should be a `0.2` stabilization release, not `1.0`. A `1.0` release should wait until the
-supported nucleus has survived multiple releases and the Codex, Postcat, and Herdr consumer matrix without
+Version 0.2 is the stabilization boundary for the single-pass presentation contract, Swift-native geometry, and
+current viewport semantics; release-candidate work must not add features. A `1.0` release should wait until the
+supported nucleus has survived multiple releases and the Codex, Motel, Postcat, and Herdr consumer matrix without
 special-case compatibility patches.

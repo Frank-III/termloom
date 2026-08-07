@@ -57,16 +57,13 @@ final class ProcessesModel {
 struct ProcessesView: Widget {
   let model: ProcessesModel
 
-  func render(
-    in area: Rect,
-    into buffer: inout Buffer,
-    environment: RenderEnvironment
-  ) {
-    Table(model.processes, selectedRow: model.selectedIndex) {
-      TableColumn("Name", value: \.name, width: .flex(2))
-      TableColumn("CPU", value: \.cpu, alignment: .trailing) { "\($0)%" }
-    }
-    .render(in: area, into: &buffer, environment: environment)
+  func render(in area: Rect, into frame: inout Frame) {
+    frame.render(
+      Table(model.processes, selectedRow: model.selectedIndex) {
+        TableColumn("Name", value: \.name, width: .flex(2))
+        TableColumn("CPU", value: \.cpu, alignment: .trailing) { "\($0)%" }
+      },
+      in: area)
   }
 }
 ```
@@ -84,7 +81,8 @@ backend.
 2. Flatten builders into arrays of render records rather than preserving arbitrarily deep generic
    trees.
 3. Add macros only to eliminate boilerplate after the underlying protocol is proven.
-4. Keep state and input routing framework-owned, with stable focus IDs and semantic actions.
+4. Keep focus, editing, and terminal-input mechanics framework-owned, with stable IDs and semantic actions; keep
+   product state and action meaning application-owned.
 5. Preserve inline rendering as a first-class mode; alternate-screen applications are not the only
    kind of real TUI.
 6. Measure allocation count, changed-cell count, compile time, and bytes written independently.
@@ -135,9 +133,10 @@ for metadata queries. Stateful widgets can derive cursor position and style whil
 state. Terminal resets and dynamic inline-height changes preserve stable focus identity instead of treating backend
 reconstruction as a new application.
 
-Fixed rendering uses exact terminal coordinates without owning the alternate screen or inline history. Caller-owned
-fixed terminals resize through `TerminalSession.resizeFixedViewport(to:terminal:)`, which keeps terminal buffers, ANSI
-backend origin metadata, and the session lifecycle rectangle synchronized.
+Fixed rendering uses exact terminal coordinates without owning the alternate screen or inline history. A standalone
+fixed `Terminal` resizes through `Terminal.resize(to:)`; a terminal associated with `TerminalSession` resizes through
+`TerminalSession.resizeFixedViewport(to:terminal:)` so terminal buffers, ANSI backend origin metadata, and the session
+lifecycle rectangle remain synchronized.
 
 Inline rendering keeps widget coordinates local `(0, 0)` while the backend stores an explicit
 physical viewport origin. `Terminal.insertBefore(height:_:)` uses scrolling regions to insert log

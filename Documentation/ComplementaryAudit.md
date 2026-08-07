@@ -22,7 +22,7 @@ when it is reusable terminal, rendering, editing, focus, geometry, or lifecycle 
 | Medium | Mouse coordinates used the original inline origin after history insertion | Ratatui input/viewport mechanics | Input localization rebases whenever insertion, resize, or dynamic sizing moves the viewport. PTY tests preserve already-queued coordinates and localize future mouse reports against the new origin. |
 | Medium | Dynamic sizing/reset recreated focus state | Ratatui interaction mechanics | Stable `InteractionRouter` state survives backend reconstruction. An integrated PTY trace tabs to the second control, resets history, and retains that focus. |
 | Medium | Updates returned from synthetic focus events were ignored | Ratatui application effects | Focus-reconciliation updates now interpret clear/reset/suspend/quit effects like ordinary routed events. A PTY application quits from its initial focus event. |
-| Medium | Stateful widgets could not derive cursor style from state | Ratatui rendering API | `StatefulWidget` has a state-aware cursor-style hook and `Frame.render(state:)` forwards it. |
+| Medium | Stateful widgets could not derive cursor style from state | Ratatui rendering API | The single stateful render pass places state-derived cursor position and style directly on `Frame`; composition and type erasure preserve the metadata. |
 | Medium | ANSI fallback sizing ignored inline viewport height | Ratatui backend | Drawable fallback height is clamped while `windowSize()` retains physical fallback dimensions. |
 | Medium | Cursor reports split across reads caused fallback anchoring and leaked CPR events | Ratatui terminal lifecycle | Cursor probing accumulates fragments to a deadline and preserves only unrelated input. |
 | Medium | Model selection persisted before reasoning confirmation | Codex semantics | Candidate model and effort commit together through one driver operation only after final confirmation; Escape leaves runtime state unchanged. |
@@ -41,7 +41,11 @@ when it is reusable terminal, rendering, editing, focus, geometry, or lifecycle 
 - Atomic text elements are framework editing mechanics. Ratatui does not know what a paste, attachment,
   mention, or hidden payload means.
 - `InlineViewportSizing` remains opt-in rather than enlarging every `TerminalApplication`.
-- Native history insertion remains distinct from visual CSI `S` scrolling.
+- Native history insertion remains distinct from visual CSI `S` scrolling. `LineAppendingBackend` and
+  `InlineHistoryBackend` keep those capabilities out of the ordinary `Backend` contract, and unsupported native
+  insertion fails explicitly.
+- Cells, interactions, and cursor metadata share one immediate `Frame` presentation pass; no retained widget identity
+  or metadata-only traversal remains.
 
 ## Intentional or deferred work
 
@@ -51,15 +55,9 @@ when it is reusable terminal, rendering, editing, focus, geometry, or lifecycle 
    requirement. Upstream retains a dismissed-token sentinel. This is an intentional documented divergence.
 3. **Menu/popup presenter:** `SelectionViewport` is proven, but a complete policy-free presenter should be
    validated by a second client before becoming public framework API.
-4. **Backend capability facets:** Core drawing, cursor control, alternate screen, inline viewport, and native
-   history remain combined in `Backend`; splitting them is major-version work.
-5. **One-pass rendering:** Cells, interactions, cursor position, and cursor style still use separate
-   traversals. Containers are tested for forwarding, but a single render context is the long-term design.
-6. **Explicit scrollback destruction:** `.resetTerminalHistory` deliberately uses CSI `3J`; ordinary
+4. **Explicit scrollback destruction:** `.resetTerminalHistory` deliberately uses CSI `3J`; ordinary
    `.clearViewport` cannot trigger it, but explicit reset still removes unrelated shell scrollback.
-7. **Unsupported insertion outcome:** `Terminal.insertBefore` still silently no-ops without required backend
-   capabilities. A typed handled/unsupported result should precede capability-protocol extraction.
-8. **Terminal matrix:** PTYs validate bytes, termios, origins, modes, and application lifecycle but do not
+5. **Terminal matrix:** PTYs validate bytes, termios, origins, modes, and application lifecycle but do not
    emulate native scrollback or reflow. Standard terminals, Ghostty-family hosts, and tmux/Zellij still need
    ongoing physical smoke coverage. `terminal-control` 0.4.1 is usable; 0.6.0 currently fails in its
    `libghostty-vt` Zig/macOS SDK build.

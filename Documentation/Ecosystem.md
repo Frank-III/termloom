@@ -110,12 +110,12 @@ must remain separate products/packages with independent dependencies and release
 | Markdown/rendering crates | Codex currently owns Markdown semantics | `RatatuiMarkdown` only after a second client |
 | Form/grid crates | Tables exist, editable forms do not | `RatatuiForms` |
 | OpenTUI console / React DevTools | Initial metrics/log panel and optional overlay built | `RatatuiDevTools` |
-| Declarative framework adapters | Result builders exist; forwarding boilerplate remained | `RatatuiMacros` |
+| Declarative framework adapters | Result builders plus optional single-pass conformance synthesis | `RatatuiMacros` |
 
 `RatatuiSyntaxHighlighting` and `RatatuiTestSupport` demonstrate conditional products within the root package.
 `RatatuiTextArea`, `RatatuiOverlays`, `RatatuiDevTools`, and `RatatuiMacros` are independent sibling packages.
-The macro package provides `@WidgetComponent`, which forwards all four `Widget` passes to `body`; result builders
-remain the primary construction API, and core consumers never resolve SwiftSyntax.
+The macro package provides `@WidgetComponent`, which forwards the single `Widget` presentation pass to `body`;
+result builders remain the primary construction API, and core consumers never resolve SwiftSyntax.
 
 ## Priority
 
@@ -124,8 +124,8 @@ remain the primary construction API, and core consumers never resolve SwiftSynta
 2. **External-event wakeup.** Observation invalidations now wake the input poll immediately and coalesce into a
    whole-frame diff. A public event source may still be useful for non-observable network streams and file
    watchers; do not turn it into per-widget signal repainting.
-3. **Backend capability facets.** Replace required optional operations and the exposed history batch state before
-   declaring the backend protocol stable.
+3. **Backend capability facets.** Keep `LineAppendingBackend` and `InlineHistoryBackend` separate from ordinary
+   drawing; stabilize native-history batching only after a second production backend validates the transaction.
 4. **Selectable text and clipboard adapters.** Keep OSC 52 and platform clipboard effects optional and explicit.
 5. **Keymap next.** OpenTUI and Codex both show demand for commands, key sequences, conflict detection, and
    discoverable help, but the package should be extracted from at least two clients rather than invented in core.

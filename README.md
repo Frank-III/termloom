@@ -106,12 +106,13 @@ Included widgets and controls:
   TextMate `.tmTheme` files without coupling the core renderer to a syntax engine
 
 SwiftPM traits keep transitive dependencies conditional. `SyntaxHighlighting` and `TestSupport` are enabled by
-default for compatibility, but a core-only consumer can opt out completely:
+default for compatibility, but a core-only consumer can opt out completely. Replace the placeholder owner below with
+the repository URL selected for publication:
 
 ```swift
 .package(
   url: "https://github.com/your-org/ratetui-swift",
-  from: "0.1.0",
+  exact: "0.2.0-rc.1",
   traits: []
 )
 ```
@@ -188,9 +189,10 @@ documents frame, primitive, memory-retention, and ANSI-output benchmarks. The [e
 documents package boundaries and the admission rule for core. The source-backed
 [capability map](Documentation/Parity.md) records what is complete and keeps validation work separate from feature
 parity. The [complementary Ratatui/Codex audit](Documentation/ComplementaryAudit.md) classifies stress-client
-findings by framework mechanics versus application policy. Behavioral porting is complete; the remaining
-long tail is a broader physical-terminal matrix, validating the provisional history-batch transaction with
-another backend, one-pass render metadata, and dedicated allocation/output benchmarks.
+findings by framework mechanics versus application policy. The 0.2 candidate freezes the single-pass `Frame` contract, Swift-native terminal geometry, fixed/fullscreen/inline
+viewport semantics, and the current backend capability facets. Remaining post-0.2 work is deliberately narrower: a
+broader physical-terminal matrix, validation of provisional native-history batching with another production backend,
+and continued allocation/output benchmarking.
 
 Run it with the mise-managed Swift toolchain:
 

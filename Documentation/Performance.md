@@ -46,31 +46,31 @@ Apple Swift 6.4, arm64 macOS, 120×40 frames, 1,000 requested iterations:
 
 | Scenario | Time/iteration | Cell updates | ANSI bytes |
 | --- | ---: | ---: | ---: |
-| Dashboard diff | 78.7 µs | 236.64 | — |
-| Dashboard with Observation | 78.0 µs | 236.64 | — |
-| Static full buffer | 55.0 µs | 0 | — |
-| One-cell change | 26.1 µs | 1 | — |
-| Full-frame churn | 85.4 µs | 4,800 | — |
-| Cursor-only frame | 55.3 µs | 0 | — |
-| Zero interaction regions | 26.5 µs | 0.01 initial average | — |
-| 100 interaction regions | 30.3 µs | 0.01 initial average | — |
-| ANSI static frame | 63.7 µs | 0 | 11 |
-| ANSI one-cell change | 41.2 µs | 1 | 42 |
-| ANSI full-frame churn | 127.5 µs | 4,800 | 5,109 |
+| Dashboard diff | 80.7 µs | 236.64 | — |
+| Dashboard with Observation | 79.3 µs | 236.64 | — |
+| Static full buffer | 54.3 µs | 0 | — |
+| One-cell change | 25.5 µs | 1 | — |
+| Full-frame churn | 82.9 µs | 4,800 | — |
+| Cursor-only frame | 54.2 µs | 0 | — |
+| Zero interaction regions | 25.9 µs | 0.015 initial average | — |
+| 100 interaction regions | 29.7 µs | 0.015 initial average | — |
+| ANSI static frame | 60.9 µs | 0 | 11 |
+| ANSI one-cell change | 33.3 µs | 1 | 42 |
+| ANSI full-frame churn | 123.2 µs | 4,800 | 5,109 |
 
 Primitive highlights:
 
 | Scenario | Time/iteration |
 | --- | ---: |
-| Empty 16×16 buffer | 0.68 µs |
-| Empty 64×64 buffer | 9.77 µs |
-| Empty 255×255 buffer | 154 µs |
-| Ten-way fill layout | 0.19 µs |
+| Empty 16×16 buffer | 0.66 µs |
+| Empty 64×64 buffer | 9.87 µs |
+| Empty 255×255 buffer | 149 µs |
+| Ten-way fill layout | 0.17 µs |
 | Wrapped 64-line paragraph into 100×50 | 0.51 ms |
 | Wrapped 2,048-line paragraph into 100×50 | 0.52 ms |
 | Wrapped 2,048-line paragraph scrolled to row 1,024 | 6.98 ms |
-| 64-row table into 120×50 | 43.2 µs |
-| 2,048-row table into 120×50 | 44.8 µs |
+| 64-row table into 120×50 | 44.0 µs |
+| 2,048-row table into 120×50 | 48.0 µs |
 
 The table and an unscrolled paragraph are effectively viewport-bounded. Paragraph rendering now composes source
 lines incrementally and stops after the visible rows; its word and character wrappers also stop consuming a long
@@ -90,14 +90,16 @@ layout index owned by the application or a separate cache, rather than hidden re
 `Paragraph.lineCount(width:)` intentionally consumes the complete document because its result is the complete
 height.
 
-Collecting 100 interaction regions adds about 3.8 µs over the otherwise identical zero-region widget, so current
-evidence does not justify an invasive one-pass metadata API. Codex additionally avoids repeated paragraph work for
-stable transcript history through application-level rendered-document caches.
+Collecting 100 interaction regions adds about 3.8 µs over the otherwise identical zero-region widget. Those figures
+measure the shipped single-pass `Frame` contract: cells, interactions, and cursor metadata are produced during one
+composition traversal, while the terminal still performs an ordinary whole-frame buffer diff. The redesign removed
+repeated container layout and metadata forwarding without introducing retained widget identity or subtree repainting.
+Codex additionally avoids repeated paragraph work for stable transcript history through application-level
+rendered-document caches.
 
-## Decision gate for one-pass metadata
+## Release interpretation
 
-Do not replace `Widget`'s render/cursor/interaction contracts solely because they traverse composition separately.
-First compare `frame/0-interactions`, `frame/100-interactions`, cursor-only frames, and real Herdr/Codex profiles.
-A one-pass API is justified only if metadata traversal is a material share of frame time after ordinary allocation
-and rendering hot spots are addressed. Any design must preserve pure immediate-mode rendering and whole-frame
-buffer diffing; it must not introduce retained widget identity or subtree repainting.
+The frame, cursor, and interaction scenarios are regression sentinels, not independent throughput guarantees. Compare
+all four on the same host: a change that improves cell rendering while regressing cursor-only or interaction-heavy
+frames is not a net framework improvement. Future optimization should target measured allocation, fitting, viewport,
+and ANSI-output costs without splitting the single presentation pass or adding hidden widget reconciliation state.

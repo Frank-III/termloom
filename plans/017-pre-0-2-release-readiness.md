@@ -16,6 +16,16 @@ Reconcile architecture, performance, ecosystem, API stability, and API change do
 
 No new major feature, sixth demo, retained reconciliation, generic menu, or inline/fullscreen transition implementation.
 
+## Progress
+
+- Architecture, API, migration, performance, ecosystem, parity, testing, macro, changelog, and release-checklist text is
+  reconciled with the single-pass `Frame` implementation.
+- Strict formatting, 269 core tests plus 3 syntax tests, the complete ecosystem matrix, Codex's 156 tests, Motel's 14
+  tests, Herdr's 91 tests, the 1,540-symbol API baseline with zero additions, and all 26 benchmark-smoke scenarios pass.
+- Automated PTY and `terminal-control` 0.4.1 supplemental inline/fullscreen/fixed smokes pass.
+- Remaining release blockers are owner-selected public repository/license metadata and a fresh physical-terminal
+  attestation; synthetic Supaterm input did not reach the terminal surface during automated smoke setup.
+
 ## Done criteria
 
 Documents describe the shipped system, API baseline has no unreviewed additions, all repositories are clean, physical evidence is recorded, and the candidate is ready to tag.

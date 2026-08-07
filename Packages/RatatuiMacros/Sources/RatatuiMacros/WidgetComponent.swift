@@ -1,6 +1,6 @@
 import Ratatui
 
-/// Synthesizes `Widget` conformance by forwarding rendering, interaction, and cursor metadata to `body`.
+/// Synthesizes `Widget` conformance by forwarding the single presentation pass to `body`.
 ///
 /// Use this for lightweight custom components whose entire presentation is expressed by another widget:
 ///
@@ -16,10 +16,6 @@ import Ratatui
 /// ```
 ///
 /// The macro deliberately does not synthesize state, event handling, layout policy, or an application runtime.
-@attached(
-  extension,
-  conformances: Widget,
-  names: named(render), named(collectInteractions), named(cursorPosition), named(cursorStyle)
-)
+@attached(extension, conformances: Widget, names: named(render))
 public macro WidgetComponent() =
   #externalMacro(module: "RatatuiWidgetMacros", type: "WidgetComponentMacro")

@@ -24,7 +24,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 014 | Adopt stabilized collections in Herdr | P1 | M | 012, 013 | DONE |
 | 015 | Bound fitting and viewport work | P1 | M | 012 | DONE |
 | 016 | Gate a smaller `TerminalApplication` protocol | P2 | M spike | 012–015 | REJECTED: associated-type capability requires erasure or split runners |
-| 017 | Prepare the 0.2 release candidate | P1 | M | 012–016 | TODO |
+| 017 | Prepare the 0.2 release candidate | P1 | M | 012–016 | IN PROGRESS |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 

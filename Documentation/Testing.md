@@ -41,15 +41,33 @@ Review the baseline diff like source code. Do not update it merely to make a fai
 ## Consumer contract matrix
 
 The local workspace matrix validates core, all sibling ecosystem packages, Postcat's explicit and Observation
-paths, and—when their sibling checkouts are present—the Codex and Herdr stress clients:
+paths, and—when their sibling checkouts are present—the Codex, Motel, and Herdr stress clients:
 
 ```sh
 Scripts/test-consumers.sh
 ```
 
-Use `--skip-codex` or `--skip-herdr` when another writer is actively changing that checkout. Override checkout
-locations with `RATATUI_CODEX_PATH` and `RATATUI_HERDR_PATH`. A missing optional checkout is reported and skipped;
-a present checkout must pass formatting and its complete test suite.
+Use `--skip-codex`, `--skip-motel`, or `--skip-herdr` when another writer is actively changing that checkout.
+Override checkout locations with `RATATUI_CODEX_PATH`, `RATATUI_MOTEL_PATH`, and `RATATUI_HERDR_PATH`. A missing
+optional checkout is reported and skipped; a present checkout must pass formatting and its complete test suite.
+
+## 0.2 release-candidate matrix
+
+Run the frozen candidate from a clean Ratatui checkout:
+
+```sh
+swift format lint --strict --recursive Package.swift Sources Tests
+swift test
+Scripts/check-api.sh
+Scripts/test-ecosystem.sh
+Scripts/test-consumers.sh
+swift run -c release ratatui-benchmark -- --suite all --iterations 10 --json > /tmp/ratatui-benchmark-smoke.json
+```
+
+The API check must report zero additive symbols. PTY coverage is part of `swift test`; additionally smoke one inline,
+one fullscreen, and one fixed-region executable on a real terminal, then verify cursor visibility, raw mode, mouse mode,
+and alternate-screen restoration after normal quit and interruption. Record the host and result in the 0.2 release
+checklist rather than treating a screenshot as terminal-lifecycle evidence.
 
 ## Performance smoke and baselines
 

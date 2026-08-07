@@ -189,13 +189,14 @@ Entries must identify the stability level, migration path, and validation eviden
   requirements would preserve the repeated layout traversals that the redesign removes. Ratatui core, all sibling
   packages and examples, Codex, and Herdr have migrated to the new contract.
 - **Provisional:** `Viewport.fixed(Rect)` embeds an exact terminal-coordinate region without alternate-screen or inline
-  history ownership. The region does not autoresize with its host; callers explicitly use `Terminal.resize(to:)`.
-  Fixed clear/reset operations affect only that region, input mouse coordinates remain physical, and session teardown
-  restores the surrounding cursor.
+  history ownership. The region does not autoresize with its host; manual `Terminal` owners use `Terminal.resize(to:)`,
+  while session-owned fixed terminals use `TerminalSession.resizeFixedViewport(to:terminal:)` so buffer,
+  backend-origin, and lifecycle rectangles remain synchronized. Fixed clear/reset operations affect only that region,
+  input mouse coordinates remain physical, and session teardown restores the surrounding cursor.
 - **Evidence:** a one-pass type-erasure regression verifies cells, interactions, and cursor metadata from one render;
   fixed-region buffer tests and a real PTY verify absolute addressing, scoped clearing, resize behavior, mode balance,
-  and cursor restoration. The full 229-test Ratatui suite, ecosystem script, Codex's 155 tests, and Herdr's 87 tests
-  pass under strict formatting.
+  and cursor restoration. Release-candidate suite counts and matrix results are recorded in
+  `ReleaseChecklist-0.2.md` rather than frozen in this historical migration entry.
 
 ### Application redraw scheduling
 

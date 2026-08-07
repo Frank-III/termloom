@@ -20,11 +20,11 @@ also produce more symbol-graph entries than an equivalent count of conceptual AP
 
 ## Inventory
 
-The normalized symbol graph contains 1,479 symbols and 1,944 relationships. Source inspection finds approximately
-905 explicit public declaration lines, concentrated in Canvas, metric widgets, controls, blocks, tables, geometry,
-and base widget composition.
+The reviewed 0.2 candidate baseline contains 1,540 symbols and 2,039 relationships. Source inspection finds 1,273
+explicit public declaration lines, concentrated in geometry, terminal lifecycle, fitting and viewport primitives,
+Canvas, metric widgets, controls, blocks, tables, and base widget composition.
 
-The high raw count is not evidence by itself that 1,479 independent abstractions were designed. It includes:
+The high raw count is not evidence by itself that 1,540 independent abstractions were designed. It includes:
 
 - stored-property accessors;
 - initializers and protocol witnesses;
@@ -58,8 +58,9 @@ allocation-light concrete sequences with erasure.
 ### Keep built-in widget configuration public
 
 Canvas, charts, gauges, bars, lists, tables, calendars, borders, and branded widgets follow upstream
-`ratatui-widgets`. They stay public but provisional as a group until the Swift package topology decides whether to
-keep an umbrella module or introduce a separate widgets product.
+`ratatui-widgets`. Version 0.2 keeps them in the umbrella module. They remain provisional as a group because their
+configuration vocabulary has less independent-client history than the supported core, not because a package split is
+pending during the release candidate.
 
 ### Keep inline reconciliation provisional and public
 
@@ -85,5 +86,5 @@ not opportunistically while fixing implementation code.
 3. Public protocol requirements must document isolation and ownership.
 4. Do not expose a concrete helper merely to test it; use `@testable` internal access or injected internal seams.
 5. Review `Scripts/check-api.sh` output and `Documentation/API/Ratatui.json` for every public change.
-6. Re-run this audit before `0.2` after the package topology is decided; a widgets-package split is the only likely
-   source of a large, justified surface reduction.
+6. The 0.2 review keeps one umbrella `Ratatui` module. Any future widgets-package split is a separately planned
+   migration, not release-candidate cleanup.
