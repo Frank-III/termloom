@@ -8,7 +8,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 001 | Main-actor isolate terminal-session lifecycle | P1 | M | — | TODO |
+| 001 | Main-actor isolate terminal-session lifecycle | P1 | M | — | DONE |
 | 002 | Propagate scoped restoration and resume failures | P1 | S–M | 001 | TODO |
 | 003 | Recover terminal modes after transaction commit failure | P1 | M | 001, 002 | TODO |
 | 004 | Enforce native-scrollback backend semantics | P1 | S | 001–003 | TODO |

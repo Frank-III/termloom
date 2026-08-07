@@ -171,6 +171,7 @@
     }
   }
 
+  @MainActor
   @Suite(.serialized) struct PTYIntegrationTests {
     @Test func fixedSessionUsesAbsoluteCoordinatesWithoutOwningTheScreen() throws {
       var master: Int32 = -1

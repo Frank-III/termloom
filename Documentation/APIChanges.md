@@ -5,6 +5,17 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Main-actor terminal-session lifecycle
+
+- **Supported concurrency correction:** `TerminalSession` is now `@MainActor` instead of
+  `@unchecked Sendable`. Its raw-mode, viewport, cursor-origin, prefetched-input, and restoration state has one
+  compiler-enforced owner matching `TerminalApplication` lifecycle isolation.
+- **Migration:** create and operate on `TerminalSession` from main-actor code. Synchronous and asynchronous
+  `withTerminalSession` scopes are both main-actor isolated. Blocking terminal input remains in the detached,
+  lock-isolated input pump, and transactional output remains a separately synchronized transport primitive.
+- **Evidence:** the minimal Swift 6 build and real-PTY inline, fullscreen, fixed, resize, suspend/resume, input-transfer,
+  and application-loop tests compile and pass without an unchecked session conformance.
+
 ### One-pass widget presentation and fixed viewports
 
 - **Supported breaking redesign:** `Widget` now has one presentation requirement,

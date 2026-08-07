@@ -245,6 +245,7 @@ private final class AsyncInputPump: @unchecked Sendable {
     }.value
   }
 
+  @MainActor
   func synchronize(with session: TerminalSession) {
     lock.withLock {
       session.synchronizeInput(&input)

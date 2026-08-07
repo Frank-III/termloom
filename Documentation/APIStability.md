@@ -60,9 +60,9 @@ Ratatui reviews more than declaration spelling:
 - **Source:** existing supported clients continue compiling.
 - **Behavior:** buffer output, cursor metadata, interaction geometry, terminal modes, and restoration remain
   deterministic unless a documented bug is fixed.
-- **Concurrency:** `TerminalApplication` and terminal lifecycle operations remain main-actor isolated. Values
-  declared `Sendable` may cross isolation boundaries; public reference types without `Sendable` carry no such
-  promise.
+- **Concurrency:** `TerminalApplication` and `TerminalSession` lifecycle operations are compiler-enforced main-actor
+  state. Blocking input polling and transactional output use separate synchronized transport primitives. Values
+  declared `Sendable` may cross isolation boundaries; public reference types without `Sendable` carry no such promise.
 - **Dependencies:** the `Ratatui` product remains usable with `traits: []` and does not acquire SwiftSyntax,
   snapshot-testing, syntax-highlighting, HTTP, provider, PTY, or application dependencies.
 - **Backend capability:** simple backends implement only `Backend`; advanced operations require explicit capability

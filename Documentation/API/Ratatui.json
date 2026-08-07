@@ -4789,7 +4789,7 @@
         "TerminalSession"
       ],
       "title": "TerminalSession",
-      "declaration": "final class TerminalSession",
+      "declaration": "@MainActor final class TerminalSession",
       "accessLevel": "public",
       "availability": []
     },
@@ -4813,7 +4813,7 @@
         "makeBackend()"
       ],
       "title": "makeBackend()",
-      "declaration": "func makeBackend() -> ANSIBackend",
+      "declaration": "@MainActor func makeBackend() -> ANSIBackend",
       "accessLevel": "public",
       "availability": []
     },
@@ -4825,7 +4825,7 @@
         "capturesMouse"
       ],
       "title": "capturesMouse",
-      "declaration": "let capturesMouse: Bool",
+      "declaration": "@MainActor let capturesMouse: Bool",
       "accessLevel": "public",
       "availability": []
     },
@@ -4837,7 +4837,7 @@
         "viewportOrigin"
       ],
       "title": "viewportOrigin",
-      "declaration": "var viewportOrigin: Position { get }",
+      "declaration": "@MainActor var viewportOrigin: Position { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -4849,7 +4849,7 @@
         "configuredViewport"
       ],
       "title": "configuredViewport",
-      "declaration": "var configuredViewport: Viewport { get }",
+      "declaration": "@MainActor var configuredViewport: Viewport { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -4861,7 +4861,7 @@
         "reanchorAfterResize(_:)"
       ],
       "title": "reanchorAfterResize(_:)",
-      "declaration": "@discardableResult func reanchorAfterResize(_ size: Size) throws -> TerminalResizeDisposition",
+      "declaration": "@discardableResult @MainActor func reanchorAfterResize(_ size: Size) throws -> TerminalResizeDisposition",
       "accessLevel": "public",
       "availability": []
     },
@@ -4873,7 +4873,7 @@
         "supportsInlineHistory"
       ],
       "title": "supportsInlineHistory",
-      "declaration": "var supportsInlineHistory: Bool { get }",
+      "declaration": "@MainActor var supportsInlineHistory: Bool { get }",
       "accessLevel": "public",
       "availability": []
     },
@@ -4885,7 +4885,7 @@
         "synchronizeViewportOrigin(_:)"
       ],
       "title": "synchronizeViewportOrigin(_:)",
-      "declaration": "func synchronizeViewportOrigin(_ origin: Position)",
+      "declaration": "@MainActor func synchronizeViewportOrigin(_ origin: Position)",
       "accessLevel": "public",
       "availability": []
     },
@@ -4897,7 +4897,7 @@
         "updateInlineViewportHeight(_:)"
       ],
       "title": "updateInlineViewportHeight(_:)",
-      "declaration": "@discardableResult func updateInlineViewportHeight(_ requestedHeight: UInt16) throws -> Bool",
+      "declaration": "@discardableResult @MainActor func updateInlineViewportHeight(_ requestedHeight: UInt16) throws -> Bool",
       "accessLevel": "public",
       "availability": []
     },
@@ -4909,7 +4909,7 @@
         "clearScrollbackAndResetViewport()"
       ],
       "title": "clearScrollbackAndResetViewport()",
-      "declaration": "func clearScrollbackAndResetViewport() throws",
+      "declaration": "@MainActor func clearScrollbackAndResetViewport() throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -4921,7 +4921,7 @@
         "resume()"
       ],
       "title": "resume()",
-      "declaration": "func resume() throws",
+      "declaration": "@MainActor func resume() throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -4933,7 +4933,7 @@
         "restore()"
       ],
       "title": "restore()",
-      "declaration": "func restore() throws",
+      "declaration": "@MainActor func restore() throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -4945,7 +4945,7 @@
         "suspend()"
       ],
       "title": "suspend()",
-      "declaration": "func suspend() throws",
+      "declaration": "@MainActor func suspend() throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -4957,7 +4957,7 @@
         "init(viewport:capturesMouse:inputDescriptor:output:fallbackSize:backendConfiguration:)"
       ],
       "title": "init(viewport:capturesMouse:inputDescriptor:output:fallbackSize:backendConfiguration:)",
-      "declaration": "init(viewport: Viewport = .inline(height: 10), capturesMouse: Bool = false, inputDescriptor: Int32 = STDIN_FILENO, output: FileHandle = .standardOutput, fallbackSize: Size = Size(width: 80, height: 24), backendConfiguration: ANSIBackendConfiguration? = nil) throws",
+      "declaration": "@MainActor init(viewport: Viewport = .inline(height: 10), capturesMouse: Bool = false, inputDescriptor: Int32 = STDIN_FILENO, output: FileHandle = .standardOutput, fallbackSize: Size = Size(width: 80, height: 24), backendConfiguration: ANSIBackendConfiguration? = nil) throws",
       "accessLevel": "public",
       "availability": []
     },
@@ -4969,7 +4969,7 @@
         "makeInput()"
       ],
       "title": "makeInput()",
-      "declaration": "func makeInput() -> TerminalInput",
+      "declaration": "@MainActor func makeInput() -> TerminalInput",
       "accessLevel": "public",
       "availability": []
     },
@@ -6871,7 +6871,7 @@
         "withTerminalSession(viewport:capturesMouse:_:)"
       ],
       "title": "withTerminalSession(viewport:capturesMouse:_:)",
-      "declaration": "func withTerminalSession<Result>(viewport: Viewport = .inline(height: 10), capturesMouse: Bool = false, _ operation: (TerminalSession) throws -> Result) throws -> Result",
+      "declaration": "@MainActor func withTerminalSession<Result>(viewport: Viewport = .inline(height: 10), capturesMouse: Bool = false, _ operation: (TerminalSession) throws -> Result) throws -> Result",
       "accessLevel": "public",
       "availability": []
     },
@@ -18591,12 +18591,6 @@
       "source": "s:7Ratatui15RenderDirectionO",
       "target": "s:s8SendableP",
       "targetFallback": "Swift.Sendable"
-    },
-    {
-      "kind": "conformsTo",
-      "source": "s:7Ratatui15TerminalSessionC",
-      "target": "s:s16SendableMetatypeP",
-      "targetFallback": "Swift.SendableMetatype"
     },
     {
       "kind": "conformsTo",

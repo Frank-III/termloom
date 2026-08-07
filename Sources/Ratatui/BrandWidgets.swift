@@ -43,8 +43,10 @@ public struct RatatuiMascot: Widget, Hashable, Sendable {
     guard !area.isEmpty else { return }
     let left = max(Int(area.x), Int(frame.buffer.area.x))
     let top = max(Int(area.y), Int(frame.buffer.area.y))
-    let right = min(Int(area.x) + Int(area.width), Int(frame.buffer.area.x) + Int(frame.buffer.area.width))
-    let bottom = min(Int(area.y) + Int(area.height), Int(frame.buffer.area.y) + Int(frame.buffer.area.height))
+    let right = min(
+      Int(area.x) + Int(area.width), Int(frame.buffer.area.x) + Int(frame.buffer.area.width))
+    let bottom = min(
+      Int(area.y) + Int(area.height), Int(frame.buffer.area.y) + Int(frame.buffer.area.height))
     guard right > left, bottom > top else { return }
 
     for row in stride(from: 0, to: Self.source.count - 1, by: 2) {

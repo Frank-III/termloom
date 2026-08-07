@@ -82,7 +82,8 @@ private final class TransactionalTerminalOutput: @unchecked Sendable {
 ///
 /// Keep this value alive until the application loop exits. `restore()` is idempotent and is also
 /// called from `deinit`, while `withTerminalSession` provides deterministic restoration on throws.
-public final class TerminalSession: @unchecked Sendable {
+@MainActor
+public final class TerminalSession {
   private let inputDescriptor: Int32
   private let output: FileHandle
   private let terminalOutput: TransactionalTerminalOutput
@@ -153,7 +154,7 @@ public final class TerminalSession: @unchecked Sendable {
     }
   }
 
-  deinit {
+  isolated deinit {
     try? restore()
   }
 
@@ -564,6 +565,7 @@ extension UInt8 {
   fileprivate var isASCIIDigit: Bool { (0x30...0x39).contains(self) }
 }
 
+@MainActor
 public func withTerminalSession<Result>(
   viewport: Viewport = .inline(height: 10),
   capturesMouse: Bool = false,

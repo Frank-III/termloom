@@ -523,7 +523,8 @@ public struct TextField: Widget, StatefulWidget {
 
     frame.addInteraction(InteractionRegion(control: id, area: area))
     if isFocused {
-      let column = TerminalWidth.of(String(characters.prefix(state.cursor))) - state.horizontalOffset
+      let column =
+        TerminalWidth.of(String(characters.prefix(state.cursor))) - state.horizontalOffset
       frame.placeCursor(
         at: Position(
           x: UInt16(clamping: Int(area.x) + min(max(0, column), Int(area.width) - 1)),

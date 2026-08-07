@@ -97,11 +97,11 @@ Expected: zero pending additions and no unreviewed breaking change.
 
 ## Done criteria
 
-- [ ] `TerminalSession` is not `@unchecked Sendable`.
-- [ ] Mutable session lifecycle is compiler-isolated to `@MainActor`.
-- [ ] `AsyncInputPump` still performs blocking input away from the main actor.
-- [ ] Ratatui, ecosystem, Codex, and Herdr compile and test.
-- [ ] API migration is documented and baseline reviewed.
+- [x] `TerminalSession` is not `@unchecked Sendable`.
+- [x] Mutable session lifecycle is compiler-isolated to `@MainActor`.
+- [x] `AsyncInputPump` still performs blocking input away from the main actor.
+- [x] Ratatui, ecosystem, Codex, and Herdr compile and test.
+- [x] API migration is documented and baseline reviewed.
 
 ## STOP conditions
 
