@@ -16,7 +16,6 @@ All notable public and observable changes are recorded here. Detailed pre-releas
   restoration behavior.
 - Added Unicode-aware fitting, top- and end-origin viewport geometry, visible-only selectable rows, and
   overflow-aware interactive tabs.
-- Added bounded, thread-safe syntax-highlight memoization that survives width reflow without changing public API.
 - Hardened terminal-session isolation, cleanup error propagation, failed frame-transaction recovery, fragmented
   input continuity, Observation wakeups, and native-scrollback capability semantics.
 - Kept optional syntax highlighting, test support, overlays, multiline editing, DevTools, and macro ergonomics behind
