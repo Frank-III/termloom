@@ -60,15 +60,14 @@ public struct DiffScopeScreen: Widget, Sendable {
       header: rows[0], files: columns[0], diff: columns[1], footer: rows[2], isCompact: false)
   }
 
-  private func paneBlock(_ title: String, focused: Bool) -> Block<Text> {
+  private func paneBlock(_ title: String, focused: Bool) -> Block<EmptyWidget> {
     Block(
       title: title,
       style: Style(background: DiffScopeTheme.panel),
       borderStyle: Style(foreground: focused ? DiffScopeTheme.accent : DiffScopeTheme.border),
       titleStyle: Style(
         foreground: focused ? DiffScopeTheme.accent : DiffScopeTheme.pale,
-        modifiers: focused ? [.bold] : []),
-      content: Text(""))
+        modifiers: focused ? [.bold] : []))
   }
 
   private func renderHeader(
@@ -76,7 +75,7 @@ public struct DiffScopeScreen: Widget, Sendable {
     into frame: inout Frame
   ) {
     guard !area.isEmpty else { return }
-    makeLine([
+    Line([
       Span(
         " DIFFSCOPE ",
         style: Style(
@@ -90,7 +89,7 @@ public struct DiffScopeScreen: Widget, Sendable {
     ]).render(
       in: Rect(x: area.x, y: area.y, width: area.width, height: 1), into: &frame)
     if area.height > 1 {
-      makeLine(
+      Line(
         [
           Span("   \(repository.branch)", style: Style(foreground: DiffScopeTheme.purple)),
           Span(
@@ -135,7 +134,7 @@ public struct DiffScopeScreen: Widget, Sendable {
     let inner = block.inner(area)
     guard !inner.isEmpty else { return }
     let filterStyle = isFiltering ? DiffScopeTheme.accent : DiffScopeTheme.dim
-    makeLine([
+    Line([
       Span(
         " Filter ", style: Style(foreground: filterStyle, modifiers: isFiltering ? [.bold] : [])),
       Span(
@@ -190,7 +189,7 @@ public struct DiffScopeScreen: Widget, Sendable {
         repository.aggregateStatsAvailable
         ? min(15, max(0, Int(content.width) - prefixWidth)) : 0
       let pathWidth = max(0, Int(content.width) - prefixWidth - statsWidth)
-      makeLine([
+      Line([
         Span(
           "\(marker) ",
           style: Style(foreground: DiffScopeTheme.accent, modifiers: isSelected ? [.bold] : [])),
@@ -242,7 +241,7 @@ public struct DiffScopeScreen: Widget, Sendable {
     let inner = block.inner(area)
     guard !inner.isEmpty else { return }
     if let file = selectedFile {
-      makeLine(
+      Line(
         [
           Span(
             " \(file.kind.label)",
@@ -326,7 +325,7 @@ public struct DiffScopeScreen: Widget, Sendable {
       if isFiltering { "type to filter · enter apply · esc close" } else if area.width < 90 {
         "tab pane · / filter · j/k move · ? help · q quit"
       } else { "tab panes · / filter · j/k move · g/G ends · h/l columns · ? help · q quit" }
-    makeLine([
+    Line([
       Span(" "),
       Span(
         mode,
@@ -356,9 +355,4 @@ public struct DiffScopeScreen: Widget, Sendable {
     ).render(in: area, into: &frame)
   }
 
-  private func makeLine(_ spans: [Span]) -> Line {
-    var line = Line("")
-    line.spans = spans
-    return line
-  }
 }

@@ -28,6 +28,12 @@ extension String: Widget {
   }
 }
 
+public struct EmptyWidget: Widget, Hashable, Sendable {
+  public init() {}
+
+  public func render(in area: Rect, into frame: inout Frame) {}
+}
+
 extension String {
   public func span(style: Style = .plain) -> Span {
     Span(self, style: style)
@@ -53,9 +59,17 @@ public struct Text: Widget, Hashable, Sendable, Stylable {
   public var style: Style
   public var alignment: Alignment?
 
+  private static func splitLines(_ content: String) -> [Line] {
+    var lines = content.split(separator: "\n", omittingEmptySubsequences: false)
+    if lines.count > 1, lines.last?.isEmpty == true {
+      lines.removeLast()
+    }
+    let splitLines = lines.map { Line(String($0)) }
+    return splitLines.isEmpty ? [Line("")] : splitLines
+  }
+
   public init(_ content: String, style: Style = .plain, alignment: Alignment? = nil) {
-    let splitLines = content.split(separator: "\n").map { Line(String($0)) }
-    lines = splitLines.isEmpty ? [Line("")] : splitLines
+    lines = Self.splitLines(content)
     self.style = style
     self.alignment = alignment
   }
@@ -74,11 +88,11 @@ public struct Text: Widget, Hashable, Sendable, Stylable {
   }
 
   public var content: String {
-    get { lines.map(\.content).joined(separator: "\n") }
-    set {
-      let splitLines = newValue.split(separator: "\n").map { Line(String($0)) }
-      lines = splitLines.isEmpty ? [Line("")] : splitLines
+    get {
+      let content = lines.map(\.content).joined(separator: "\n")
+      return lines.count > 1 && lines.last?.content.isEmpty == true ? content + "\n" : content
     }
+    set { lines = Self.splitLines(newValue) }
   }
 
   public var width: Int {

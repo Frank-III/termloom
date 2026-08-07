@@ -363,6 +363,72 @@ import Testing
     #expect(buffer.lines().joined().contains { $0.unicodeScalars.first?.value ?? 0 >= 0x2800 })
   }
 
+  @Test func emptyWidgetLeavesFramePresentationMetadataUnchanged() {
+    let area = Rect(x: 0, y: 0, width: 4, height: 2)
+    var frame = Frame(
+      buffer: Buffer(
+        area: area,
+        repeating: Cell(symbol: "x", style: Style(foreground: .red))
+      )
+    )
+    frame.addInteraction(
+      InteractionRegion(control: "probe", area: area, action: "activate")
+    )
+    frame.placeCursor(at: Position(x: 2, y: 1), style: .steadyBar)
+    let originalBuffer = frame.buffer
+    let originalInteractions = frame.interactions
+    let originalCursorPosition = frame.cursorPosition
+    let originalCursorStyle = frame.cursorStyle
+
+    frame.render(EmptyWidget(), in: area)
+
+    #expect(frame.buffer == originalBuffer)
+    #expect(frame.interactions == originalInteractions)
+    #expect(frame.cursorPosition == originalCursorPosition)
+    #expect(frame.cursorStyle == originalCursorStyle)
+  }
+
+  @Test func contentFreeBlockMatchesDummyContentAndPreservesExistingInitializers() {
+    let area = Rect(x: 0, y: 0, width: 12, height: 5)
+    let decorationOnly = Block(
+      title: "Empty",
+      borders: .double,
+      style: Style(background: .blue),
+      borderStyle: Style(foreground: .cyan),
+      padding: .horizontal(1),
+      shadow: .lightShade()
+    )
+    let dummyContent = Block<Text>(
+      title: "Empty",
+      borders: .double,
+      style: Style(background: .blue),
+      borderStyle: Style(foreground: .cyan),
+      padding: .horizontal(1),
+      shadow: .lightShade(),
+      content: Text("")
+    )
+    var decorationFrame = Frame(buffer: Buffer(area: area))
+    var dummyFrame = Frame(buffer: Buffer(area: area))
+
+    decorationFrame.render(decorationOnly, in: area)
+    dummyFrame.render(dummyContent, in: area)
+
+    #expect(decorationFrame.buffer == dummyFrame.buffer)
+    #expect(decorationOnly.inner(area) == dummyContent.inner(area))
+    #expect(decorationOnly.content == EmptyWidget())
+
+    let builderBlock = Block { Text("builder") }
+    let contentBlock = Block(content: Text("content"))
+    assertWidget(builderBlock, size: Size(width: 9, height: 3)) {
+      """
+      │╭───────╮│
+      ││builder││
+      │╰───────╯│
+      """
+    }
+    #expect(contentBlock.content.content == "content")
+  }
+
   @Test func blockSupportsSelectiveBordersAndPositionedTitles() {
     var buffer = Buffer(area: Rect(x: 0, y: 0, width: 16, height: 4))
     let block = Block(

@@ -5,6 +5,17 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Text, line, and empty-block construction ergonomics
+
+- **Supported:** `Text` preserves leading and consecutive empty rows while retaining its established single
+  terminal-newline behavior. `Line` accepts dynamic `[Span]` values directly. `EmptyWidget` and the constrained
+  `Block<EmptyWidget>` initializer support decoration-only blocks without dummy text content.
+- **Migration:** replace local span-installation helpers with `Line(spans)` and `Block<Text>(content: Text(""))`
+  decoration shells with an inferred `Block(...)` or `Block<EmptyWidget>`.
+- **Evidence:** focused text and widget regressions cover blank-row round trips, styled and empty span arrays,
+  presentation metadata, decoration equivalence, inner geometry, and existing block initializer resolution. Postcat,
+  DiffScope, ecosystem, and consumer suites validate source compatibility.
+
 ### Input routing and invalidation correctness
 
 - **Supported behavioral corrections:** wakeup-only input polls preserve pending fragmented Escape sequences; key-release

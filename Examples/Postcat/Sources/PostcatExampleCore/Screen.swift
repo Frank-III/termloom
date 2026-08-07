@@ -53,15 +53,14 @@ public struct PostcatScreen: Widget, Sendable {
       header: rows[0], url: rows[1], request: rows[2], response: rows[3], status: rows[4])
   }
 
-  private func paneBlock(_ title: String, focused: Bool) -> Block<Text> {
+  private func paneBlock(_ title: String, focused: Bool) -> Block<EmptyWidget> {
     Block(
       title: title,
       borderStyle: Style(foreground: focused ? ExampleTheme.accent : ExampleTheme.border),
       titleStyle: Style(
         foreground: focused ? ExampleTheme.accent : ExampleTheme.dim,
         modifiers: focused ? [.bold] : []
-      ),
-      content: Text("")
+      )
     )
   }
 

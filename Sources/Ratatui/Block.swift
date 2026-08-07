@@ -569,6 +569,35 @@ public struct Block<Content: Widget>: Widget {
   }
 }
 
+extension Block where Content == EmptyWidget {
+  public init(
+    title: String? = nil,
+    titles: [BlockTitle] = [],
+    borders: BorderSet = .rounded,
+    borderEdges: BorderEdges = .all,
+    style: Style = .plain,
+    borderStyle: Style = .plain,
+    titleStyle: Style = .plain,
+    padding: Padding = .zero,
+    shadow: BlockShadow? = nil,
+    borderMerge: BorderMergeStrategy = .replace
+  ) {
+    self.init(
+      title: title,
+      titles: titles,
+      borders: borders,
+      borderEdges: borderEdges,
+      style: style,
+      borderStyle: borderStyle,
+      titleStyle: titleStyle,
+      padding: padding,
+      shadow: shadow,
+      borderMerge: borderMerge,
+      content: EmptyWidget()
+    )
+  }
+}
+
 extension Block: IntrinsicSizeWidget where Content: IntrinsicSizeWidget {
   public var intrinsicSize: Size {
     let horizontal = horizontalSpace

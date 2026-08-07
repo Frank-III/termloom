@@ -87,6 +87,60 @@ import Testing
     #expect(fullyStyled.style.removedModifiers == .all)
   }
 
+  @Test func textPreservesMeaningfulEmptyRowsAndTerminalNewlineSemantics() {
+    #expect(Text("a\n\nb").lines.map(\.content) == ["a", "", "b"])
+    #expect(Text("\na").lines.map(\.content) == ["", "a"])
+    #expect(Text("a\n").lines.map(\.content) == ["a"])
+    #expect(Text("\n").lines.map(\.content) == [""])
+
+    for value in ["a\n\nb", "\na", "a\n", "\n", ""] {
+      var text = Text("placeholder")
+      text.content = value
+      #expect(text.lines == Text(value).lines)
+
+      let representedContent = text.content
+      let representedLines = text.lines
+      text.content = representedContent
+      #expect(text.lines == representedLines)
+    }
+
+    var trailingEmptyRows = Text([Line("a"), Line(""), Line("")])
+    let representedContent = trailingEmptyRows.content
+    #expect(representedContent == "a\n\n\n")
+    trailingEmptyRows.content = representedContent
+    #expect(trailingEmptyRows.lines.map(\.content) == ["a", "", ""])
+  }
+
+  @Test func lineDirectlyConstructsDynamicSpansWithoutChangingStyles() {
+    let spans = [
+      Span("red", style: Style(foreground: .red, modifiers: [.bold])),
+      Span(" plain"),
+    ]
+    let line = Line(spans, style: Style(background: .blue), alignment: .trailing)
+
+    #expect(line.spans == spans)
+    #expect(line.style == Style(background: .blue))
+    #expect(line.alignment == .trailing)
+    let buffer = assertWidget(line, size: Size(width: 10, height: 1)) {
+      """
+      │ red plain│
+      """
+    }
+    #expect(buffer[Position(x: 1, y: 0)].style.foreground == .red)
+    #expect(buffer[Position(x: 1, y: 0)].style.background == .blue)
+    #expect(buffer[Position(x: 1, y: 0)].style.modifiers == [.bold])
+    #expect(buffer[Position(x: 5, y: 0)].style.foreground == nil)
+    #expect(buffer[Position(x: 5, y: 0)].style.background == .blue)
+
+    let empty = Line([])
+    #expect(empty.spans.isEmpty)
+    assertWidget(empty, size: Size(width: 3, height: 1)) {
+      """
+      │   │
+      """
+    }
+  }
+
   @Test func lineTruncationPreservesPartialWideGlyphCellsLikeUpstream() {
     let ordinaryCases: [(Alignment, Int, String)] = [
       (.leading, 4, "1234"),

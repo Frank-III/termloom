@@ -1818,6 +1818,41 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui11EmptyWidgetV",
+      "kind": "swift.struct",
+      "path": [
+        "EmptyWidget"
+      ],
+      "title": "EmptyWidget",
+      "declaration": "struct EmptyWidget",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11EmptyWidgetV6render2in4intoyAA4RectV_AA5FrameVztF",
+      "kind": "swift.method",
+      "path": [
+        "EmptyWidget",
+        "render(in:into:)"
+      ],
+      "title": "render(in:into:)",
+      "declaration": "func render(in area: Rect, into frame: inout Frame)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui11EmptyWidgetVACycfc",
+      "kind": "swift.init",
+      "path": [
+        "EmptyWidget",
+        "init()"
+      ],
+      "title": "init()",
+      "declaration": "init()",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui11InputParserV",
       "kind": "swift.struct",
       "path": [
@@ -8983,6 +9018,18 @@
       "availability": []
     },
     {
+      "id": "s:7Ratatui4LineV_5style9alignmentACSayAA4SpanVG_AA5StyleVAA9AlignmentOSgtcfc",
+      "kind": "swift.init",
+      "path": [
+        "Line",
+        "init(_:style:alignment:)"
+      ],
+      "title": "init(_:style:alignment:)",
+      "declaration": "init(_ spans: [Span], style: Style = .plain, alignment: Alignment? = nil)",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
       "id": "s:7Ratatui4LineV_9alignmentAcA6MaskedV_AA9AlignmentOtcfc",
       "kind": "swift.init",
       "path": [
@@ -10364,6 +10411,18 @@
       ],
       "title": "borderSet",
       "declaration": "var borderSet: BorderSet",
+      "accessLevel": "public",
+      "availability": []
+    },
+    {
+      "id": "s:7Ratatui5BlockVA2A11EmptyWidgetVRszrlE5title6titles7borders11borderEdges5style0H5Style0eK07padding6shadow0H5MergeACyAEGSSSg_SayAA0B5TitleVGAA9BorderSetVAA0pI0VAA0K0VA2zA7PaddingVAA0B6ShadowVSgAA0pN8StrategyOtcfc",
+      "kind": "swift.init",
+      "path": [
+        "Block",
+        "init(title:titles:borders:borderEdges:style:borderStyle:titleStyle:padding:shadow:borderMerge:)"
+      ],
+      "title": "init(title:titles:borders:borderEdges:style:borderStyle:titleStyle:padding:shadow:borderMerge:)",
+      "declaration": "init(title: String? = nil, titles: [BlockTitle] = [], borders: BorderSet = .rounded, borderEdges: BorderEdges = .all, style: Style = .plain, borderStyle: Style = .plain, titleStyle: Style = .plain, padding: Padding = .zero, shadow: BlockShadow? = nil, borderMerge: BorderMergeStrategy = .replace)",
       "accessLevel": "public",
       "availability": []
     },
@@ -18015,6 +18074,35 @@
     },
     {
       "kind": "conformsTo",
+      "source": "s:7Ratatui11EmptyWidgetV",
+      "target": "s:7Ratatui6WidgetP"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11EmptyWidgetV",
+      "target": "s:SH",
+      "targetFallback": "Swift.Hashable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11EmptyWidgetV",
+      "target": "s:SQ",
+      "targetFallback": "Swift.Equatable"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11EmptyWidgetV",
+      "target": "s:s16SendableMetatypeP",
+      "targetFallback": "Swift.SendableMetatype"
+    },
+    {
+      "kind": "conformsTo",
+      "source": "s:7Ratatui11EmptyWidgetV",
+      "target": "s:s8SendableP",
+      "targetFallback": "Swift.Sendable"
+    },
+    {
+      "kind": "conformsTo",
       "source": "s:7Ratatui11InputParserV",
       "target": "s:s16SendableMetatypeP",
       "targetFallback": "Swift.SendableMetatype"
@@ -22113,6 +22201,16 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui11EmptyWidgetV6render2in4intoyAA4RectV_AA5FrameVztF",
+      "target": "s:7Ratatui11EmptyWidgetV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui11EmptyWidgetVACycfc",
+      "target": "s:7Ratatui11EmptyWidgetV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui11InputParserV11flushEscapeAA13TerminalEventOSgyF",
       "target": "s:7Ratatui11InputParserV"
     },
@@ -24513,6 +24611,11 @@
     },
     {
       "kind": "memberOf",
+      "source": "s:7Ratatui4LineV_5style9alignmentACSayAA4SpanVG_AA5StyleVAA9AlignmentOSgtcfc",
+      "target": "s:7Ratatui4LineV"
+    },
+    {
+      "kind": "memberOf",
       "source": "s:7Ratatui4LineV_9alignmentAcA6MaskedV_AA9AlignmentOtcfc",
       "target": "s:7Ratatui4LineV"
     },
@@ -25054,6 +25157,11 @@
     {
       "kind": "memberOf",
       "source": "s:7Ratatui5BlockV9borderSetAA06BorderD0Vvp",
+      "target": "s:7Ratatui5BlockV"
+    },
+    {
+      "kind": "memberOf",
+      "source": "s:7Ratatui5BlockVA2A11EmptyWidgetVRszrlE5title6titles7borders11borderEdges5style0H5Style0eK07padding6shadow0H5MergeACyAEGSSSg_SayAA0B5TitleVGAA9BorderSetVAA0pI0VAA0K0VA2zA7PaddingVAA0B6ShadowVSgAA0pN8StrategyOtcfc",
       "target": "s:7Ratatui5BlockV"
     },
     {

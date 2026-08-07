@@ -42,6 +42,16 @@ public struct Line: Hashable, Sendable, ExpressibleByStringLiteral, Stylable, Wi
   }
 
   public init(
+    _ spans: [Span],
+    style: Style = .plain,
+    alignment: Alignment? = nil
+  ) {
+    self.spans = spans
+    self.style = style
+    self.alignment = alignment
+  }
+
+  public init(
     style: Style = .plain,
     alignment: Alignment? = nil,
     @SpanBuilder spans: () -> [Span]

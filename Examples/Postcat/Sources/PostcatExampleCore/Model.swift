@@ -2,14 +2,6 @@ import Foundation
 import Ratatui
 import RatatuiSyntaxHighlighting
 
-extension Line {
-  init(_ spans: [Span], alignment: Alignment? = nil) {
-    self.init("")
-    self.spans = spans
-    self.alignment = alignment
-  }
-}
-
 public enum HTTPMethod: String, CaseIterable, Hashable, Sendable {
   case get = "GET"
   case post = "POST"
@@ -171,11 +163,7 @@ func responseLines(for response: APIResponse, tab: ResponseTab) -> [Line] {
       source,
       language: source == response.body ? nil : "json",
       theme: ExampleTheme.syntax
-    ).map { spans in
-      var line = Line("")
-      line.spans = spans
-      return line
-    }
+    ).map { Line($0) }
   }
 }
 

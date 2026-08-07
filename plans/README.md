@@ -14,7 +14,7 @@ Execute in order. Keep one writer in the workspace. Each executor must read its 
 | 004 | Enforce native-scrollback backend semantics | P1 | S | 001–003 | DONE |
 | 005 | Honor mapped buffer origins in ANSI history output | P1 | S | 004 | DONE |
 | 006 | Preserve fragmented input and suppress stale semantic events | P1 | S | 001–005 | DONE (`85319e1`) |
-| 007 | Remove proven text and block construction workarounds | P1 | S–M | 006 | TODO |
+| 007 | Remove proven text and block construction workarounds | P1 | S–M | 006 | DONE |
 
 Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reason`.
 
