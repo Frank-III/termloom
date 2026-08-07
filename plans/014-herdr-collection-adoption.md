@@ -7,6 +7,8 @@
 - **Risk**: MEDIUM
 - **Depends on**: plans 012–013
 - **Category**: consumer proof
+- **Planned at**: commit `f32a379`, 2026-08-07
+- **Status**: DONE
 
 ## Scope
 
@@ -18,4 +20,12 @@ No generic menu framework, variable-height lazy collection, or core terminal-emu
 
 ## Done criteria
 
-Herdr removes duplicated tab/row geometry without semantic movement into Ratatui; its complete 87-test baseline plus new Unicode and interaction tests pass.
+Herdr removes duplicated tab/row geometry without semantic movement into Ratatui; its complete baseline plus new Unicode and interaction tests pass.
+
+## Result
+
+Herdr workspace tabs now use `Tabs`, including overflow projection and exact same-pass `InteractionDescriptor` regions.
+Workspace-switcher, command-palette, and context-menu rows now use `SelectableRows`; the row closure and interaction
+metadata consume the same visible geometry, while Herdr retains labels, selection state, action decoding, cursor policy,
+and overlay meaning. Unicode overflow, context targeting, and overlay geometry regressions pass with the complete
+91-test Herdr suite.
