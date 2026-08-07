@@ -183,11 +183,11 @@ framework boundary is making an application repeat mechanics:
   complementary end-anchored row window for pre-rendered logs and transcript pagers, avoiding measurement or
   rendering of off-screen rows. A future framework `Menu`/`Popup` presenter should compose these mechanisms
   without owning Codex's commands or data.
-- `TerminalApplication` still exposes low-level compatibility hooks (`takePendingHistoryInsertions`
-  and `terminalHistoryDidReset`) plus a separate `performSuspendedAction` callback. Codex no longer needs
-  the history hooks because it supplies an observable `InlineDocument`; direct insertion remains an
-  escape hatch. A typed suspended-operation effect would make the remaining callback ordering explicit
-  and independently testable.
+- `TerminalApplication` retains defaulted inline-history and suspension hooks for 0.2. The capability-splitting
+  spike in `TerminalApplicationCapabilityGate.md` found that moving the document ID to an optional protocol requires
+  identity erasure, separate run entry points, or generic propagation through the runner. Fullscreen clients already
+  inherit no-op defaults without source glue, so the current single typed lifecycle remains the smaller practical
+  boundary until a second source-backed inline client changes that evidence.
 - A generic `clear` effect must not hide `CSI 3 J`. The runtime now distinguishes safe
   `clearViewport` from explicit `resetTerminalHistory`; application-owned history replay and full
   terminal scrollback purge should remain visibly destructive operations.
