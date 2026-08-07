@@ -126,15 +126,14 @@ reads. Runtime viewport rebuilds keep one input pump and rebase its physical-to-
 in place, preserving partial escape sequences, queued burst events, and the last observed window size.
 Cursor-probe leftovers are transferred exactly once rather than replayed whenever a backend is rebuilt.
 
-Widgets currently expose rendering, interaction collection, and cursor queries as separate passes.
-Containers must apply identical geometry to all three. Controls register stable `ControlID` values and
-local hit regions through arbitrary builder/stack/block nesting. `InteractionRouter` owns
-reconciliation, Tab/Shift-Tab traversal, mouse focus, and Enter/Space activation, and sends `ActionID`
-values back to the application. Type erasure and every compositional container must preserve all three
-outputs; dropping cursor metadata makes composed text fields silently lose the hardware cursor.
-Stateful widgets can derive both cursor position and cursor style from state. Terminal resets and dynamic
-inline-height changes preserve stable focus identity instead of treating backend reconstruction as a new
-application.
+Widgets perform one immediate presentation pass into `Frame`, which owns the mutable cell buffer, render
+environment, interaction regions, and hardware-cursor metadata. Controls register stable `ControlID` values and
+local hit regions through arbitrary builder/stack/block nesting during that pass. `InteractionRouter` owns
+reconciliation, Tab/Shift-Tab traversal, mouse focus, and Enter/Space activation, and sends `ActionID` values back
+to the application. Type erasure and compositional containers forward one render call rather than repeating layout
+for metadata queries. Stateful widgets can derive cursor position and style while reconciling application-owned
+state. Terminal resets and dynamic inline-height changes preserve stable focus identity instead of treating backend
+reconstruction as a new application.
 
 Inline rendering keeps widget coordinates local `(0, 0)` while the backend stores an explicit
 physical viewport origin. `Terminal.insertBefore(height:_:)` uses scrolling regions to insert log
@@ -193,9 +192,10 @@ framework boundary is making an application repeat mechanics:
   `TerminalResizeDisposition` now carries that distinction. Content-sized inline applications opt into
   the separate `InlineViewportSizing` capability instead of adding another requirement to every
   `TerminalApplication`.
-- `Backend` mixes core drawing with optional inline-history operations. Future API work should group
-  these as capability facets or injected strategies so non-inline backends do not conform to niche
-  methods merely to throw `unsupported`.
+- Optional backend mechanics are capability facets: `LineAppendingBackend` owns physical line emission and
+  `InlineHistoryBackend` owns native-history insertion and region movement. The base `Backend` remains limited to
+  ordinary drawing, size, clearing, and cursor operations. Unsupported native scrollback fails explicitly rather than
+  degrading to visual scrolling.
 
 ### Recommended Swift-first direction
 
@@ -208,19 +208,16 @@ framework boundary is making an application repeat mechanics:
    become typed payloads in a future source-breaking revision.
 3. Add a reusable popup/menu presenter that composes an anchor widget, filtered/scrolling selection,
    and footer policy. Do not add Codex-specific overlays to Ratatui.
-4. Collapse render metadata into one traversal in a future major API: a render context should collect
-   cells, interactions, and cursor metadata together. Until then, all erasure and container types must
-   faithfully forward every pass.
-5. Keep Markdown streaming, provider lifecycle, transcript semantics, slash commands, and skill/file
+4. Keep Markdown streaming, provider lifecycle, transcript semantics, slash commands, and skill/file
    resolution outside core Ratatui. They may become separate packages after a second independent client
    proves the abstraction.
 
 ### Remaining architectural risks
 
-- `Widget` still performs separate render, interaction, cursor-position, and cursor-style traversals. A
-  one-pass render context is major-version work; every current container must keep geometry identical.
-- `Backend` still combines core drawing with optional inline-history operations. Capability facets and a
-  typed handled/unsupported insertion result remain preferable to adding more niche requirements.
+- A caller-owned fixed `TerminalSession` retains its configured rectangle when `Terminal.resize(to:)` changes the
+  terminal's fixed region. A follow-up ownership API must update both values atomically or make one the sole owner.
+- `InlineHistoryBackend` remains provisional until a second production backend validates its batching and native
+  scrollback transaction vocabulary.
 - `resetTerminalHistory` deliberately emits `CSI 3 J`; ordinary clearing cannot invoke it, but an explicit
   reset can erase shell scrollback outside the application's semantic history.
 - A policy-free `Menu`/`Popup` presenter is not yet proven by a second independent client. Ratatui should
