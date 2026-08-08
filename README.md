@@ -252,6 +252,19 @@ SNAPSHOT_TESTING_RECORD=all mise exec -- swift test
 See [Testing terminal output](Documentation/Testing.md) for the project-wide assertion policy and
 stateful-widget examples.
 
+## Production pressure clients
+
+TermLoom is tested by independent applications maintained in separate repositories:
+
+- [Codex Swift](https://github.com/Frank-III/codex-swift) exercises retained inline history, streaming Markdown,
+  editing, overlays, syntax highlighting, and large-session reflow.
+- [Herdr Swift](https://github.com/Frank-III/herdr-swift) exercises fullscreen lifecycle, PTYs, terminal emulation,
+  workspaces, remote sessions, and dense interaction geometry.
+- [Motel Swift](https://github.com/Frank-III/motel-swift) exercises responsive layouts, large collection projection,
+  waterfall visualization, mouse interaction, and application-owned persistence.
+
+These applications validate the framework but retain their own product semantics and upstream attribution.
+
 ## Acknowledgements
 
 TermLoom is an independent Swift implementation built to learn from and test ideas established by other open-source
