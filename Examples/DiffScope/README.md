@@ -1,6 +1,9 @@
 # DiffScope
 
-A compact fullscreen Git diff browser built as a separate `termloom` example package. It is intentionally a viewer, not a complete Git client: the example concentrates on large selectable collections, responsive panes, async detail loading, styled diffs, filtering, scrolling, overlays, mouse actions, and alternate-screen lifecycle.
+A compact fullscreen Git diff browser inspired by [GitUI](https://github.com/extrawurst/gitui) and built as a separate
+`termloom` example package. It is intentionally a viewer, not a complete Git client: the example concentrates on large
+selectable collections, responsive panes, async detail loading, styled diffs, filtering, scrolling, overlays, mouse
+actions, and alternate-screen lifecycle.
 
 By default it opens a metadata-shaped demonstration of [oven-sh/bun#30412](https://github.com/oven-sh/bun/pull/30412), a 2,188-file pull request. Patches are synthesized so the example is instant, deterministic, and does not bundle or download the million-line pull request.
 

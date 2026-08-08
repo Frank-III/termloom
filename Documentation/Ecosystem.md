@@ -41,7 +41,7 @@ CustomDump, and SwiftSyntax are not incidental example dependencies. The heavy m
 ## Postcat boundary test
 
 `Examples/Postcat` is a separate Swift package depending on the local framework products. It is inspired by
-[egoist/postcat](https://github.com/egoist/postcat), an MIT-licensed TermLoom application. The upstream project
+[egoist/postcat](https://github.com/egoist/postcat), an MIT-licensed Ratatui application. The upstream project
 is a polished product of roughly 5,800 Rust lines plus 1,300 lines of end-to-end tests, not literally a tiny
 example. The Swift package intentionally implements a smaller teaching surface:
 
