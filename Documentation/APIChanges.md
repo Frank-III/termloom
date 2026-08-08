@@ -5,6 +5,13 @@ Entries must identify the stability level, migration path, and validation eviden
 
 ## Unreleased
 
+### Wide-grapheme text-area scrolling
+
+- **Behavioral correction:** `TermLoomTextArea` snaps horizontal viewport offsets to grapheme boundaries, so a narrow
+  editor can never place its hardware cursor on the continuation cell of a wide character.
+- **Evidence:** focused rendering covers both cursor-following scroll and reconciliation of an externally supplied offset
+  that falls inside a two-column grapheme.
+
 ### Bounded fitting and viewport work
 
 - **Performance correction:** `String`, `Span`, and `Line` truncation establish overflow by scanning only through the

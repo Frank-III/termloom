@@ -95,6 +95,26 @@ import Testing
     #expect(frame.cursorStyle == .steadyBar)
   }
 
+  @Test func horizontalScrollingNeverBisectsAWideGrapheme() {
+    var state = TextAreaState(text: "界a", cursor: TextPosition(row: 0, column: 1))
+    let widget = TextArea(state, id: "editor")
+    let area = Rect(x: 0, y: 0, width: 2, height: 1)
+    var frame = Frame(
+      buffer: Buffer(area: area),
+      environment: RenderEnvironment(focusedControl: "editor"))
+
+    frame.render(widget, in: area, state: &state)
+
+    #expect(state.horizontalOffset == 2)
+    #expect(line(in: frame.buffer, row: 0) == "a ")
+    #expect(frame.cursorPosition == Position(x: 0, y: 0))
+
+    state.horizontalOffset = 1
+    state.cursor = TextPosition(row: 0, column: 2)
+    state.ensureCursorVisible(viewport: Size(width: 3, height: 1))
+    #expect(state.horizontalOffset == 2)
+  }
+
   private func line(in buffer: Buffer, row: Int) -> String {
     (buffer.area.x..<buffer.area.right).map { x in
       buffer[Position(x: x, y: row)].symbol

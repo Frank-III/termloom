@@ -21,7 +21,7 @@ Source: `main` at the commit recorded immediately before tagging
 - [x] `swift test`: 269 TermLoom tests in 27 suites plus 3 syntax-highlighting tests.
 - [x] `Scripts/check-api.sh`: 1,540 reviewed symbols and zero additions.
 - [x] `Scripts/test-ecosystem.sh`
-- [x] `Scripts/test-consumers.sh`: Codex 160 tests, Motel 14 tests, and Herdr 91 tests.
+- [x] `Scripts/test-consumers.sh`: Codex 162 tests, Motel 14 tests, and Herdr 94 tests.
 - [x] Release benchmark JSON smoke parses with 26 unique registered scenarios.
 
 ## Terminal validation
@@ -45,11 +45,11 @@ Source: `main` at the commit recorded immediately before tagging
 
 ## Recorded evidence
 
-- Date: 2026-08-07
+- Date: 2026-08-08
 - Toolchain: Apple Swift 6.4 (`swift-tools-version: 6.2`), arm64 macOS.
-- Automated matrix log: `/tmp/termloom-0.2-tail-reflow-matrix.log`; TermLoom through Motel passed, while Herdr's
-  autosaver timing test missed its deadline under accumulated matrix load. The focused retry and complete 91-test
-  Herdr rerun passed in `/tmp/herdr-tail-reflow-rerun.log`.
+- The refreshed ecosystem and consumer matrices pass with Codex's editable model-picker and Unicode-column
+  regressions, Herdr's focus-reporting/split/popup regressions, and Motel unchanged. Herdr's autosaver regression now
+  awaits the scheduled save itself instead of depending on a fixed wall-clock polling deadline.
 - Benchmark smoke: `/tmp/termloom-0.2-benchmark-smoke.json` (26 unique scenarios).
 - `terminal-control` 0.4.1 supplemental smokes exercised the built inline counter, fullscreen Observation demo, and a
   temporary fixed-region program with explicit resize. Captures are in `/tmp/termloom-0.2-termctrl-*.txt`; these are

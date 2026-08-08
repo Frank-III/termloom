@@ -133,12 +133,26 @@ public struct TextAreaState: Hashable, Sendable {
     }
 
     let width = max(1, viewport.width - max(0, gutterWidth))
-    let cursorColumn = TerminalWidth.of(prefix(lines[cursor.row], through: cursor.column))
+    let line = lines[cursor.row]
+    let cursorColumn = TerminalWidth.of(prefix(line, through: cursor.column))
+    let minimumOffset: Int
     if cursorColumn < horizontalOffset {
-      horizontalOffset = cursorColumn
+      minimumOffset = cursorColumn
     } else if cursorColumn >= horizontalOffset + width {
-      horizontalOffset = cursorColumn - width + 1
+      minimumOffset = cursorColumn - width + 1
+    } else {
+      minimumOffset = horizontalOffset
     }
+    horizontalOffset = horizontalBoundary(in: line, atOrAfter: minimumOffset)
+  }
+
+  private func horizontalBoundary(in line: String, atOrAfter offset: Int) -> Int {
+    var boundary = 0
+    for character in line {
+      guard boundary < offset else { break }
+      boundary += TerminalWidth.of(character)
+    }
+    return boundary
   }
 
   public mutating func reconcile() {
