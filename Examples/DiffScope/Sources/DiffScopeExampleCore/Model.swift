@@ -1,5 +1,5 @@
 import Foundation
-import Ratatui
+import TermLoom
 
 public enum FileChangeKind: String, Hashable, Sendable {
   case added = "A"

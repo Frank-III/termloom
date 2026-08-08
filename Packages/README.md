@@ -1,14 +1,14 @@
-# Ratatui Swift ecosystem packages
+# TermLoom Swift ecosystem packages
 
-These are independent Swift packages that depend on the zero-dependency `Ratatui` product. Keeping them
+These are independent Swift packages that depend on the zero-dependency `TermLoom` product. Keeping them
 separate lets applications opt into focused capabilities without expanding the core API or dependency graph.
 
 | Package | Purpose | Extra dependency cost |
 | --- | --- | --- |
-| [`RatatuiOverlays`](RatatuiOverlays) | Popup geometry and presentation | None |
-| [`RatatuiTextArea`](RatatuiTextArea) | Multiline editor state and widget | None |
-| [`RatatuiDevTools`](RatatuiDevTools) | Frame metrics, logs, diagnostics panel | Optional `Overlays` trait |
-| [`RatatuiMacros`](RatatuiMacros) | `@WidgetComponent` forwarding macro | SwiftSyntax, isolated here |
+| [`TermLoomOverlays`](TermLoomOverlays) | Popup geometry and presentation | None |
+| [`TermLoomTextArea`](TermLoomTextArea) | Multiline editor state and widget | None |
+| [`TermLoomDevTools`](TermLoomDevTools) | Frame metrics, logs, diagnostics panel | Optional `Overlays` trait |
+| [`TermLoomMacros`](TermLoomMacros) | `@WidgetComponent` forwarding macro | SwiftSyntax, isolated here |
 
 Each package has its own manifest and tests. Run the complete matrix from the repository root:
 

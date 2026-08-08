@@ -2,7 +2,7 @@
 
 > **Executor instructions**: Execute after plan 001. Preserve the original operation error and make cleanup failure observable. Update `plans/README.md` when complete.
 >
-> **Drift check**: verify `Sources/Ratatui/TerminalSession.swift` still contains `defer { try? session.restore() }` in both `withTerminalSession` overloads and `try? resume()` in `withRestoredTerminal`. If not, STOP and reassess.
+> **Drift check**: verify `Sources/TermLoom/TerminalSession.swift` still contains `defer { try? session.restore() }` in both `withTerminalSession` overloads and `try? resume()` in `withRestoredTerminal`. If not, STOP and reassess.
 
 ## Status
 
@@ -19,7 +19,7 @@ A successful scoped operation can currently return success even if terminal rest
 
 ## Current state
 
-- `Sources/Ratatui/TerminalSession.swift:567-585` suppresses `restore()` errors in both public scope helpers.
+- `Sources/TermLoom/TerminalSession.swift:567-585` suppresses `restore()` errors in both public scope helpers.
 - `withRestoredTerminal` suppresses `resume()` failure when its body throws.
 - `suspend()` can fail in termios restoration or protocol output, so these are real error paths.
 
@@ -27,8 +27,8 @@ A successful scoped operation can currently return success even if terminal rest
 
 **In scope**:
 
-- `Sources/Ratatui/TerminalSession.swift`
-- `Tests/RatatuiTests/PTYIntegrationTests.swift` or a new focused lifecycle test file
+- `Sources/TermLoom/TerminalSession.swift`
+- `Tests/TermLoomTests/PTYIntegrationTests.swift` or a new focused lifecycle test file
 - `Documentation/APIChanges.md`, `Documentation/Architecture.md`
 - API baseline only if a public error wrapper is added
 
@@ -73,7 +73,7 @@ Keep `deinit` best-effort because it cannot throw; deterministic public scopes m
 **Verify**:
 
 ```sh
-rg -n 'defer \{ try\? session\.restore\(\) \}|try\? resume\(\)' Sources/Ratatui/TerminalSession.swift
+rg -n 'defer \{ try\? session\.restore\(\) \}|try\? resume\(\)' Sources/TermLoom/TerminalSession.swift
 ```
 
 Expected: no matches in public scoped helpers; a best-effort deinit or failure-recovery path may remain with an explanatory comment.

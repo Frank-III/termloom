@@ -2,7 +2,7 @@
 
 > **Executor instructions**: Follow this plan step by step. Run every verification command and confirm the expected result before moving to the next step. If anything in the "STOP conditions" section occurs, stop and report; do not improvise. When done, update the status row for this plan in `plans/README.md` unless a reviewer explicitly says it maintains the index.
 >
-> **Drift check (run first)**: `git diff --stat aec5f74..HEAD -- Sources/Ratatui/Application.swift Sources/Ratatui/Interaction.swift Sources/Ratatui/TerminalSession.swift Tests/RatatuiTests/InteractionTests.swift Tests/RatatuiTests/ObservationInvalidationTrackerTests.swift Tests/RatatuiTests/PTYIntegrationTests.swift`
+> **Drift check (run first)**: `git diff --stat aec5f74..HEAD -- Sources/TermLoom/Application.swift Sources/TermLoom/Interaction.swift Sources/TermLoom/TerminalSession.swift Tests/TermLoomTests/InteractionTests.swift Tests/TermLoomTests/ObservationInvalidationTrackerTests.swift Tests/TermLoomTests/PTYIntegrationTests.swift`
 > If any in-scope file changed since this plan was written, compare the excerpts below with live code. If behavior or signatures differ, stop and report.
 
 ## Status
@@ -16,16 +16,16 @@
 
 ## Why this matters
 
-Ratatui supports fragmented terminal sequences, Kitty key release reports, and Observation-driven wakeups, but two paths currently combine incorrectly: a wakeup-only poll flushes a pending Escape byte, and the interaction router treats key releases as semantic activation/navigation. A third issue lets callbacks from obsolete Observation dependency generations request redundant frames. These are framework correctness defects with deterministic regression tests and no desired client behavior to preserve.
+TermLoom supports fragmented terminal sequences, Kitty key release reports, and Observation-driven wakeups, but two paths currently combine incorrectly: a wakeup-only poll flushes a pending Escape byte, and the interaction router treats key releases as semantic activation/navigation. A third issue lets callbacks from obsolete Observation dependency generations request redundant frames. These are framework correctness defects with deterministic regression tests and no desired client behavior to preserve.
 
 ## Current state
 
-- `Sources/Ratatui/TerminalSession.swift:789-807` drains the optional wakeup descriptor, then calls `parser.flushEscape()` whenever stdin was not readable. This does not distinguish a real poll timeout from a wakeup-only result.
-- `Sources/Ratatui/Interaction.swift:169-190` routes Tab and Enter/Space without checking `KeyEvent.kind`; `.release` may advance focus or emit an action.
-- `Sources/Ratatui/Application.swift:84-93` prevents an old Observation generation from disarming the current generation but invokes `onChange()` unconditionally.
-- `Tests/RatatuiTests/PTYIntegrationTests.swift:1001-1014` is the existing pattern for a real pipe-backed wakeup interrupting `TerminalInput.readEvent`.
-- `Tests/RatatuiTests/InteractionTests.swift:100-130` covers press routing and is the correct place for release/repeat characterization.
-- `Tests/RatatuiTests/ObservationInvalidationTrackerTests.swift:21-39` covers dependency tracking and rearming.
+- `Sources/TermLoom/TerminalSession.swift:789-807` drains the optional wakeup descriptor, then calls `parser.flushEscape()` whenever stdin was not readable. This does not distinguish a real poll timeout from a wakeup-only result.
+- `Sources/TermLoom/Interaction.swift:169-190` routes Tab and Enter/Space without checking `KeyEvent.kind`; `.release` may advance focus or emit an action.
+- `Sources/TermLoom/Application.swift:84-93` prevents an old Observation generation from disarming the current generation but invokes `onChange()` unconditionally.
+- `Tests/TermLoomTests/PTYIntegrationTests.swift:1001-1014` is the existing pattern for a real pipe-backed wakeup interrupting `TerminalInput.readEvent`.
+- `Tests/TermLoomTests/InteractionTests.swift:100-130` covers press routing and is the correct place for release/repeat characterization.
+- `Tests/TermLoomTests/ObservationInvalidationTrackerTests.swift:21-39` covers dependency tracking and rearming.
 
 Relevant current excerpts:
 
@@ -76,12 +76,12 @@ Repository convention: runtime state transitions stay explicit and preserve queu
 ## Scope
 
 **In scope**:
-- `Sources/Ratatui/Application.swift`
-- `Sources/Ratatui/Interaction.swift`
-- `Sources/Ratatui/TerminalSession.swift`
-- `Tests/RatatuiTests/InteractionTests.swift`
-- `Tests/RatatuiTests/ObservationInvalidationTrackerTests.swift`
-- `Tests/RatatuiTests/PTYIntegrationTests.swift`
+- `Sources/TermLoom/Application.swift`
+- `Sources/TermLoom/Interaction.swift`
+- `Sources/TermLoom/TerminalSession.swift`
+- `Tests/TermLoomTests/InteractionTests.swift`
+- `Tests/TermLoomTests/ObservationInvalidationTrackerTests.swift`
+- `Tests/TermLoomTests/PTYIntegrationTests.swift`
 - `Documentation/APIChanges.md`
 
 **Out of scope**:

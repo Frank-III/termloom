@@ -43,7 +43,7 @@ Entries must identify the stability level, migration path, and validation eviden
   reporting leading/trailing overflow. `Tabs.layout(in:)` returns value-semantic `TabLayout` and `TabPlacement` geometry.
 - **Additive:** `Tabs` supports configurable overflow indicators, selected-tab placement, and optional value-semantic
   `InteractionDescriptor` metadata. Emitted interactions use the exact visible tab rectangles from the render pass.
-- **Ownership:** Ratatui owns terminal-column projection and geometry. Applications retain tab identity, navigation,
+- **Ownership:** TermLoom owns terminal-column projection and geometry. Applications retain tab identity, navigation,
   labels, colors, switching behavior, and action meaning.
 - **Evidence:** synthetic tests cover Unicode widths, overflow boundaries, oversized selected tabs, narrow areas, and
   same-pass interaction geometry. Motel service tabs and Postcat response tabs validate unrelated product use cases.
@@ -186,7 +186,7 @@ Entries must identify the stability level, migration path, and validation eviden
   `frame.render(_:in:environment:)` for scoped environment overrides. Existing buffer-only render helpers remain for
   snapshots and low-level cell rendering, but intentionally discard interaction and cursor metadata.
 - This is an intentional pre-0.2 source break rather than a deprecated forwarding layer: retaining the old protocol
-  requirements would preserve the repeated layout traversals that the redesign removes. Ratatui core, all sibling
+  requirements would preserve the repeated layout traversals that the redesign removes. TermLoom core, all sibling
   packages and examples, Codex, and Herdr have migrated to the new contract.
 - **Provisional:** `Viewport.fixed(Rect)` embeds an exact terminal-coordinate region without alternate-screen or inline
   history ownership. The region does not autoresize with its host; manual `Terminal` owners use `Terminal.resize(to:)`,
@@ -203,7 +203,7 @@ Entries must identify the stability level, migration path, and validation eviden
 - **Supported:** `TerminalApplication.automaticallyTracksObservableState` defaults to `true`. Applications that
   already own a complete event/stream redraw scheduler can return `false` to prevent duplicate frames.
 - Swift Observation mutations read during presentation or widget rendering coalesce into an ordinary whole-frame
-  render and changed-cell diff. Ratatui does not retain widget state or repaint subtrees.
+  render and changed-cell diff. TermLoom does not retain widget state or repaint subtrees.
 - **Provisional:** `ObservationInvalidationTracker` exposes that one-shot dependency tracking to offscreen and remote
   renderers. Each render rearms its current dependencies and supplies its own transport-neutral wakeup callback.
 - Postcat provides explicit and `--observable` modes; Codex uses its explicit scheduler. PTY coverage verifies

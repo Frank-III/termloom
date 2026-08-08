@@ -51,8 +51,8 @@ Production clients repeatedly clip and pad strings using `String.count`, `String
 
 ## Done criteria
 
-- Ratatui exposes tested plain and rich terminal-column fitting.
-- Ratatui exposes tested top-origin row viewport geometry.
+- TermLoom exposes tested plain and rich terminal-column fitting.
+- TermLoom exposes tested top-origin row viewport geometry.
 - Postcat, DiffScope, and Motel remove representative local fitting/slicing workarounds.
 - The full ecosystem and production-consumer matrix passes.
 - Plan 009 is marked `DONE` and all touched repositories are clean.

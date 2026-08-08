@@ -3,24 +3,24 @@
 import PackageDescription
 
 let package = Package(
-  name: "ratetui-swift",
+  name: "termloom",
   platforms: [
     .macOS(.v14)
   ],
   products: [
-    .library(name: "Ratatui", targets: ["Ratatui"]),
-    .library(name: "RatatuiSyntaxHighlighting", targets: ["RatatuiSyntaxHighlighting"]),
-    .library(name: "RatatuiTestSupport", targets: ["RatatuiTestSupport"]),
-    .executable(name: "ratatui-demo", targets: ["RatatuiDemo"]),
-    .executable(name: "ratatui-benchmark", targets: ["RatatuiBenchmark"]),
-    .executable(name: "ratatui-counter", targets: ["RatatuiCounter"]),
-    .executable(name: "ratatui-gallery", targets: ["RatatuiGallery"]),
-    .executable(name: "ratatui-observation", targets: ["RatatuiObservationDemo"]),
+    .library(name: "TermLoom", targets: ["TermLoom"]),
+    .library(name: "TermLoomSyntaxHighlighting", targets: ["TermLoomSyntaxHighlighting"]),
+    .library(name: "TermLoomTestSupport", targets: ["TermLoomTestSupport"]),
+    .executable(name: "termloom-demo", targets: ["TermLoomDemo"]),
+    .executable(name: "termloom-benchmark", targets: ["TermLoomBenchmark"]),
+    .executable(name: "termloom-counter", targets: ["TermLoomCounter"]),
+    .executable(name: "termloom-gallery", targets: ["TermLoomGallery"]),
+    .executable(name: "termloom-observation", targets: ["TermLoomObservationDemo"]),
   ],
   traits: [
     .trait(
       name: "SyntaxHighlighting",
-      description: "Enable the Highlight-based RatatuiSyntaxHighlighting product"
+      description: "Enable the Highlight-based TermLoomSyntaxHighlighting product"
     ),
     .trait(
       name: "TestSupport",
@@ -43,11 +43,11 @@ let package = Package(
     ),
   ],
   targets: [
-    .target(name: "Ratatui"),
+    .target(name: "TermLoom"),
     .target(
-      name: "RatatuiSyntaxHighlighting",
+      name: "TermLoomSyntaxHighlighting",
       dependencies: [
-        "Ratatui",
+        "TermLoom",
         .product(
           name: "Highlight", package: "swift-highlight",
           condition: .when(traits: ["SyntaxHighlighting"])),
@@ -60,39 +60,39 @@ let package = Package(
       ]
     ),
     .target(
-      name: "RatatuiTestSupport",
+      name: "TermLoomTestSupport",
       dependencies: [
-        "Ratatui",
+        "TermLoom",
         .product(
           name: "InlineSnapshotTesting", package: "swift-snapshot-testing",
           condition: .when(traits: ["TestSupport"])),
       ]
     ),
     .executableTarget(
-      name: "RatatuiDemo",
-      dependencies: ["Ratatui"]
+      name: "TermLoomDemo",
+      dependencies: ["TermLoom"]
     ),
     .executableTarget(
-      name: "RatatuiBenchmark",
-      dependencies: ["Ratatui"]
+      name: "TermLoomBenchmark",
+      dependencies: ["TermLoom"]
     ),
     .executableTarget(
-      name: "RatatuiCounter",
-      dependencies: ["Ratatui"]
+      name: "TermLoomCounter",
+      dependencies: ["TermLoom"]
     ),
     .executableTarget(
-      name: "RatatuiGallery",
-      dependencies: ["Ratatui"]
+      name: "TermLoomGallery",
+      dependencies: ["TermLoom"]
     ),
     .executableTarget(
-      name: "RatatuiObservationDemo",
-      dependencies: ["Ratatui"]
+      name: "TermLoomObservationDemo",
+      dependencies: ["TermLoom"]
     ),
     .testTarget(
-      name: "RatatuiTests",
+      name: "TermLoomTests",
       dependencies: [
-        "Ratatui",
-        .target(name: "RatatuiTestSupport", condition: .when(traits: ["TestSupport"])),
+        "TermLoom",
+        .target(name: "TermLoomTestSupport", condition: .when(traits: ["TestSupport"])),
         .product(
           name: "CustomDump", package: "swift-custom-dump",
           condition: .when(traits: ["TestSupport"])),
@@ -100,8 +100,8 @@ let package = Package(
       resources: [.copy("Fixtures/emoji-test.txt")]
     ),
     .testTarget(
-      name: "RatatuiSyntaxHighlightingTests",
-      dependencies: ["RatatuiSyntaxHighlighting"]
+      name: "TermLoomSyntaxHighlightingTests",
+      dependencies: ["TermLoomSyntaxHighlighting"]
     ),
   ],
   swiftLanguageModes: [.v6]

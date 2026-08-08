@@ -3,10 +3,10 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 packages=(
-  "Packages/RatatuiOverlays"
-  "Packages/RatatuiTextArea"
-  "Packages/RatatuiDevTools"
-  "Packages/RatatuiMacros"
+  "Packages/TermLoomOverlays"
+  "Packages/TermLoomTextArea"
+  "Packages/TermLoomDevTools"
+  "Packages/TermLoomMacros"
   "Examples/Postcat"
   "Examples/DiffScope"
 )
@@ -14,7 +14,7 @@ packages=(
 printf '\n== minimal core (no default traits) ==\n'
 (
   cd "$root"
-  swift build --disable-default-traits --product Ratatui
+  swift build --disable-default-traits --product TermLoom
 )
 
 for package in "${packages[@]}"; do
@@ -26,16 +26,16 @@ for package in "${packages[@]}"; do
   )
 done
 
-printf '\n== RatatuiDevTools without its default Overlays trait ==\n'
+printf '\n== TermLoomDevTools without its default Overlays trait ==\n'
 (
-  cd "$root/Packages/RatatuiDevTools"
-  swift build --disable-default-traits --product RatatuiDevTools
+  cd "$root/Packages/TermLoomDevTools"
+  swift build --disable-default-traits --product TermLoomDevTools
 )
 
 printf '\n== Postcat with optional DevTools trait ==\n'
 (
   cd "$root/Examples/Postcat"
-  swift build --traits DevTools --product ratatui-postcat
+  swift build --traits DevTools --product termloom-postcat
 )
 
 printf '\n== Postcat dependency boundary ==\n'

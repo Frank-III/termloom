@@ -1,5 +1,5 @@
 import Observation
-import Ratatui
+import TermLoom
 
 @Observable
 @MainActor

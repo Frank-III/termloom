@@ -1,6 +1,6 @@
 import Foundation
-import Ratatui
-import RatatuiSyntaxHighlighting
+import TermLoom
+import TermLoomSyntaxHighlighting
 
 public enum HTTPMethod: String, CaseIterable, Hashable, Sendable {
   case get = "GET"

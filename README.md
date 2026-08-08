@@ -1,6 +1,7 @@
-# Ratatui for Swift — without porting Rust's surface area
+# TermLoom — a Swift-native terminal UI framework
 
-This experiment asks a different question than “how do we translate Ratatui?”:
+TermLoom is an independent Swift framework inspired by Ratatui's rendering lessons; it is not an official Ratatui
+binding or a transliteration of Rust APIs. The project asks a different question than “how do we translate Ratatui?”:
 
 > What would a terminal UI framework look like if Ratatui supplied the rendering lessons, but
 > Swift and Point-Free supplied the API design lessons?
@@ -101,7 +102,7 @@ Included widgets and controls:
 - Unicode-aware terminal-column clipping, ellipsis, alignment padding, and style-preserving `Span`/`Line`
   fitting, plus pure top-origin and end-origin row viewport geometry
 - Point-Free inline snapshot helpers for exact-width terminal buffers and readable ANSI streams
-- `RatatuiSyntaxHighlighting`, an optional pure-Swift 192-language highlighter that emits styled
+- `TermLoomSyntaxHighlighting`, an optional pure-Swift 192-language highlighter that emits styled
   terminal spans, maps paths to languages, includes the Codex theme catalog, and parses custom
   TextMate `.tmTheme` files without coupling the core renderer to a syntax engine
 
@@ -111,7 +112,7 @@ the repository URL selected for publication:
 
 ```swift
 .package(
-  url: "https://github.com/your-org/ratetui-swift",
+  url: "https://github.com/your-org/termloom",
   exact: "0.2.0-rc.1",
   traits: []
 )
@@ -122,10 +123,10 @@ CustomDump, or SwiftSyntax dependencies.
 
 Independent packages live under [`Packages/`](Packages):
 
-- `RatatuiTextArea` — multiline editing, selection, undo/redo, and viewport state
-- `RatatuiOverlays` — popup geometry and metadata-preserving presentation
-- `RatatuiDevTools` — frame metrics, logs, and a trait-gated popup
-- `RatatuiMacros` — optional `@WidgetComponent` ergonomics, isolated with SwiftSyntax
+- `TermLoomTextArea` — multiline editing, selection, undo/redo, and viewport state
+- `TermLoomOverlays` — popup geometry and metadata-preserving presentation
+- `TermLoomDevTools` — frame metrics, logs, and a trait-gated popup
+- `TermLoomMacros` — optional `@WidgetComponent` ergonomics, isolated with SwiftSyntax
 
 This mirrors an important Point-Free technique: preserve type information where it prevents invalid
 programs, then deliberately erase or flatten where deeply nested generic types would hurt compiler
@@ -152,7 +153,7 @@ func update(_ event: TerminalEvent) async -> ApplicationUpdate {
 ```
 
 Swift Observation is supported without adopting SwiftUI's retained view lifecycle. Reads from an `@Observable`
-model invalidate one complete Ratatui frame; an internal wakeup pipe interrupts the input poll immediately,
+model invalidate one complete TermLoom frame; an internal wakeup pipe interrupts the input poll immediately,
 and repeated mutations coalesce before the ordinary buffer diff:
 
 ```swift
@@ -168,10 +169,10 @@ final class App: TerminalApplication {
 }
 ```
 
-There is intentionally no Ratatui-specific `@State`: application state remains normal Swift value/reference
+There is intentionally no TermLoom-specific `@State`: application state remains normal Swift value/reference
 state, and widgets do not acquire a hidden reconciliation identity. Applications that already own a complete
 explicit event/stream scheduler can return `false` from `automaticallyTracksObservableState` to prevent duplicate
-frames while retaining the ordinary immediate-mode runtime. Run `swift run ratatui-observation` for a live demo:
+frames while retaining the ordinary immediate-mode runtime. Run `swift run termloom-observation` for a live demo:
 its timer and key handlers mutate an `@Observable` model while deliberately returning `.ignore`, with no periodic
 redraw protocol.
 
@@ -179,7 +180,7 @@ Offscreen and remote renderers can use the same dependency tracking through
 `ObservationInvalidationTracker`. Wrap each complete presentation/render transaction with `track`, then wake the
 renderer from its `onChange` callback; the callback is one-shot and the next render rearms the current dependency
 set. This keeps terminal-attached and daemon-owned render loops on the same Observation semantics without imposing
-a Ratatui transport protocol.
+a TermLoom transport protocol.
 
 The [API stability policy](Documentation/APIStability.md) defines the supported nucleus, provisional surfaces,
 deprecation process, and public-symbol review gate. The [public API audit](Documentation/PublicAPIAudit.md)
@@ -188,7 +189,7 @@ notes until tagged releases provide a generated changelog. The [performance guid
 documents frame, primitive, memory-retention, and ANSI-output benchmarks. The [ecosystem guide](Documentation/Ecosystem.md)
 documents package boundaries and the admission rule for core. The source-backed
 [capability map](Documentation/Parity.md) records what is complete and keeps validation work separate from feature
-parity. The [complementary Ratatui/Codex audit](Documentation/ComplementaryAudit.md) classifies stress-client
+parity. The [complementary TermLoom/Codex audit](Documentation/ComplementaryAudit.md) classifies stress-client
 findings by framework mechanics versus application policy. The 0.2 candidate freezes the single-pass `Frame` contract, Swift-native terminal geometry, fixed/fullscreen/inline
 viewport semantics, and the current backend capability facets. Remaining post-0.2 work is deliberately narrower: a
 broader physical-terminal matrix, validation of provisional native-history batching with another production backend,
@@ -198,24 +199,24 @@ Run it with the mise-managed Swift toolchain:
 
 ```sh
 mise exec -- swift test
-mise exec -- swift run ratatui-demo
-mise exec -- swift run ratatui-counter
-mise exec -- swift run ratatui-gallery
-mise exec -- swift run ratatui-observation
-mise exec -- swift run -c release ratatui-benchmark
+mise exec -- swift run termloom-demo
+mise exec -- swift run termloom-counter
+mise exec -- swift run termloom-gallery
+mise exec -- swift run termloom-observation
+mise exec -- swift run -c release termloom-benchmark
 
 # Validate all sibling packages and conditional dependency boundaries
 Scripts/test-ecosystem.sh
 
 # Separate example package: a compact, real HTTP client
 cd Examples/Postcat
-swift run ratatui-postcat
+swift run termloom-postcat
 
 # Fullscreen large-diff browser; defaults to a Bun #30412 demonstration
 cd ../DiffScope
-swift run ratatui-diffscope
-swift run ratatui-diffscope --repo /path/to/repository
-swift run ratatui-diffscope --repo /path/to/pr-head --base BASE_SHA
+swift run termloom-diffscope
+swift run termloom-diffscope --repo /path/to/repository
+swift run termloom-diffscope --repo /path/to/pr-head --base BASE_SHA
 ```
 
 [`Examples/DiffScope`](Examples/DiffScope) is a read-only, GitUI-inspired stress client for responsive
@@ -229,7 +230,7 @@ framework, which should be optional sibling packages, and what the examples reve
 Rendering tests can snapshot a complete buffer without losing trailing cells:
 
 ```swift
-import RatatuiTestSupport
+import TermLoomTestSupport
 
 assertWidget(
   Paragraph("ready\nrunning", wrap: .none),

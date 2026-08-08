@@ -1,11 +1,11 @@
 import Foundation
 import Observation
-import Ratatui
-import RatatuiOverlays
-import RatatuiTextArea
+import TermLoom
+import TermLoomOverlays
+import TermLoomTextArea
 
 #if DevTools
-  import RatatuiDevTools
+  import TermLoomDevTools
 #endif
 
 public enum PostcatRenderingMode: Hashable, Sendable {

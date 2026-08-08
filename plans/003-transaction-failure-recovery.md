@@ -19,8 +19,8 @@ The host-level frame transaction buffers viewport mutation, native history, and 
 
 ## Current state
 
-- `Sources/Ratatui/TerminalSession.swift:54-76` commits the complete buffered frame at the end of `withTransaction`.
-- `Sources/Ratatui/ANSIBackend.swift:286-357` can buffer margin, autowrap, history, synchronized-output, and origin changes.
+- `Sources/TermLoom/TerminalSession.swift:54-76` commits the complete buffered frame at the end of `withTransaction`.
+- `Sources/TermLoom/ANSIBackend.swift:286-357` can buffer margin, autowrap, history, synchronized-output, and origin changes.
 - Normal `restoreSequence` does not defensively end synchronized output, reset margins, enable wrapping, and reset SGR.
 - Native history line feeds intentionally remain outside `CSI ?2026`; preserve this.
 
@@ -28,11 +28,11 @@ The host-level frame transaction buffers viewport mutation, native history, and 
 
 **In scope**:
 
-- `Sources/Ratatui/TerminalSession.swift`
-- `Sources/Ratatui/Application.swift` only if state publication must move after physical commit
-- `Sources/Ratatui/ANSIBackend.swift` only for rollback/publication coordination
-- `Tests/RatatuiTests/PTYIntegrationTests.swift`
-- `Tests/RatatuiTests/BackendTests.swift`
+- `Sources/TermLoom/TerminalSession.swift`
+- `Sources/TermLoom/Application.swift` only if state publication must move after physical commit
+- `Sources/TermLoom/ANSIBackend.swift` only for rollback/publication coordination
+- `Tests/TermLoomTests/PTYIntegrationTests.swift`
+- `Tests/TermLoomTests/BackendTests.swift`
 - architecture/API-change documentation
 
 **Out of scope**:

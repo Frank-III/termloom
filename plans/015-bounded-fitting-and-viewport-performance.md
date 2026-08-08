@@ -12,7 +12,7 @@
 
 ## Scope
 
-Make `String`, `Span`, and `Line` clipping establish truncation without first measuring complete long inputs. Make `TabViewport` boundary checks linear overall rather than repeatedly reducing remaining slices. Benchmark client-shaped long Unicode strings, large selectable collections, tab projection, and Herdr frame conversion. Optimize Herdr's duplicate Ghostty-to-Ratatui projection only if profiles support it.
+Make `String`, `Span`, and `Line` clipping establish truncation without first measuring complete long inputs. Make `TabViewport` boundary checks linear overall rather than repeatedly reducing remaining slices. Benchmark client-shaped long Unicode strings, large selectable collections, tab projection, and Herdr frame conversion. Optimize Herdr's duplicate Ghostty-to-TermLoom projection only if profiles support it.
 
 ## Non-goals
 

@@ -25,7 +25,7 @@ A fixed-height lazy row primitive should own only projection and presentation me
    - optionally registers application-provided control/action metadata for visible rows;
    - stores no retained selection or viewport state.
 3. Preserve stable application-owned IDs and string action routing; do not redesign `ActionID` in this milestone.
-4. Migrate DiffScope file rows and Motel trace/waterfall rows without moving Git or telemetry presentation into Ratatui.
+4. Migrate DiffScope file rows and Motel trace/waterfall rows without moving Git or telemetry presentation into TermLoom.
 5. Characterize projection boundaries, laziness, selection styling, interaction rectangles, and modal interaction suppression.
 6. Update API documentation and baseline.
 
@@ -52,7 +52,7 @@ A fixed-height lazy row primitive should own only projection and presentation me
 ## Verification
 
 1. Strict format lint.
-2. Ratatui tests, including focused row-projection tests.
+2. TermLoom tests, including focused row-projection tests.
 3. API baseline review/update.
 4. DiffScope tests, including visible interaction ranges.
 5. Motel tests, including trace and waterfall row actions.

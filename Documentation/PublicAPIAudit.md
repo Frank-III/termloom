@@ -1,6 +1,6 @@
 # Public API access-control audit
 
-This audit reviews whether Ratatui's public declarations are intentional before the `0.2` stabilization boundary.
+This audit reviews whether TermLoom's public declarations are intentional before the `0.2` stabilization boundary.
 It is an access-control audit, not a promise that every declaration is already stable; stability levels remain in
 `APIStability.md`.
 
@@ -85,6 +85,6 @@ not opportunistically while fixing implementation code.
    package.
 3. Public protocol requirements must document isolation and ownership.
 4. Do not expose a concrete helper merely to test it; use `@testable` internal access or injected internal seams.
-5. Review `Scripts/check-api.sh` output and `Documentation/API/Ratatui.json` for every public change.
-6. The 0.2 review keeps one umbrella `Ratatui` module. Any future widgets-package split is a separately planned
+5. Review `Scripts/check-api.sh` output and `Documentation/API/TermLoom.json` for every public change.
+6. The 0.2 review keeps one umbrella `TermLoom` module. Any future widgets-package split is a separately planned
    migration, not release-candidate cleanup.

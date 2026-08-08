@@ -1,6 +1,6 @@
 import DiffScopeExampleCore
 import Foundation
-import Ratatui
+import TermLoom
 
 let arguments = Array(CommandLine.arguments.dropFirst())
 let configuration = try await DiffScopeConfiguration.resolve(arguments: arguments)

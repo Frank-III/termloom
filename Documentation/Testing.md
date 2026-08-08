@@ -1,7 +1,7 @@
 # Testing terminal output
 
-`RatatuiTestSupport` is a separate library product for tests. It depends on Point-Free's
-InlineSnapshotTesting package; the production `Ratatui` target does not.
+`TermLoomTestSupport` is a separate library product for tests. It depends on Point-Free's
+InlineSnapshotTesting package; the production `TermLoom` target does not.
 
 ## Pick the assertion by behavior
 
@@ -21,8 +21,8 @@ visible in source diffs.
 
 ## Public API review gate
 
-`Scripts/check-api.sh` builds Swift symbol graphs and compares Ratatui against the normalized baseline in
-`Documentation/API/Ratatui.json`. Additive declarations pass; removed or changed declarations, conformances,
+`Scripts/check-api.sh` builds Swift symbol graphs and compares TermLoom against the normalized baseline in
+`Documentation/API/TermLoom.json`. Additive declarations pass; removed or changed declarations, conformances,
 inheritance, and availability fail.
 
 ```sh
@@ -48,12 +48,12 @@ Scripts/test-consumers.sh
 ```
 
 Use `--skip-codex`, `--skip-motel`, or `--skip-herdr` when another writer is actively changing that checkout.
-Override checkout locations with `RATATUI_CODEX_PATH`, `RATATUI_MOTEL_PATH`, and `RATATUI_HERDR_PATH`. A missing
+Override checkout locations with `TERMLOOM_CODEX_PATH`, `TERMLOOM_MOTEL_PATH`, and `TERMLOOM_HERDR_PATH`. A missing
 optional checkout is reported and skipped; a present checkout must pass formatting and its complete test suite.
 
 ## 0.2 release-candidate matrix
 
-Run the frozen candidate from a clean Ratatui checkout:
+Run the frozen candidate from a clean TermLoom checkout:
 
 ```sh
 swift format lint --strict --recursive Package.swift Sources Tests
@@ -61,7 +61,7 @@ swift test
 Scripts/check-api.sh
 Scripts/test-ecosystem.sh
 Scripts/test-consumers.sh
-swift run -c release ratatui-benchmark -- --suite all --iterations 10 --json > /tmp/ratatui-benchmark-smoke.json
+swift run -c release termloom-benchmark -- --suite all --iterations 10 --json > /tmp/termloom-benchmark-smoke.json
 ```
 
 The API check must report zero additive symbols. PTY coverage is part of `swift test`; additionally smoke one inline,
@@ -75,7 +75,7 @@ CI runs every benchmark scenario with a small iteration count to catch build and
 and after performance-sensitive changes, run a release baseline with enough iterations:
 
 ```sh
-swift run -c release ratatui-benchmark -- --suite all --iterations 1000 --json > benchmark.json
+swift run -c release termloom-benchmark -- --suite all --iterations 1000 --json > benchmark.json
 ```
 
 Compare like hardware and toolchains. See `Documentation/Performance.md` for scenario definitions and metric
@@ -86,8 +86,8 @@ limitations.
 Start without a trailing closure:
 
 ```swift
-import Ratatui
-import RatatuiTestSupport
+import TermLoom
+import TermLoomTestSupport
 import Testing
 
 @Test func paragraphWraps() {

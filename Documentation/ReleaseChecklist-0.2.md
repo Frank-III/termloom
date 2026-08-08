@@ -1,4 +1,4 @@
-# Ratatui Swift 0.2 release checklist
+# TermLoom Swift 0.2 release checklist
 
 Candidate: `0.2.0-rc.1`  
 Source: `main` at the commit recorded immediately before tagging
@@ -19,7 +19,7 @@ Source: `main` at the commit recorded immediately before tagging
 ## API and automated validation
 
 - [x] `swift format lint --strict --recursive Package.swift Sources Tests`
-- [x] `swift test`: 269 Ratatui tests in 27 suites plus 3 syntax-highlighting tests.
+- [x] `swift test`: 269 TermLoom tests in 27 suites plus 3 syntax-highlighting tests.
 - [x] `Scripts/check-api.sh`: 1,540 reviewed symbols and zero additions.
 - [x] `Scripts/test-ecosystem.sh`
 - [x] `Scripts/test-consumers.sh`: Codex 160 tests, Motel 14 tests, and Herdr 91 tests.
@@ -36,7 +36,7 @@ Source: `main` at the commit recorded immediately before tagging
 
 ## Workspace integrity
 
-- [x] `ratetui-swift` is clean after the release-preparation commit is recorded.
+- [x] `termloom` is clean after the release-preparation commit is recorded.
 - [x] `codex-swift`, `motel-swift`, and `herdr-swift` are clean after the complete consumer matrix.
 - [x] KWWK has no new changes. Its intentional protected baseline remains:
   - `Sources/KWWKCli/CodingTUI.swift` file SHA-256:
@@ -48,12 +48,12 @@ Source: `main` at the commit recorded immediately before tagging
 
 - Date: 2026-08-07
 - Toolchain: Apple Swift 6.4 (`swift-tools-version: 6.2`), arm64 macOS.
-- Automated matrix log: `/tmp/ratatui-0.2-tail-reflow-matrix.log`; Ratatui through Motel passed, while Herdr's
+- Automated matrix log: `/tmp/termloom-0.2-tail-reflow-matrix.log`; TermLoom through Motel passed, while Herdr's
   autosaver timing test missed its deadline under accumulated matrix load. The focused retry and complete 91-test
   Herdr rerun passed in `/tmp/herdr-tail-reflow-rerun.log`.
-- Benchmark smoke: `/tmp/ratatui-0.2-benchmark-smoke.json` (26 unique scenarios).
+- Benchmark smoke: `/tmp/termloom-0.2-benchmark-smoke.json` (26 unique scenarios).
 - `terminal-control` 0.4.1 supplemental smokes exercised the built inline counter, fullscreen Observation demo, and a
-  temporary fixed-region program with explicit resize. Captures are in `/tmp/ratatui-0.2-termctrl-*.txt`; these are
+  temporary fixed-region program with explicit resize. Captures are in `/tmp/termloom-0.2-termctrl-*.txt`; these are
   PTY/emulator evidence and do not replace the unchecked physical-terminal items above.
 - Supaterm physical automation was attempted but synthetic text/key injection did not reach its terminal surface.
   Previous Ghostty-family history evidence remains useful, but the 0.2 candidate requires a fresh manual attestation.
@@ -62,7 +62,7 @@ Source: `main` at the commit recorded immediately before tagging
 
 ```sh
 git status --short --branch
-git tag -s 0.2.0-rc.1 -m "Ratatui Swift 0.2.0 release candidate 1"
+git tag -s 0.2.0-rc.1 -m "TermLoom Swift 0.2.0 release candidate 1"
 git tag -v 0.2.0-rc.1
 git show --stat 0.2.0-rc.1
 ```

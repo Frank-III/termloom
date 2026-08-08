@@ -18,7 +18,7 @@ jobs:
       - uses: swift-actions/setup-swift@v2
         with:
           swift-version: "6.2"
-      - run: swift build --disable-default-traits --product Ratatui
+      - run: swift build --disable-default-traits --product TermLoom
 
   macos-validation:
     name: macOS tests, API, and ecosystem
@@ -34,5 +34,5 @@ jobs:
       - run: Scripts/test-ecosystem.sh
       - name: Benchmark smoke test
         run: |
-          swift run -c release ratatui-benchmark -- --suite all --iterations 10 --json > benchmark.json
+          swift run -c release termloom-benchmark -- --suite all --iterations 10 --json > benchmark.json
           python3 -c 'import json; assert len(json.load(open("benchmark.json"))) >= 20'

@@ -3,21 +3,21 @@
 import PackageDescription
 
 let package = Package(
-  name: "ratatui-diffscope-example",
+  name: "termloom-diffscope-example",
   platforms: [.macOS(.v14)],
   products: [
-    .executable(name: "ratatui-diffscope", targets: ["DiffScopeExample"])
+    .executable(name: "termloom-diffscope", targets: ["DiffScopeExample"])
   ],
   dependencies: [
     .package(path: "../..", traits: []),
-    .package(path: "../../Packages/RatatuiOverlays"),
+    .package(path: "../../Packages/TermLoomOverlays"),
   ],
   targets: [
     .target(
       name: "DiffScopeExampleCore",
       dependencies: [
-        .product(name: "Ratatui", package: "ratetui-swift"),
-        .product(name: "RatatuiOverlays", package: "RatatuiOverlays"),
+        .product(name: "TermLoom", package: "termloom"),
+        .product(name: "TermLoomOverlays", package: "TermLoomOverlays"),
       ]
     ),
     .executableTarget(
@@ -28,7 +28,7 @@ let package = Package(
       name: "DiffScopeExampleCoreTests",
       dependencies: [
         "DiffScopeExampleCore",
-        .product(name: "Ratatui", package: "ratetui-swift"),
+        .product(name: "TermLoom", package: "termloom"),
       ]
     ),
   ],

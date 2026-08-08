@@ -30,15 +30,15 @@ run_package_checks() {
   )
 }
 
-printf '\n== Ratatui public API ==\n'
+printf '\n== TermLoom public API ==\n'
 "$root/Scripts/check-api.sh"
 
-run_package_checks "Ratatui core" "$root"
+run_package_checks "TermLoom core" "$root"
 
-printf '\n== Ratatui ecosystem ==\n'
+printf '\n== TermLoom ecosystem ==\n'
 "$root/Scripts/test-ecosystem.sh"
 
-codex_path="${RATATUI_CODEX_PATH:-$workspace/codex-swift}"
+codex_path="${TERMLOOM_CODEX_PATH:-$workspace/codex-swift}"
 if ! $skip_codex; then
   if [[ -f "$codex_path/Package.swift" ]]; then
     run_package_checks "Codex stress client" "$codex_path"
@@ -47,7 +47,7 @@ if ! $skip_codex; then
   fi
 fi
 
-motel_path="${RATATUI_MOTEL_PATH:-$workspace/motel-swift}"
+motel_path="${TERMLOOM_MOTEL_PATH:-$workspace/motel-swift}"
 if ! $skip_motel; then
   if [[ -f "$motel_path/Package.swift" ]]; then
     run_package_checks "Motel stress client" "$motel_path"
@@ -56,7 +56,7 @@ if ! $skip_motel; then
   fi
 fi
 
-herdr_path="${RATATUI_HERDR_PATH:-$workspace/herdr-swift}"
+herdr_path="${TERMLOOM_HERDR_PATH:-$workspace/herdr-swift}"
 if ! $skip_herdr; then
   if [[ -f "$herdr_path/Package.swift" ]]; then
     run_package_checks "Herdr stress client" "$herdr_path"

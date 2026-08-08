@@ -3,33 +3,33 @@
 import PackageDescription
 
 let package = Package(
-  name: "ratatui-postcat-example",
+  name: "termloom-postcat-example",
   platforms: [.macOS(.v14)],
   products: [
-    .executable(name: "ratatui-postcat", targets: ["PostcatExample"])
+    .executable(name: "termloom-postcat", targets: ["PostcatExample"])
   ],
   traits: [
     .trait(
       name: "DevTools",
-      description: "Enable the F12 diagnostics overlay from RatatuiDevTools"
+      description: "Enable the F12 diagnostics overlay from TermLoomDevTools"
     )
   ],
   dependencies: [
     .package(path: "../..", traits: ["SyntaxHighlighting"]),
-    .package(path: "../../Packages/RatatuiDevTools", traits: ["Overlays"]),
-    .package(path: "../../Packages/RatatuiOverlays"),
-    .package(path: "../../Packages/RatatuiTextArea"),
+    .package(path: "../../Packages/TermLoomDevTools", traits: ["Overlays"]),
+    .package(path: "../../Packages/TermLoomOverlays"),
+    .package(path: "../../Packages/TermLoomTextArea"),
   ],
   targets: [
     .target(
       name: "PostcatExampleCore",
       dependencies: [
-        .product(name: "Ratatui", package: "ratetui-swift"),
-        .product(name: "RatatuiSyntaxHighlighting", package: "ratetui-swift"),
-        .product(name: "RatatuiOverlays", package: "RatatuiOverlays"),
-        .product(name: "RatatuiTextArea", package: "RatatuiTextArea"),
+        .product(name: "TermLoom", package: "termloom"),
+        .product(name: "TermLoomSyntaxHighlighting", package: "termloom"),
+        .product(name: "TermLoomOverlays", package: "TermLoomOverlays"),
+        .product(name: "TermLoomTextArea", package: "TermLoomTextArea"),
         .product(
-          name: "RatatuiDevTools", package: "RatatuiDevTools",
+          name: "TermLoomDevTools", package: "TermLoomDevTools",
           condition: .when(traits: ["DevTools"])),
       ]
     ),
@@ -39,7 +39,7 @@ let package = Package(
     ),
     .testTarget(
       name: "PostcatExampleCoreTests",
-      dependencies: ["PostcatExampleCore", .product(name: "Ratatui", package: "ratetui-swift")]
+      dependencies: ["PostcatExampleCore", .product(name: "TermLoom", package: "termloom")]
     ),
   ],
   swiftLanguageModes: [.v6]

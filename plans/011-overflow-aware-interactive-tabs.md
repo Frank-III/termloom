@@ -13,7 +13,7 @@
 
 Motel, Herdr, and Postcat need the same terminal-sensitive tab mechanics: keep the selected tab visible, reserve overflow indicators, derive exact visible tab rectangles, and optionally attach application actions. Existing `Tabs` renders rich titles and selection styles but clips from the leading edge, exposes no geometry, and cannot emit interactions. Clients therefore duplicate Unicode width projection and hit-region calculations.
 
-Applications provide evidence for the invariant, not the API shape. Ratatui should own only generic horizontal projection and same-pass presentation geometry. Product labels, colors, identity, switching behavior, trailing mode chrome, and navigation remain application-owned.
+Applications provide evidence for the invariant, not the API shape. TermLoom should own only generic horizontal projection and same-pass presentation geometry. Product labels, colors, identity, switching behavior, trailing mode chrome, and navigation remain application-owned.
 
 ## Scope
 
@@ -46,14 +46,14 @@ Applications provide evidence for the invariant, not the API shape. Ratatui shou
 - Visible tabs are contiguous and remain in source order.
 - Overflow indicators appear when hidden tabs exist on that side and space remains after preserving a visible selected-tab cell.
 - Every tab interaction uses the exact visible rectangle rendered in the same pass.
-- Application-provided identity and action meaning are not interpreted by Ratatui.
+- Application-provided identity and action meaning are not interpreted by TermLoom.
 - Existing `Tabs` initializers and non-overflow rendering remain source-compatible.
 - Empty titles and empty areas emit no tab interactions.
 
 ## Verification
 
 1. Strict format lint.
-2. Ratatui tests, including synthetic projection and interaction geometry.
+2. TermLoom tests, including synthetic projection and interaction geometry.
 3. API baseline review/update.
 4. Postcat and Motel tests.
 5. Full ecosystem and consumer matrices.
@@ -62,6 +62,6 @@ Applications provide evidence for the invariant, not the API shape. Ratatui shou
 ## Done criteria
 
 - Motel no longer owns overflow projection, tab rectangles, or per-tab interaction construction.
-- Postcat uses core tab interactions without moving response semantics into Ratatui.
+- Postcat uses core tab interactions without moving response semantics into TermLoom.
 - Synthetic tests prove Unicode-aware projection and same-pass geometry.
 - All verification passes and touched repositories are clean.

@@ -2,7 +2,7 @@
 
 > **Executor instructions**: Follow this plan step by step. Run every verification command and confirm the expected result before moving to the next step. If anything in the "STOP conditions" section occurs, stop and report; do not improvise. When done, update the status row for this plan in `plans/README.md` unless a reviewer explicitly says it maintains the index.
 >
-> **Drift check (run first)**: `git diff --stat 85319e1..HEAD -- Sources/Ratatui/Widget.swift Sources/Ratatui/Paragraph.swift Sources/Ratatui/Block.swift Tests/RatatuiTests/TextTests.swift Tests/RatatuiTests/WidgetTests.swift Examples/Postcat/Sources/PostcatExampleCore/Model.swift Examples/Postcat/Sources/PostcatExampleCore/Screen.swift Examples/DiffScope/Sources/DiffScopeExampleCore/Screen.swift Documentation/APIChanges.md Documentation/API/Ratatui.json`
+> **Drift check (run first)**: `git diff --stat 85319e1..HEAD -- Sources/TermLoom/Widget.swift Sources/TermLoom/Paragraph.swift Sources/TermLoom/Block.swift Tests/TermLoomTests/TextTests.swift Tests/TermLoomTests/WidgetTests.swift Examples/Postcat/Sources/PostcatExampleCore/Model.swift Examples/Postcat/Sources/PostcatExampleCore/Screen.swift Examples/DiffScope/Sources/DiffScopeExampleCore/Screen.swift Documentation/APIChanges.md Documentation/API/TermLoom.json`
 > If any in-scope file changed since this plan was written, compare the excerpts below with live code. If behavior or signatures differ, stop and report.
 
 ## Status
@@ -20,11 +20,11 @@ Three unrelated construction gaps have already produced application workarounds.
 
 ## Current state
 
-- `Sources/Ratatui/Widget.swift:56-60` and `:76-82` use `String.split(separator:)`, which removes all empty subsequences. Existing `Tests/RatatuiTests/TextTests.swift:67-68` intentionally establishes that one terminal newline does not add another row; preserve that behavior while retaining leading/consecutive empty lines.
-- `Sources/Ratatui/Paragraph.swift:29-56` gives `Line` a String initializer and `@SpanBuilder` initializer but no `[Span]` initializer.
+- `Sources/TermLoom/Widget.swift:56-60` and `:76-82` use `String.split(separator:)`, which removes all empty subsequences. Existing `Tests/TermLoomTests/TextTests.swift:67-68` intentionally establishes that one terminal newline does not add another row; preserve that behavior while retaining leading/consecutive empty lines.
+- `Sources/TermLoom/Paragraph.swift:29-56` gives `Line` a String initializer and `@SpanBuilder` initializer but no `[Span]` initializer.
 - `Examples/Postcat/Sources/PostcatExampleCore/Model.swift:5-10` defines a local `Line.init(_ spans:[Span], alignment:)` workaround.
 - `Examples/DiffScope/Sources/DiffScopeExampleCore/Screen.swift:359-362` creates `Line("")`, assigns `line.spans`, and returns it.
-- `Sources/Ratatui/Block.swift:283-353` requires generic content for all initializers.
+- `Sources/TermLoom/Block.swift:283-353` requires generic content for all initializers.
 - `Examples/Postcat/Sources/PostcatExampleCore/Screen.swift:56-67`, `Examples/DiffScope/Sources/DiffScopeExampleCore/Screen.swift:63-75`, and Herdr's screen use `Block<Text>` with `Text("")` as decoration-only shells.
 
 Relevant current excerpts:
@@ -71,16 +71,16 @@ Repository conventions: value-semantic widgets, additive convenience APIs, resul
 ## Scope
 
 **In scope**:
-- `Sources/Ratatui/Widget.swift`
-- `Sources/Ratatui/Paragraph.swift`
-- `Sources/Ratatui/Block.swift`
-- `Tests/RatatuiTests/TextTests.swift`
-- `Tests/RatatuiTests/WidgetTests.swift`
+- `Sources/TermLoom/Widget.swift`
+- `Sources/TermLoom/Paragraph.swift`
+- `Sources/TermLoom/Block.swift`
+- `Tests/TermLoomTests/TextTests.swift`
+- `Tests/TermLoomTests/WidgetTests.swift`
 - `Examples/Postcat/Sources/PostcatExampleCore/Model.swift`
 - `Examples/Postcat/Sources/PostcatExampleCore/Screen.swift`
 - `Examples/DiffScope/Sources/DiffScopeExampleCore/Screen.swift`
 - `Documentation/APIChanges.md`
-- `Documentation/API/Ratatui.json`
+- `Documentation/API/TermLoom.json`
 
 **Out of scope**:
 - Geometry scalar migration.

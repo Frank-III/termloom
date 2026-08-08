@@ -20,7 +20,7 @@ No generic menu framework, variable-height lazy collection, or core terminal-emu
 
 ## Done criteria
 
-Herdr removes duplicated tab/row geometry without semantic movement into Ratatui; its complete baseline plus new Unicode and interaction tests pass.
+Herdr removes duplicated tab/row geometry without semantic movement into TermLoom; its complete baseline plus new Unicode and interaction tests pass.
 
 ## Result
 

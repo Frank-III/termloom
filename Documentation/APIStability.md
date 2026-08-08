@@ -1,6 +1,6 @@
 # API stability
 
-Ratatui is moving from exploratory development toward a supported `0.x` API. This document defines what
+TermLoom is moving from exploratory development toward a supported `0.x` API. This document defines what
 compatibility means before a `1.0` release and prevents every currently public declaration from becoming an
 accidental permanent commitment.
 
@@ -56,7 +56,7 @@ hosting integrations should begin here and graduate only after real clients esta
 
 ## Compatibility dimensions
 
-Ratatui reviews more than declaration spelling:
+TermLoom reviews more than declaration spelling:
 
 - **Source:** existing supported clients continue compiling.
 - **Behavior:** buffer output, cursor metadata, interaction geometry, terminal modes, and restoration remain
@@ -64,7 +64,7 @@ Ratatui reviews more than declaration spelling:
 - **Concurrency:** `TerminalApplication` and `TerminalSession` lifecycle operations are compiler-enforced main-actor
   state. Blocking input polling and transactional output use separate synchronized transport primitives. Values
   declared `Sendable` may cross isolation boundaries; public reference types without `Sendable` carry no such promise.
-- **Dependencies:** the `Ratatui` product remains usable with `traits: []` and does not acquire SwiftSyntax,
+- **Dependencies:** the `TermLoom` product remains usable with `traits: []` and does not acquire SwiftSyntax,
   snapshot-testing, syntax-highlighting, HTTP, provider, PTY, or application dependencies.
 - **Backend capability:** simple backends implement only `Backend`; advanced operations require explicit capability
   protocols rather than runtime flags or throwing defaults.
@@ -75,7 +75,7 @@ existing supported case remains a breaking change.
 
 ## Public API baseline
 
-`Documentation/API/Ratatui.json` is a normalized Swift symbol-graph snapshot. It covers every public Ratatui
+`Documentation/API/TermLoom.json` is a normalized Swift symbol-graph snapshot. It covers every public TermLoom
 symbol—not only the supported nucleus—so that provisional changes are deliberate rather than accidental.
 
 Run:

@@ -1,25 +1,25 @@
 # Postcat example
 
-A compact, keyboard-first HTTP client built as a separate Swift package against the local Ratatui products.
+A compact, keyboard-first HTTP client built as a separate Swift package against the local TermLoom products.
 It is inspired by [egoist/postcat](https://github.com/egoist/postcat) (MIT), but intentionally implements a
 small teaching surface rather than copying the complete application.
 
 The example exercises fullscreen lifecycle, custom widget composition, text editing, focus policy, tabs,
 scrolling, syntax highlighting, async work, cancellation, periodic redraws, overlays, cursor placement, and an
-injected/testable network boundary. It composes `RatatuiTextArea` and `RatatuiOverlays` while requesting only
-the root package's `SyntaxHighlighting` trait. It required no Postcat-specific additions to `Ratatui` core.
+injected/testable network boundary. It composes `TermLoomTextArea` and `TermLoomOverlays` while requesting only
+the root package's `SyntaxHighlighting` trait. It required no Postcat-specific additions to `TermLoom` core.
 
 ```sh
 cd Examples/Postcat
 # Existing explicit redraw scheduler
-swift run ratatui-postcat
+swift run termloom-postcat
 
 # Swift Observation scheduler: model mutations return .ignore and wake rendering automatically
-swift run ratatui-postcat -- --observable
+swift run termloom-postcat -- --observable
 
 # Optional independently packaged diagnostics overlay (toggle with F12)
-swift run --traits DevTools ratatui-postcat
-swift run --traits DevTools ratatui-postcat -- --observable
+swift run --traits DevTools termloom-postcat
+swift run --traits DevTools termloom-postcat -- --observable
 ```
 
 Keys:

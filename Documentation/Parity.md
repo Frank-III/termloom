@@ -1,4 +1,4 @@
-# Ratatui capability map
+# TermLoom capability map
 
 This is a living implementation map against the checked-in `guided/ratatui` reference. It tracks
 behavioral capability, not Rust API spelling: the public surface should remain idiomatic Swift.
@@ -36,14 +36,14 @@ behavioral capability, not Rust API spelling: the public surface should remain i
 | Focus, semantic controls, and collection projection | Swift extension | buttons, checkboxes, radios, editable `TextField`, identified atomic elements, focus routing, bounded terminal fitting, `RowViewport`, visible-only `SelectableRows`, and overflow-aware interactive tabs | validation controls and accessibility-like semantics |
 | Async application runtime | Swift extension | `Application.swift` | effects/tasks, structured cancellation policies, clocks |
 | Observation integration | Swift extension | presentation and complete widget-render reads tracked by `Application.swift`; coalesced pipe wakeup; public `ObservationInvalidationTracker` for offscreen/remote render loops; real-run-loop PTY regressions and README examples | optional public wakeup source for non-observable producers |
-| Syntax highlighting | Swift extension | optional `RatatuiSyntaxHighlighting` product, pure-Swift highlight.js-compatible engine with 192 languages, terminal-span output, path/language mapping, 32 Codex themes, and custom TextMate `.tmTheme` parsing | expand language aliases and theme-scope fidelity as real applications require |
-| Test backend and snapshots | Complete | public `RatatuiTestSupport`, inline buffer/ANSI snapshots, stateful `assertWidget`, composite dashboard, and checked-in exhaustive Unicode 17 emoji fixtures | fixture growth continues with upstream changes |
+| Syntax highlighting | Swift extension | optional `TermLoomSyntaxHighlighting` product, pure-Swift highlight.js-compatible engine with 192 languages, terminal-span output, path/language mapping, 32 Codex themes, and custom TextMate `.tmTheme` parsing | expand language aliases and theme-scope fidelity as real applications require |
+| Test backend and snapshots | Complete | public `TermLoomTestSupport`, inline buffer/ANSI snapshots, stateful `assertWidget`, composite dashboard, and checked-in exhaustive Unicode 17 emoji fixtures | fixture growth continues with upstream changes |
 | PTY integration coverage | Partial | automated `openpty` raw-mode/origin/resize/viewport-size/protocol/restoration plus real application-loop Observation, focus/effect, burst-input reset, mouse-origin, overflow-sizing and keyboard-push balance tests; live counter and Canvas gallery smokes | broader terminal/emulator matrix |
 | Benchmarks | Partial | contextual Unicode retained an ASCII hot path and measured 12,627–12,727 frames/s across three stabilized 10,000-frame release runs at 120×40; plain key-path cells preserve rich-text clipping without allocating `Line`/`Span` storage and start-aligned layouts bypass cache synchronization | tracked allocation and terminal-output benchmarks |
 
 ## Design boundary
 
-Ratatui is the behavioral reference for terminal correctness and widget capability. It is not the
+TermLoom is the behavioral reference for terminal correctness and widget capability. It is not the
 generic API template. Swift keeps domain types, key paths, result builders, Observation, async
 updates, and explicit dependency boundaries until a coarse render boundary; cells and buffers stay
 compact and dependency-free.

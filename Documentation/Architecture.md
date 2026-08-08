@@ -1,6 +1,6 @@
-# Architecture: Swift first, Ratatui informed
+# Architecture: Swift first, TermLoom informed
 
-Ratatui is the behavioral reference for terminal correctness: cells, clipping, Unicode width,
+TermLoom is the behavioral reference for terminal correctness: cells, clipping, Unicode width,
 double buffering, minimal diffs, layout, and backend separation. It is not the API template.
 
 The API template comes from studying Point-Free's current libraries locally:
@@ -104,7 +104,7 @@ Presentation and widget-render reads are wrapped in Swift Observation access tra
 the input poll, so the loop wakes immediately rather than waiting for its polling timeout. Repeated mutations
 coalesce behind one invalidation bit. Periodic-only frames reuse their armed access registrations rather than
 accumulating new one-shot Observation callbacks; event-driven and observed changes refresh the dependency set.
-Ratatui still performs an ordinary whole-frame buffer render and changed-cell diff; it does not build a signal
+TermLoom still performs an ordinary whole-frame buffer render and changed-cell diff; it does not build a signal
 graph or repaint individual widget subtrees.
 
 This deliberately adopts `@Observable`, which is a zero-dependency Swift language/runtime facility, without
@@ -153,7 +153,7 @@ otherwise omit from scrollback. If the coalesced physical write fails, an unbuff
 synchronized output and resets margins, styles, wrapping, and cursor visibility. Session viewport state,
 terminal diff/backend state, and inline-document reconciliation roll back to their pre-frame snapshots so a
 caller-driven retry emits a complete update. A scrollback reset already leaves the cursor at the known home position, so
-Ratatui rebuilds the inline reservation from row zero instead of issuing a competing cursor-position query
+TermLoom rebuilds the inline reservation from row zero instead of issuing a competing cursor-position query
 while the asynchronous input pump is active. Terminal protocol setup is session-scoped: resets do not stack
 extra Kitty keyboard pushes, so final restoration balances the original push exactly once.
 
@@ -210,9 +210,9 @@ framework boundary is making an application repeat mechanics:
    `resetTerminalHistory` are now distinct; suspended operations and custom document rebuild effects can
    become typed payloads in a future source-breaking revision.
 3. Add a reusable popup/menu presenter that composes an anchor widget, filtered/scrolling selection,
-   and footer policy. Do not add Codex-specific overlays to Ratatui.
+   and footer policy. Do not add Codex-specific overlays to TermLoom.
 4. Keep Markdown streaming, provider lifecycle, transcript semantics, slash commands, and skill/file
-   resolution outside core Ratatui. They may become separate packages after a second independent client
+   resolution outside core TermLoom. They may become separate packages after a second independent client
    proves the abstraction.
 
 ### Remaining architectural risks
@@ -221,7 +221,7 @@ framework boundary is making an application repeat mechanics:
   scrollback transaction vocabulary.
 - `resetTerminalHistory` deliberately emits `CSI 3 J`; ordinary clearing cannot invoke it, but an explicit
   reset can erase shell scrollback outside the application's semantic history.
-- A policy-free `Menu`/`Popup` presenter is not yet proven by a second independent client. Ratatui should
+- A policy-free `Menu`/`Popup` presenter is not yet proven by a second independent client. TermLoom should
   own placement, clipping, variable-height visibility and actions, never Codex filtering or commands.
 - PTY tests now cover the real application loop, render-only Observation, burst input across reset,
   mouse rebasing, dynamic-height overflow, focus preservation, and protocol balance. Emulator-native

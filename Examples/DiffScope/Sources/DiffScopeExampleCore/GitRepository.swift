@@ -197,7 +197,7 @@ public struct GitRepositoryClient: Sendable {
     process.arguments = ["git", "-C", root.path] + arguments
 
     let temporary = FileManager.default.temporaryDirectory
-      .appendingPathComponent("ratatui-diffscope-\(UUID().uuidString)")
+      .appendingPathComponent("termloom-diffscope-\(UUID().uuidString)")
     let errorURL = temporary.appendingPathExtension("stderr")
     FileManager.default.createFile(atPath: temporary.path, contents: nil)
     FileManager.default.createFile(atPath: errorURL.path, contents: nil)

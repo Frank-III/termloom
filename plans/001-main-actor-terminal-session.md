@@ -5,8 +5,8 @@
 > **Drift check**: run:
 >
 > ```sh
-> cd /Users/new/projects/learn_swift/ratetui-swift
-> shasum -a 256 Sources/Ratatui/TerminalSession.swift Sources/Ratatui/Application.swift Documentation/APIStability.md
+> cd /Users/new/projects/learn_swift/termloom
+> shasum -a 256 Sources/TermLoom/TerminalSession.swift Sources/TermLoom/Application.swift Documentation/APIStability.md
 > ```
 >
 > Expected first hash: `6c3076bb5f93034c0b93077bcd23e9ec4be5604695b20287b32891cb41e45c0f`. If it differs, compare the current declarations below and STOP if lifecycle isolation was already redesigned or new cross-actor callers exist.
@@ -26,21 +26,21 @@
 
 ## Current state
 
-- `Sources/Ratatui/TerminalSession.swift:85` declares `public final class TerminalSession: @unchecked Sendable`.
+- `Sources/TermLoom/TerminalSession.swift:85` declares `public final class TerminalSession: @unchecked Sendable`.
 - Mutable fields at lines 89–100 include `viewport`, `lifecycleState`, `prefetchedInput`, `lastWindowSize`, and `viewportOrigin`.
 - Lifecycle/session methods are synchronous and unisolated.
-- `Sources/Ratatui/Application.swift` already runs `TerminalApplication` on `@MainActor`; blocking input is isolated in `AsyncInputPump` and must remain there.
+- `Sources/TermLoom/Application.swift` already runs `TerminalApplication` on `@MainActor`; blocking input is isolated in `AsyncInputPump` and must remain there.
 - The redesigned `Widget`/`Frame` architecture is unrelated and must not change.
 
 ## Scope
 
 **In scope**:
 
-- `Sources/Ratatui/TerminalSession.swift`
-- `Sources/Ratatui/Application.swift` only for compiler-required call-site isolation
-- terminal/session tests under `Tests/RatatuiTests/`
+- `Sources/TermLoom/TerminalSession.swift`
+- `Sources/TermLoom/Application.swift` only for compiler-required call-site isolation
+- terminal/session tests under `Tests/TermLoomTests/`
 - `Documentation/APIStability.md`, `Documentation/APIChanges.md`
-- `Documentation/API/Ratatui.json` only through reviewed baseline update
+- `Documentation/API/TermLoom.json` only through reviewed baseline update
 
 **Out of scope**:
 
@@ -60,7 +60,7 @@ If Swift 6.2 requires explicit isolated deinitialization, use the supported lang
 **Verify**:
 
 ```sh
-swift build --disable-default-traits --product Ratatui
+swift build --disable-default-traits --product TermLoom
 ```
 
 Expected: exit 0 with no concurrency warnings/errors.
@@ -100,7 +100,7 @@ Expected: zero pending additions and no unreviewed breaking change.
 - [x] `TerminalSession` is not `@unchecked Sendable`.
 - [x] Mutable session lifecycle is compiler-isolated to `@MainActor`.
 - [x] `AsyncInputPump` still performs blocking input away from the main actor.
-- [x] Ratatui, ecosystem, Codex, and Herdr compile and test.
+- [x] TermLoom, ecosystem, Codex, and Herdr compile and test.
 - [x] API migration is documented and baseline reviewed.
 
 ## STOP conditions

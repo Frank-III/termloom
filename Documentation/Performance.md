@@ -1,11 +1,11 @@
 # Performance benchmarks
 
-`ratatui-benchmark` measures immediate-mode frame construction, changed-cell output, public primitives, and real
+`termloom-benchmark` measures immediate-mode frame construction, changed-cell output, public primitives, and real
 ANSI byte volume. Run benchmarks in release mode:
 
 ```sh
-swift run -c release ratatui-benchmark -- --suite all --iterations 1000
-swift run -c release ratatui-benchmark -- --suite all --iterations 1000 --json > benchmark.json
+swift run -c release termloom-benchmark -- --suite all --iterations 1000
+swift run -c release termloom-benchmark -- --suite all --iterations 1000 --json > benchmark.json
 ```
 
 Available suites are `frames`, `primitives`, `collections`, `output`, and `all`. The default remains `frames`, and a

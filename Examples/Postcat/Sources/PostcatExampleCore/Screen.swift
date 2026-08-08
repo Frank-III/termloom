@@ -1,6 +1,6 @@
-import Ratatui
-import RatatuiOverlays
-import RatatuiTextArea
+import TermLoom
+import TermLoomOverlays
+import TermLoomTextArea
 
 public struct PostcatScreen: Widget, Sendable {
   public var method: HTTPMethod
@@ -72,7 +72,7 @@ public struct PostcatScreen: Widget, Sendable {
         " ⚡ postcat swift ",
         style: Style(
           foreground: ExampleTheme.dark, background: ExampleTheme.accent, modifiers: [.bold])),
-      Span("  Ratatui example", style: Style(foreground: ExampleTheme.dim)),
+      Span("  TermLoom example", style: Style(foreground: ExampleTheme.dim)),
     ]).render(in: area, into: &frame)
     Line(
       [

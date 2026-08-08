@@ -2,7 +2,7 @@
 
 > **Executor instructions**: Execute after plan 004. This is a coordinate-correctness fix, not a history-policy redesign. Update `plans/README.md` when complete.
 >
-> **Drift check**: `Sources/Ratatui/ANSIBackend.swift` SHA-256 was `2d1b05ca7dde20207127b49c0aad4c8bc1e7eef878a47dad9c292ef86de6e5e3`. Confirm `appendHistoryRow` still reads `Position(x: column, y: row)` without `buffer.area` offsets; otherwise STOP.
+> **Drift check**: `Sources/TermLoom/ANSIBackend.swift` SHA-256 was `2d1b05ca7dde20207127b49c0aad4c8bc1e7eef878a47dad9c292ef86de6e5e3`. Confirm `appendHistoryRow` still reads `Position(x: column, y: row)` without `buffer.area` offsets; otherwise STOP.
 
 ## Status
 
@@ -19,21 +19,21 @@
 
 ## Current state
 
-`Sources/Ratatui/ANSIBackend.swift:447-451` currently computes:
+`Sources/TermLoom/ANSIBackend.swift:447-451` currently computes:
 
 ```swift
 Position(x: UInt16(clamping: column), y: UInt16(clamping: row))
 ```
 
-`Sources/Ratatui/Backend.swift:132-145` correctly adds `viewport.area.x` and `viewport.area.y` while restoring mapped buffers.
+`Sources/TermLoom/Backend.swift:132-145` correctly adds `viewport.area.x` and `viewport.area.y` while restoring mapped buffers.
 
 ## Scope
 
 **In scope**:
 
-- `Sources/Ratatui/ANSIBackend.swift`
-- `Tests/RatatuiTests/BackendTests.swift`
-- `Tests/RatatuiTests/ANSIBackendTests.swift` if that is the established direct serializer test location
+- `Sources/TermLoom/ANSIBackend.swift`
+- `Tests/TermLoomTests/BackendTests.swift`
+- `Tests/TermLoomTests/ANSIBackendTests.swift` if that is the established direct serializer test location
 - APIChanges only if observable behavior warrants a note
 
 **Out of scope**:

@@ -1,7 +1,7 @@
 # TerminalApplication capability design gate
 
 Plan 016 evaluated whether `TerminalApplication` should shrink to body, update, redraw policy, and explicit optional
-capabilities before Ratatui Swift 0.2. The source change is rejected for this release.
+capabilities before TermLoom Swift 0.2. The source change is rejected for this release.
 
 ## Candidate shape
 
@@ -44,7 +44,7 @@ associated type can be discovered dynamically without affecting widget or action
 | Codex | yes | yes | yes | yes |
 
 The fullscreen applications currently get all optional hooks from defaults and therefore write no source-level glue.
-Only Codex supplies a source-backed document and suspended operation. Ratatui's PTY fixtures additionally exercise
+Only Codex supplies a source-backed document and suspended operation. TermLoom's PTY fixtures additionally exercise
 pending direct history insertion and reset behavior.
 
 ## Rejection evidence

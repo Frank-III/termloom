@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create or verify Ratatui's canonical public symbol-graph baseline."""
+"""Create or verify TermLoom's canonical public symbol-graph baseline."""
 
 from __future__ import annotations
 
@@ -38,16 +38,16 @@ def canonical_relationship(relationship: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_graphs(graph_directory: pathlib.Path) -> dict[str, Any]:
-    paths = sorted(graph_directory.glob("Ratatui.symbols.json"))
-    paths += sorted(graph_directory.glob("Ratatui@*.symbols.json"))
+    paths = sorted(graph_directory.glob("TermLoom.symbols.json"))
+    paths += sorted(graph_directory.glob("TermLoom@*.symbols.json"))
     if not paths:
-        raise RuntimeError(f"no Ratatui symbol graphs found in {graph_directory}")
+        raise RuntimeError(f"no TermLoom symbol graphs found in {graph_directory}")
 
     symbols: dict[str, dict[str, Any]] = {}
     relationships: dict[str, dict[str, Any]] = {}
     for path in paths:
         graph = json.loads(path.read_text())
-        if graph.get("module", {}).get("name") != "Ratatui":
+        if graph.get("module", {}).get("name") != "TermLoom":
             continue
         for raw_symbol in graph.get("symbols", []):
             symbol = canonical_symbol(raw_symbol)
@@ -59,7 +59,7 @@ def load_graphs(graph_directory: pathlib.Path) -> dict[str, Any]:
 
     return {
         "schemaVersion": 1,
-        "module": "Ratatui",
+        "module": "TermLoom",
         "symbols": sorted(symbols.values(), key=lambda value: value["id"]),
         "relationships": sorted(
             relationships.values(),
@@ -104,7 +104,7 @@ def check(baseline: dict[str, Any], current: dict[str, Any]) -> int:
         )
 
     if failures:
-        print("Ratatui public API baseline changed:", file=sys.stderr)
+        print("TermLoom public API baseline changed:", file=sys.stderr)
         for failure in failures[:100]:
             print(f"  - {failure}", file=sys.stderr)
         if len(failures) > 100:
@@ -119,7 +119,7 @@ def check(baseline: dict[str, Any], current: dict[str, Any]) -> int:
 
     additions = len(current_symbols.keys() - baseline_symbols.keys())
     print(
-        f"Ratatui API baseline passed ({len(baseline_symbols)} protected symbols; "
+        f"TermLoom API baseline passed ({len(baseline_symbols)} protected symbols; "
         f"{additions} additive symbols)."
     )
     return 0

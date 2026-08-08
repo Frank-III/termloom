@@ -1,5 +1,5 @@
-import Ratatui
-import RatatuiOverlays
+import TermLoom
+import TermLoomOverlays
 
 public struct DiffScopeScreen: Widget, Sendable {
   public var repository: RepositorySnapshot

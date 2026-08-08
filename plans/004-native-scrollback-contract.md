@@ -2,7 +2,7 @@
 
 > **Executor instructions**: Execute after lifecycle/transaction hardening. Do not silently substitute visual scrolling for native history. Update `plans/README.md` when complete.
 >
-> **Drift check**: `Sources/Ratatui/Backend.swift` SHA-256 was `4c29c4dfe3bef32ac6fd9198727b7243b0c75cf1bd995fa5110d19b1c87e93bf`. Confirm the extension still forwards `scrollRegionUpIntoScrollback` to `scrollRegionUp`; otherwise STOP and reassess.
+> **Drift check**: `Sources/TermLoom/Backend.swift` SHA-256 was `4c29c4dfe3bef32ac6fd9198727b7243b0c75cf1bd995fa5110d19b1c87e93bf`. Confirm the extension still forwards `scrollRegionUpIntoScrollback` to `scrollRegionUp`; otherwise STOP and reassess.
 
 ## Status
 
@@ -19,8 +19,8 @@ The protocol explicitly distinguishes native-scrollback retention from visual CS
 
 ## Current state
 
-- `Sources/Ratatui/Backend.swift:93-96` documents the semantic guarantee.
-- `Sources/Ratatui/Backend.swift:151-155` violates it by forwarding to `scrollRegionUp`.
+- `Sources/TermLoom/Backend.swift:93-96` documents the semantic guarantee.
+- `Sources/TermLoom/Backend.swift:151-155` violates it by forwarding to `scrollRegionUp`.
 - `Terminal.insertBefore` relies on the stronger operation for generic inline insertion.
 - ANSIBackend and TestBackend already provide explicit implementations; the test-only `RecordingNativeHistoryBackend` also declares the method.
 
@@ -28,9 +28,9 @@ The protocol explicitly distinguishes native-scrollback retention from visual CS
 
 **In scope**:
 
-- `Sources/Ratatui/Backend.swift`
-- `Sources/Ratatui/Terminal.swift` only if unsupported handling needs clarification
-- Ratatui backend/history tests
+- `Sources/TermLoom/Backend.swift`
+- `Sources/TermLoom/Terminal.swift` only if unsupported handling needs clarification
+- TermLoom backend/history tests
 - API stability/change docs and baseline
 
 **Out of scope**:

@@ -27,4 +27,4 @@ fi
 python3 Scripts/api-baseline.py \
   "$mode" \
   "$graph_directory" \
-  Documentation/API/Ratatui.json
+  Documentation/API/TermLoom.json

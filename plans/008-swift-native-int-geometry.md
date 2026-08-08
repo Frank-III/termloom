@@ -21,7 +21,7 @@ Convert coordinate and extent values to `Int`, including:
 - layout constraints, spacing, padding, scroll offsets, widget dimensions, and viewport heights;
 - buffer drawing widths and backend region movement;
 - fixed/inline terminal session geometry and history measurement;
-- Ratatui packages, Postcat, DiffScope, Codex, and Herdr call sites.
+- TermLoom packages, Postcat, DiffScope, Codex, and Herdr call sites.
 
 Preserve fixed-width protocol data such as modifier bitsets, terminal mode/device parameters, color channels, Unicode widths, and C ABI `winsize` fields. Convert only at those boundaries.
 
@@ -47,7 +47,7 @@ Preserve fixed-width protocol data such as modifier bitsets, terminal mode/devic
 
 ## Done criteria
 
-- Ratatui public geometry and application-facing dimension APIs use `Int`.
+- TermLoom public geometry and application-facing dimension APIs use `Int`.
 - Fixed-width integers remain only where they model protocol, storage, color, Unicode, or ABI data.
 - Production clients no longer contain geometry-only `UInt16(clamping:)` glue.
 - All verification passes and repositories are clean.

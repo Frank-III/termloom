@@ -1,4 +1,4 @@
-# Ratatui Swift Runtime-Hardening Plans
+# TermLoom Swift Runtime-Hardening Plans
 
 Generated 2026-08-06 after the single-pass `Widget`/`Frame` redesign and `Viewport.fixed(Rect)` migration. Git was initialized after these plans were prepared; the recorded SHA-256 values remain the authoritative pre-implementation drift checks for plans 001–005.
 
@@ -49,7 +49,7 @@ Status values: `TODO`, `IN PROGRESS`, `DONE`, `BLOCKED: reason`, `REJECTED: reas
 
 ## Required final matrix
 
-After plan 005, run from `/Users/new/projects/learn_swift/ratetui-swift`:
+After plan 005, run from `/Users/new/projects/learn_swift/termloom`:
 
 ```sh
 swift format lint --strict --recursive Package.swift Sources Tests
@@ -84,6 +84,6 @@ These are not part of plans 001–005:
 
 ## Findings considered and rejected
 
-- Retained widgets, Ratatui-specific `@State`, and subtree repainting: conflict with the established immediate-mode architecture.
+- Retained widgets, TermLoom-specific `@State`, and subtree repainting: conflict with the established immediate-mode architecture.
 - Moving Git, transcript, HTTP, provider, or Markdown policy into core: application-specific.
 - Reverting the single-pass `Frame` redesign: independent review found it coherent and its migrations/tests complete.

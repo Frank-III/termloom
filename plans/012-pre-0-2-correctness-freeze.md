@@ -40,7 +40,7 @@ The Swift-native geometry, fitting, selectable-row, and overflow-tab changes are
 
 ## Verification
 
-Run strict formatting and tests in Ratatui, Codex, and Herdr, then Ratatui's API, ecosystem, and consumer matrices. Recheck KWWK hashes.
+Run strict formatting and tests in TermLoom, Codex, and Herdr, then TermLoom's API, ecosystem, and consumer matrices. Recheck KWWK hashes.
 
 ## Done criteria
 

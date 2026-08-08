@@ -34,6 +34,6 @@ All notable public and observable changes are recorded here. Detailed pre-releas
 
 ### Validation target
 
-The candidate is gated by strict formatting, the complete Ratatui/ecosystem/consumer suites, an exact public API
+The candidate is gated by strict formatting, the complete TermLoom/ecosystem/consumer suites, an exact public API
 baseline, release benchmark JSON smoke, PTY lifecycle coverage, and inline/fullscreen/fixed real-terminal smokes. See
 [`Documentation/ReleaseChecklist-0.2.md`](Documentation/ReleaseChecklist-0.2.md).

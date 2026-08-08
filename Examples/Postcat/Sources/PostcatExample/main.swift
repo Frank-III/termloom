@@ -1,5 +1,5 @@
 import PostcatExampleCore
-import Ratatui
+import TermLoom
 
 let renderingMode: PostcatRenderingMode =
   CommandLine.arguments.contains("--observable") ? .observation : .explicit

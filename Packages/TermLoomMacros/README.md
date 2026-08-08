@@ -1,0 +1,26 @@
+# TermLoomMacros
+
+Optional compile-time ergonomics for TermLoom Swift. This package is separate so ordinary TermLoom users never
+resolve or compile SwiftSyntax.
+
+```swift
+import TermLoom
+import TermLoomMacros
+
+@WidgetComponent
+struct EmptyState {
+  var message: String
+
+  var body: some Widget {
+    VStack {
+      Text(message, alignment: .center)
+      Button("Retry", action: "retry")
+    }
+  }
+}
+```
+
+`@WidgetComponent` synthesizes `Widget` conformance and forwards the single `Frame` presentation pass to `body`.
+Cells, interactions, and cursor metadata therefore follow the same pass automatically. The macro deliberately does
+not synthesize state, event handling, layout policy, or an application runtime. Result builders remain the primary
+view-construction API; the macro only removes protocol forwarding boilerplate.
