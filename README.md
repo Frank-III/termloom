@@ -3,6 +3,11 @@
 TermLoom is an independent Swift framework inspired by Ratatui's rendering lessons; it is not an official Ratatui
 binding or a transliteration of Rust APIs. The project asks a different question than “how do we translate Ratatui?”:
 
+![TermLoom gallery showing metrics, collections, charts, and controls](Documentation/Media/demo.gif)
+
+_Recorded from the real `termloom-gallery` executable with
+[Terminal Control](https://github.com/anomalyco/terminal-control)._
+
 > What would a terminal UI framework look like if Ratatui supplied the rendering lessons, but
 > Swift and Point-Free supplied the API design lessons?
 
