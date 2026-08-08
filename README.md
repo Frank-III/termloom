@@ -107,13 +107,13 @@ Included widgets and controls:
   TextMate `.tmTheme` files without coupling the core renderer to a syntax engine
 
 SwiftPM traits keep transitive dependencies conditional. `SyntaxHighlighting` and `TestSupport` are enabled by
-default for compatibility, but a core-only consumer can opt out completely. Replace the placeholder owner below with
-the repository URL selected for publication:
+default for compatibility, but a core-only consumer can opt out completely. Until the first release candidate is
+tagged, depend on the public development branch:
 
 ```swift
 .package(
-  url: "https://github.com/your-org/termloom",
-  exact: "0.2.0-rc.1",
+  url: "https://github.com/Frank-III/termloom.git",
+  branch: "main",
   traits: []
 )
 ```
@@ -251,3 +251,22 @@ SNAPSHOT_TESTING_RECORD=all mise exec -- swift test
 
 See [Testing terminal output](Documentation/Testing.md) for the project-wide assertion policy and
 stateful-widget examples.
+
+## Acknowledgements
+
+TermLoom is an independent Swift implementation built to learn from and test ideas established by other open-source
+projects:
+
+- [Ratatui](https://github.com/ratatui/ratatui) and its predecessor
+  [tui-rs](https://github.com/fdehau/tui-rs) are the primary references for terminal rendering behavior, widgets, and
+  backend invariants.
+- [Point-Free](https://github.com/pointfreeco)'s Swift libraries influenced the value-oriented API design, dependency
+  boundaries, and snapshot-testing approach.
+- [swift-highlight](https://github.com/danelyan/swift-highlight) provides the optional syntax engine;
+  [Highlightr](https://github.com/raspu/Highlightr) and
+  [two-face](https://github.com/CosmicHorrorDev/two-face) informed syntax and theme research.
+- [Ghostty](https://github.com/ghostty-org/ghostty) provides important terminal-behavior references used during PTY and
+  real-terminal validation.
+
+TermLoom is not affiliated with or endorsed by those projects. Their names and links identify inspiration and
+behavioral references, not copied ownership.

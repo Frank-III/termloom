@@ -23,7 +23,7 @@ No new major feature, sixth demo, retained reconciliation, generic menu, or inli
 - Strict formatting, 269 core tests plus 3 syntax tests, the complete ecosystem matrix, Codex's 160 tests, Motel's 14
   tests, Herdr's 91 tests, the 1,540-symbol API baseline with zero additions, and all 26 benchmark-smoke scenarios pass.
 - Automated PTY and `terminal-control` 0.4.1 supplemental inline/fullscreen/fixed smokes pass.
-- Remaining release blockers are owner-selected public repository/license metadata and a fresh physical-terminal
+- Public repository and MIT license metadata are resolved. The remaining release blocker is a fresh physical-terminal
   attestation; synthetic Supaterm input did not reach the terminal surface during automated smoke setup.
 
 ## Done criteria

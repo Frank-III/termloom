@@ -11,9 +11,8 @@ Source: `main` at the commit recorded immediately before tagging
   single-pass `Frame` design and current viewport/capability boundaries.
 - [x] `Package.swift` parses with Swift tools 6.2, declares Swift 6 mode and macOS 14, and exposes the intended three
   libraries and five executables.
-- [ ] Select and configure the public repository remote, then replace the placeholder owner in `README.md`.
-- [ ] Add the project license selected by the owner. No license file is currently present, so public distribution must
-  not be tagged as final until this is resolved.
+- [x] Public repository selected as `https://github.com/Frank-III/termloom`; `README.md` uses that SwiftPM URL.
+- [x] MIT license added, matching the upstream Ratatui license family used by the primary behavioral reference.
 - [ ] Create the annotated candidate tag only after every item below is checked.
 
 ## API and automated validation
