@@ -94,6 +94,11 @@ final class TransactionalTerminalOutput: @unchecked Sendable {
   private let lock = NSLock()
   private var isBuffering = false
   private var buffer = Data()
+  private var writeCount: UInt64 = 0
+
+  /// Changes whenever bytes are written, buffered, or discarded, so a backend can tell whether
+  /// anything but its own last write may have changed the terminal since.
+  var generation: UInt64 { lock.withLock { writeCount } }
 
   convenience init(output: FileHandle) {
     self.init { data in try output.write(contentsOf: data) }
@@ -105,6 +110,7 @@ final class TransactionalTerminalOutput: @unchecked Sendable {
 
   func write(_ data: Data) throws {
     try lock.withLock {
+      writeCount &+= 1
       if isBuffering {
         buffer.append(data)
       } else {
@@ -127,6 +133,8 @@ final class TransactionalTerminalOutput: @unchecked Sendable {
       lock.withLock {
         isBuffering = false
         buffer.removeAll(keepingCapacity: true)
+        // Discarded bytes never reach the terminal.
+        writeCount &+= 1
       }
       throw error
     }
@@ -142,6 +150,7 @@ final class TransactionalTerminalOutput: @unchecked Sendable {
       let commitError = error
       do {
         try lock.withLock {
+          writeCount &+= 1
           try directWrite(Self.emergencyRecoverySequence)
         }
       } catch {
@@ -276,6 +285,9 @@ public final class TerminalSession {
     backend.outputWriter = { [terminalOutput] data in
       try terminalOutput.write(data)
     }
+    // Session lifecycle output (suspend, resume, resize, history resets) is written outside the
+    // backend; the backend re-sends its complete cursor state after any such write.
+    backend.outputGeneration = { [terminalOutput] in terminalOutput.generation }
     return backend
   }
 

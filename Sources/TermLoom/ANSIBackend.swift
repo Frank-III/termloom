@@ -95,6 +95,16 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private var historyBatchRowCount = 0
   /// Byte storage reused across `draw` calls so steady-state frames do not reallocate it.
   private var outputBuffer: [UInt8] = []
+  /// The cursor state the last `presentFrame` left on the terminal. Every other operation that
+  /// writes to the terminal or changes cursor addressing resets it to unknown, so the next frame
+  /// emits the complete cursor state again.
+  internal private(set) var presentedCursor = ANSIPresentedCursor.unknown
+  /// Counts writes to the shared terminal output, including writes that bypass this backend
+  /// (`TerminalSession` lifecycle sequences, other backends, discarded transactions). A frame that
+  /// observes a count other than the one recorded after this backend's own last frame write treats
+  /// the cursor state as unknown.
+  var outputGeneration: (() -> UInt64)?
+  private var presentedOutputGeneration: UInt64?
   public var configuration: ANSIBackendConfiguration
 
   public var capabilities: BackendCapabilities {
@@ -135,6 +145,9 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   }
 
   public mutating func size() throws -> Size {
+    let addressing = cursorAddressing
+    // A clamped inline origin moves where every logical cursor position lands on the screen.
+    defer { if cursorAddressing != addressing { presentedCursor.position = nil } }
     #if os(macOS) || os(Linux)
       var window = winsize()
       if ioctl(output.fileDescriptor, UInt(TIOCGWINSZ), &window) == 0,
@@ -190,6 +203,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
 
   public mutating func draw(_ updates: [CellUpdate]) throws {
     guard !updates.isEmpty else { return }
+    presentedCursor = .unknown
     var bytes: [UInt8] = []
     swap(&bytes, &outputBuffer)
     defer {
@@ -207,6 +221,125 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   /// The largest output buffer `draw` keeps for reuse; larger buffers are released after the frame.
   private static let maximumRetainedOutputCapacity = 1 << 20
 
+  /// Writes one `Terminal` frame: the changed cells followed by only those parts of the cursor
+  /// state (shape, position, visibility) that differ from what the terminal already shows, as one
+  /// write and, when synchronized output is enabled, inside one synchronized update. Writes nothing
+  /// when no cell and no cursor state changed.
+  ///
+  /// The terminal ends up exactly as after `draw(updates)`, `setCursorStyle(cursorStyle)` and
+  /// `setCursor(cursorPosition)`: only escape sequences that would not change anything are omitted.
+  internal mutating func presentFrame(
+    _ updates: [CellUpdate], cursorStyle: CursorStyle, cursorPosition: Position?
+  ) throws {
+    if let generation = outputGeneration?(), generation != presentedOutputGeneration {
+      presentedCursor = .unknown
+    }
+    var bytes: [UInt8] = []
+    swap(&bytes, &outputBuffer)
+    defer {
+      if bytes.capacity <= Self.maximumRetainedOutputCapacity {
+        bytes.removeAll(keepingCapacity: true)
+        swap(&bytes, &outputBuffer)
+      }
+    }
+    bytes.removeAll(keepingCapacity: true)
+    if !updates.isEmpty { bytes.reserveCapacity(updates.count * 16 + 32) }
+    let cursor = appendFrame(
+      updates, cursorStyle: cursorStyle, cursorPosition: cursorPosition,
+      from: presentedCursor, to: &bytes)
+    guard !bytes.isEmpty else { return }
+    do {
+      try outputWriter(Data(bytes))
+    } catch {
+      // Some of the frame may have reached the terminal.
+      presentedCursor = .unknown
+      throw error
+    }
+    presentedCursor = cursor
+    presentedOutputGeneration = outputGeneration?()
+  }
+
+  /// Serializes a frame exactly as `presentFrame` writes it when the terminal shows `cursor`, and
+  /// returns the cursor state the terminal shows afterwards.
+  internal func appendFrame(
+    _ updates: [CellUpdate],
+    cursorStyle: CursorStyle,
+    cursorPosition: Position?,
+    from cursor: ANSIPresentedCursor,
+    to bytes: inout [UInt8]
+  ) -> ANSIPresentedCursor {
+    let synchronized = configuration.supportsSynchronizedOutput
+    let frameStart = bytes.count
+    var cursor = cursor
+    if updates.isEmpty {
+      if synchronized { bytes.appendANSI("\u{1B}[?2026h") }
+    } else {
+      appendCells(updates, to: &bytes)
+      // Drawing moves the cursor.
+      cursor.position = nil
+    }
+    let cursorStart = bytes.count
+    appendCursorChanges(
+      style: cursorStyle, position: cursorPosition, cursor: &cursor, to: &bytes)
+    if updates.isEmpty, bytes.count == cursorStart {
+      bytes.removeSubrange(frameStart...)
+      return cursor
+    }
+    if synchronized { bytes.appendANSI("\u{1B}[?2026l") }
+    return cursor
+  }
+
+  /// Appends the escape sequences that take the terminal's cursor from `cursor` to the given
+  /// shape and position (`nil` hides it), in the order `setCursorStyle` then `setCursor` emit them,
+  /// skipping each one that would not change the terminal.
+  private func appendCursorChanges(
+    style: CursorStyle,
+    position: Position?,
+    cursor: inout ANSIPresentedCursor,
+    to bytes: inout [UInt8]
+  ) {
+    if cursor.style != style {
+      bytes.appendANSI("\u{1B}[")
+      bytes.appendANSIDecimal(Self.cursorStyleParameter(style))
+      bytes.appendANSI(" q")
+      cursor.style = style
+    }
+    guard let position else {
+      if cursor.isVisible != false {
+        bytes.appendANSI("\u{1B}[?25l")
+        cursor.isVisible = false
+      }
+      return
+    }
+    if cursor.position != position {
+      appendCursor(position, to: &bytes)
+      switch cursorAddressing {
+      case .absolute, .absoluteOrigin:
+        cursor.position = position
+      case .savedOrigin, .savedBottom:
+        // These moves restore the saved cursor (DECRC), which also restores its rendition and
+        // wrap state, so they are repeated every frame exactly as before.
+        cursor.position = nil
+      }
+    }
+    if cursor.isVisible != true {
+      bytes.appendANSI("\u{1B}[?25h")
+      cursor.isVisible = true
+    }
+  }
+
+  private static func cursorStyleParameter(_ style: CursorStyle) -> Int {
+    switch style {
+    case .defaultUserShape: 0
+    case .blinkingBlock: 1
+    case .steadyBlock: 2
+    case .blinkingUnderline: 3
+    case .steadyUnderline: 4
+    case .blinkingBar: 5
+    case .steadyBar: 6
+    }
+  }
+
   /// Serializes `updates` exactly as `draw` writes them.
   ///
   /// The first style of the frame is established with a full reset-and-set sequence because the
@@ -214,6 +347,14 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   /// attributes and colors when that is shorter (see `appendSGRTransition`). The frame ends with
   /// `CSI 0 m`, so the terminal is left in the default rendition as before.
   internal func appendDraw(_ updates: [CellUpdate], to bytes: inout [UInt8]) {
+    appendCells(updates, to: &bytes)
+    if configuration.supportsSynchronizedOutput {
+      bytes.appendANSI("\u{1B}[?2026l")
+    }
+  }
+
+  /// `appendDraw` without the closing synchronized-update sequence.
+  private func appendCells(_ updates: [CellUpdate], to bytes: inout [UInt8]) {
     var activeStyle: Style?
     var activeState: ANSIGraphicState?
     var expectedPosition: Position?
@@ -242,17 +383,16 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       )
     }
     bytes.appendANSI("\u{1B}[0m")
-    if configuration.supportsSynchronizedOutput {
-      bytes.appendANSI("\u{1B}[?2026l")
-    }
   }
 
   public mutating func clear() throws {
+    presentedCursor = .unknown
     try outputWriter(Data(clearSequence().utf8))
   }
 
   public mutating func clear(_ region: ClearRegion) throws {
     if region == .all { return try clear() }
+    presentedCursor = .unknown
     let sequence: String
     switch region {
     case .all: return try clear()
@@ -265,25 +405,19 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   }
 
   public mutating func setCursor(_ position: Position?) throws {
+    presentedCursor = .unknown
     let sequence = position.map { "\(cursor(position: $0))\u{1B}[?25h" } ?? "\u{1B}[?25l"
     try outputWriter(Data(sequence.utf8))
   }
 
   public mutating func setCursorStyle(_ style: CursorStyle) throws {
-    let parameter =
-      switch style {
-      case .defaultUserShape: 0
-      case .blinkingBlock: 1
-      case .steadyBlock: 2
-      case .blinkingUnderline: 3
-      case .steadyUnderline: 4
-      case .blinkingBar: 5
-      case .steadyBar: 6
-      }
+    presentedCursor = .unknown
+    let parameter = Self.cursorStyleParameter(style)
     try outputWriter(Data("\u{1B}[\(parameter) q".utf8))
   }
 
   public mutating func setViewportOrigin(_ origin: Position) throws {
+    presentedCursor = .unknown
     switch cursorAddressing {
     case .absolute:
       reportedViewportOrigin = origin
@@ -297,6 +431,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
 
   public mutating func appendLines(_ count: Int) throws {
     guard count > 0 else { return }
+    presentedCursor = .unknown
     try outputWriter(Data(String(repeating: "\n", count: Int(count)).utf8))
   }
 
@@ -320,6 +455,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       buffer.area.height > 0
     else { return false }
 
+    presentedCursor = .unknown
     var operationSucceeded = false
     defer {
       if !operationSucceeded {
@@ -406,6 +542,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       throw BackendOperationError.unsupported("scrollback insertion from a saved origin")
     }
     guard !rows.isEmpty, count > 0 else { return }
+    presentedCursor = .unknown
     let top = Int(rows.lowerBound) + 1
     let bottom = Int(rows.upperBound)
     // CSI S is a visual region transform, not a history operation: Ghostty-family terminals discard
@@ -430,6 +567,7 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
       throw BackendOperationError.unsupported("region scrolling from a saved origin")
     }
     guard !rows.isEmpty, count > 0 else { return }
+    presentedCursor = .unknown
     let top = Int(rows.lowerBound) + 1
     let bottom = Int(rows.upperBound)
     let sequence = "\u{1B}7\u{1B}[\(top);\(bottom)r\u{1B}[\(count)\(command)\u{1B}[r\u{1B}8"
@@ -715,6 +853,17 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private var ansi16Palette: [(UInt8, UInt8, UInt8)] {
     ansiPalette16
   }
+}
+
+/// The cursor state an `ANSIBackend` frame left on the terminal; `nil` means unknown.
+struct ANSIPresentedCursor: Equatable {
+  var style: CursorStyle?
+  var isVisible: Bool?
+  /// Where the cursor sits, as a viewport position, when nothing has moved it since a frame put it
+  /// there.
+  var position: Position?
+
+  static let unknown = Self()
 }
 
 private let ansiPalette16: [(UInt8, UInt8, UInt8)] = [

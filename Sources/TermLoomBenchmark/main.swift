@@ -756,6 +756,7 @@ private func outputBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
   let outputIterations = min(iterations, 1_000)
   let emitIterations = min(iterations, 500)
   var samples = try fixedOutputBenchmarks(iterations: outputIterations)
+  samples += try cursorOutputBenchmarks(iterations: outputIterations)
   // Whole frames through `Terminal.draw` (render, diff, emit) with style-heavy content.
   for pattern in OutputPattern.allCases {
     samples.append(
@@ -805,6 +806,70 @@ private func fixedOutputBenchmarks(iterations outputIterations: Int) throws -> [
         Fill(
           iteration.isMultiple(of: 2) ? "A" : "B",
           style: Style(background: iteration.isMultiple(of: 2) ? .blue : .magenta)))
+    },
+  ]
+}
+
+/// A text-input line: `length` letters on one row of a blank screen.
+private struct CaretLine: Widget {
+  var row: Int
+  var length: Int
+
+  func render(in area: Rect, into frame: inout Frame) {
+    guard area.height > row else { return }
+    let text = String((0..<length).map { Character(Unicode.Scalar(UInt8(97 + $0 % 26))) })
+    frame.buffer.setString(text, at: Position(x: area.x, y: area.y + row))
+  }
+}
+
+// Frames whose cost is dominated by the cursor: nothing changes at all, only the caret moves, or
+// one cell changes while the caret stays put. `outputBytesPerIteration` is the number of bytes
+// written to the terminal per frame. Each sample's first frame paints the whole screen once.
+private func cursorOutputBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
+  let caret = Position(x: 10, y: 20)
+  return [
+    // Idle frames: nothing changed, the cursor is hidden.
+    try ansiOutputBenchmark(
+      name: "ansi/cursor/idle-hidden", iterations: iterations
+    ) { _, frame in
+      frame.render(Fill(" "))
+    },
+    // Idle frames: nothing changed, a visible bar caret stays at one position.
+    try ansiOutputBenchmark(
+      name: "ansi/cursor/idle-visible", iterations: iterations
+    ) { _, frame in
+      frame.render(Fill(" "))
+      frame.placeCursor(at: caret, style: .steadyBar)
+    },
+    // A text-input caret moves along a line every frame; no cell changes.
+    try ansiOutputBenchmark(
+      name: "ansi/cursor/caret-moving", iterations: iterations
+    ) { iteration, frame in
+      frame.render(Fill(" "))
+      frame.placeCursor(at: Position(x: iteration % 80, y: 20), style: .steadyBar)
+    },
+    // The caret visits every cell of the screen (the ANSI version of `frame/cursor-only`).
+    try ansiOutputBenchmark(
+      name: "ansi/cursor/grid-moving", iterations: iterations
+    ) { iteration, frame in
+      frame.render(Fill(" "))
+      frame.placeCursor(
+        at: Position(x: iteration % 120, y: (iteration / 120) % 40), style: .steadyBar)
+    },
+    // One cell changes every frame while a visible caret stays put.
+    try ansiOutputBenchmark(
+      name: "ansi/cursor/one-cell-fixed-caret", iterations: iterations
+    ) { iteration, frame in
+      frame.render(SingleCell(symbol: iteration.isMultiple(of: 2) ? "A" : "B"))
+      frame.placeCursor(at: caret, style: .steadyBar)
+    },
+    // Typing: each frame adds one letter and the caret follows it (the line restarts every 80).
+    try ansiOutputBenchmark(
+      name: "ansi/cursor/typing", iterations: iterations
+    ) { iteration, frame in
+      let length = iteration % 80
+      frame.render(CaretLine(row: 20, length: length))
+      frame.placeCursor(at: Position(x: length, y: 20), style: .steadyBar)
     },
   ]
 }

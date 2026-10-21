@@ -209,9 +209,21 @@ public struct Terminal<BackendType: Backend> {
 
   private mutating func present(cursorStyle: CursorStyle, cursorPosition: Position?) throws -> Int {
     let updates = current.diff(from: previous)
-    try backend.draw(updates)
-    try backend.setCursorStyle(cursorStyle)
-    try backend.setCursor(cursorPosition)
+    if BackendType.self == ANSIBackend.self {
+      // One write per frame, inside the synchronized update, with only the cursor changes. The
+      // backend is mutated in place (its type is exactly `ANSIBackend`) so its reused output
+      // buffer stays uniquely referenced.
+      try withUnsafeMutablePointer(to: &backend) { pointer in
+        try pointer.withMemoryRebound(to: ANSIBackend.self, capacity: 1) { ansi in
+          try ansi.pointee.presentFrame(
+            updates, cursorStyle: cursorStyle, cursorPosition: cursorPosition)
+        }
+      }
+    } else {
+      try backend.draw(updates)
+      try backend.setCursorStyle(cursorStyle)
+      try backend.setCursor(cursorPosition)
+    }
     try backend.flush()
     frameCount &+= 1
     swap(&current, &previous)
