@@ -125,6 +125,29 @@ public struct Line: Hashable, Sendable, ExpressibleByStringLiteral, Stylable, Wi
     )
     let end = row.x + row.width
     for span in spans {
+      if TerminalWidth.isPrintableASCII(span.content) {
+        // One-column graphemes: skip whole columns, then draw one cell per byte.
+        var bytes = span.content.utf8[...]
+        if skipped < leadingSkip {
+          let skippedBytes = min(bytes.count, leadingSkip - skipped)
+          skipped += skippedBytes
+          bytes = bytes.dropFirst(skippedBytes)
+        }
+        for byte in bytes {
+          guard position.x + 1 <= end else { return }
+          let inherited =
+            buffer.cell(at: position)?.style
+            ?? parentStyle.patching(style)
+          position = buffer.setGrapheme(
+            Character(Unicode.Scalar(byte)),
+            width: 1,
+            at: position,
+            style: inherited.patching(span.style),
+            maxWidth: (end - position.x)
+          )
+        }
+        continue
+      }
       for character in span.content {
         let characterWidth = TerminalWidth.of(character)
         if skipped < leadingSkip {
@@ -140,8 +163,9 @@ public struct Line: Hashable, Sendable, ExpressibleByStringLiteral, Stylable, Wi
         let inherited =
           buffer.cell(at: position)?.style
           ?? parentStyle.patching(style)
-        position = buffer.setString(
-          String(character),
+        position = buffer.setGrapheme(
+          character,
+          width: characterWidth,
           at: position,
           style: inherited.patching(span.style),
           maxWidth: (end - position.x)
@@ -237,8 +261,13 @@ public struct Paragraph: Widget, Hashable, Sendable {
     let height = area.height
     if wrap == .none {
       for (row, sourceLine) in lines.dropFirst(Int(scroll)).prefix(height).enumerated() {
-        guard let visualLine = visualLines(for: sourceLine, width: width).first else { continue }
-        render(visualLine, at: row, width: width, in: area, into: &frame.buffer)
+        renderVisible(
+          visibleGlyphs(of: sourceLine, width: width),
+          at: row,
+          width: width,
+          in: area,
+          into: &frame.buffer
+        )
       }
       return
     }
@@ -275,6 +304,8 @@ public struct Paragraph: Widget, Hashable, Sendable {
 
   public func lineCount(width: Int) -> Int {
     guard width > 0 else { return 0 }
+    // Without wrapping every source line is exactly one visual line.
+    if wrap == .none { return lines.count }
     return lines.reduce(0) { $0 + visualLines(for: $1, width: Int(width)).count }
   }
 
@@ -286,6 +317,84 @@ public struct Paragraph: Widget, Hashable, Sendable {
     var character: Character
     var style: Style
     var alignment: Alignment
+    /// `TerminalWidth.of(character)`, measured once when the glyph is created.
+    var width: Int
+  }
+
+  /// The glyphs of a line in source order, measuring each grapheme exactly once. Printable ASCII
+  /// spans are walked byte by byte (each byte is a one-column grapheme); other spans are
+  /// segmented into graphemes exactly as `String` iteration does.
+  fileprivate struct Glyphs: Sequence, IteratorProtocol {
+    private let spans: [Span]
+    private let baseStyle: Style
+    private let alignment: Alignment
+    private var spanIndex = 0
+    private var glyphStyle = Style.plain
+    private var asciiBytes: String.UTF8View.Iterator?
+    private var characters: String.Iterator?
+
+    init(line: Line, paragraphStyle: Style) {
+      spans = line.spans
+      baseStyle = paragraphStyle.patching(line.style)
+      alignment = line.alignment ?? .leading
+    }
+
+    mutating func next() -> Glyph? {
+      while true {
+        // At most one of the two iterators is active at a time.
+        if let byte = asciiBytes?.next() {
+          return Glyph(
+            character: Character(Unicode.Scalar(byte)),
+            style: glyphStyle,
+            alignment: alignment,
+            width: 1
+          )
+        }
+        asciiBytes = nil
+        if let character = characters?.next() {
+          return Glyph(
+            character: character,
+            style: glyphStyle,
+            alignment: alignment,
+            width: TerminalWidth.of(character)
+          )
+        }
+        characters = nil
+        guard spanIndex < spans.count else { return nil }
+        let span = spans[spanIndex]
+        spanIndex += 1
+        glyphStyle = baseStyle.patching(span.style)
+        if TerminalWidth.isPrintableASCII(span.content) {
+          asciiBytes = span.content.utf8.makeIterator()
+        } else {
+          characters = span.content.makeIterator()
+        }
+      }
+    }
+  }
+
+  /// The glyphs `horizontallyScrolled(_:width:)` keeps from the whole unwrapped line, produced
+  /// without materializing or measuring the glyphs past the visible columns.
+  private func visibleGlyphs(of line: Line, width: Int) -> [Glyph] {
+    guard width > 0 else { return [] }
+    var glyphs = Glyphs(line: line, paragraphStyle: style)
+    var visible: [Glyph] = []
+    var pending = glyphs.next()
+    if horizontalScroll > 0, pending?.alignment == .leading {
+      var skipped = 0
+      while let glyph = pending, skipped + glyph.width <= Int(horizontalScroll) {
+        skipped += glyph.width
+        pending = glyphs.next()
+      }
+    }
+    var used = 0
+    while let glyph = pending {
+      used += glyph.width
+      guard used <= width else { break }
+      visible.append(glyph)
+      pending = glyphs.next()
+    }
+    return visible
   }
 
   private func render(
@@ -295,8 +404,23 @@ public struct Paragraph: Widget, Hashable, Sendable {
     in area: Rect,
     into buffer: inout Buffer
   ) {
-    let line = horizontallyScrolled(unscrolledLine, width: width)
-    let usedWidth = line.reduce(0) { $0 + TerminalWidth.of($1.character) }
+    renderVisible(
+      horizontallyScrolled(unscrolledLine, width: width),
+      at: row,
+      width: width,
+      in: area,
+      into: &buffer
+    )
+  }
+
+  private func renderVisible(
+    _ line: [Glyph],
+    at row: Int,
+    width: Int,
+    in area: Rect,
+    into buffer: inout Buffer
+  ) {
+    let usedWidth = line.reduce(0) { $0 + $1.width }
     let offset: Int
     switch line.first?.alignment ?? .leading {
     case .leading: offset = 0
@@ -308,9 +432,10 @@ public struct Paragraph: Widget, Hashable, Sendable {
       y: (area.y + row)
     )
     for glyph in line {
-      guard TerminalWidth.of(glyph.character) > 0 else { continue }
-      position = buffer.setString(
-        String(glyph.character),
+      guard glyph.width > 0 else { continue }
+      position = buffer.setGrapheme(
+        glyph.character,
+        width: glyph.width,
         at: position,
         style: glyph.style,
         maxWidth: (area.x + width - position.x)
@@ -324,13 +449,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
     maximumCount: Int? = nil
   ) -> [[Glyph]] {
     guard width > 0, maximumCount != 0 else { return [] }
-    let glyphs = line.spans.lazy.flatMap { span in
-      let glyphStyle = style.patching(line.style).patching(span.style)
-      let alignment = line.alignment ?? .leading
-      return span.content.lazy.map {
-        Glyph(character: $0, style: glyphStyle, alignment: alignment)
-      }
-    }
+    let glyphs = Glyphs(line: line, paragraphStyle: style)
     switch wrap {
     case .none:
       return [Array(glyphs)]
@@ -352,7 +471,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
     var sawGlyph = false
     for glyph in glyphs {
       sawGlyph = true
-      let glyphWidth = TerminalWidth.of(glyph.character)
+      let glyphWidth = glyph.width
       guard glyphWidth <= width else { continue }
       if glyphWidth > 0, lineWidth + glyphWidth > width {
         result.append(line)
@@ -385,7 +504,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
     var previousWasNonWhitespace = false
 
     for glyph in glyphs {
-      let glyphWidth = TerminalWidth.of(glyph.character)
+      let glyphWidth = glyph.width
       guard glyphWidth <= width else { continue }
       let isWhitespace = Self.isWrappingWhitespace(glyph.character)
       let wordFound = previousWasNonWhitespace && isWhitespace
@@ -423,7 +542,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
         var consumedWhitespace = 0
         while consumedWhitespace < pendingWhitespace.count {
           let first = pendingWhitespace[consumedWhitespace]
-          let firstWidth = TerminalWidth.of(first.character)
+          let firstWidth = first.width
           guard firstWidth <= remainingWidth else { break }
           whitespaceWidth -= firstWidth
           remainingWidth -= firstWidth
@@ -479,7 +598,7 @@ public struct Paragraph: Widget, Hashable, Sendable {
     var skipped = 0
     let start =
       glyphs.firstIndex { glyph in
-        let glyphWidth = TerminalWidth.of(glyph.character)
+        let glyphWidth = glyph.width
         if skipped + glyphWidth <= Int(horizontalScroll) {
           skipped += glyphWidth
           return false
@@ -513,7 +632,7 @@ extension Array where Element == Paragraph.Glyph {
     var used = 0
     let end =
       firstIndex { glyph in
-        used += TerminalWidth.of(glyph.character)
+        used += glyph.width
         return used > width
       } ?? endIndex
     return self[..<end]

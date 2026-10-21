@@ -417,6 +417,171 @@ private func collectionBenchmarks(iterations: Int) -> [BenchmarkSample] {
   return samples
 }
 
+// MARK: - Text drawing
+
+// The `text` suite measures string -> cell drawing: grapheme segmentation, width measurement,
+// clipping, alignment and wrapping. Every operation draws a whole 120x40 screen (or one list or
+// paragraph viewport of that size), so ns/iteration is the cost of one frame's text.
+
+private let textScreen = Rect(x: 0, y: 0, width: 120, height: 40)
+
+/// Deterministic ASCII prose, `length` bytes, starting at a row-dependent offset.
+private func asciiText(row: Int, length: Int) -> String {
+  let words = [
+    "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda",
+    "mu", "worker-\(row)", "status=ok", "42ms", "[INFO]",
+  ]
+  var result = ""
+  var index = row
+  while result.utf8.count < length {
+    result += words[index % words.count] + " "
+    index += 7
+  }
+  return String(result.prefix(length))
+}
+
+/// Deterministic mixed text, about `columns` terminal columns long: wide CJK and Hangul, a
+/// combining accent, a ZWJ family, an emoji presentation selector, a flag, a skin-tone modifier,
+/// precomposed Latin, Greek and ASCII.
+private func mixedText(row: Int, columns: Int) -> String {
+  let pieces = [
+    "\u{754C}\u{9762}", "e\u{301}", "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466}",
+    "ok ", "\u{2714}\u{FE0F}", "\u{1F1EF}\u{1F1F5}",
+    "\u{65E5}\u{672C}\u{8A9E}\u{30C6}\u{30AD}\u{30B9}\u{30C8} ", "caf\u{E9} ",
+    "\u{D55C}\u{AD6D}\u{C5B4} ", "\u{1F44D}\u{1F3FD}", "abc ", "\u{3A9}\u{2248} ",
+  ]
+  var result = ""
+  var index = row
+  var usedColumns = 0
+  while usedColumns < columns {
+    let piece = pieces[index % pieces.count]
+    result += piece
+    usedColumns += TerminalWidth.of(piece)
+    index += 5
+  }
+  return result
+}
+
+private func textBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
+  var samples: [BenchmarkSample] = []
+  let environment = RenderEnvironment()
+  let frameIterations = max(1, iterations / 5)
+
+  func bufferSample(
+    _ name: String,
+    iterations: Int,
+    draw: (inout Buffer, Int) -> Void
+  ) -> BenchmarkSample {
+    var buffer = Buffer(area: textScreen)
+    var sample = measure(name, iterations: iterations) { iteration in
+      draw(&buffer, iteration)
+      return 0
+    }
+    withExtendedLifetime(buffer) {}
+    sample.cellUpdatesPerIteration = nil
+    return sample
+  }
+
+  // Two alternating contents so each frame really rewrites every cell.
+  let asciiLines = (0..<2).map { variant in
+    (0..<textScreen.height).map { asciiText(row: $0 + variant, length: textScreen.width) }
+  }
+  let mixedLines = (0..<2).map { variant in
+    (0..<textScreen.height).map { mixedText(row: $0 + variant, columns: textScreen.width) }
+  }
+  let longASCIILines = (0..<textScreen.height).map { asciiText(row: $0, length: 400) }
+
+  let kinds = [("ascii", asciiLines), ("mixed", mixedLines)]
+  for (kind, lines) in kinds {
+    let name = "text/setString/\(kind)-120x40"
+    samples.append(
+      bufferSample(name, iterations: frameIterations) { buffer, iteration in
+        for (row, line) in lines[iteration % 2].enumerated() {
+          buffer.setString(line, at: Position(x: 0, y: row))
+        }
+      })
+  }
+
+  let clippedName = "text/setString/ascii-clipped-400-to-120x40"
+  samples.append(
+    bufferSample(clippedName, iterations: frameIterations) { buffer, _ in
+      for (row, line) in longASCIILines.enumerated() {
+        buffer.setString(line, at: Position(x: 0, y: row), maxWidth: textScreen.width)
+      }
+    })
+
+  for (kind, lines) in kinds {
+    let texts = lines.map { variant in
+      Text(variant.map { Line([Span($0, style: Style(foreground: .cyan))]) })
+    }
+    let name = "text/text-widget/\(kind)-120x40"
+    samples.append(
+      bufferSample(name, iterations: frameIterations) { buffer, iteration in
+        texts[iteration % 2].render(in: textScreen, into: &buffer, environment: environment)
+      })
+  }
+
+  let centeredOverflow = Text(longASCIILines.map { Line($0, alignment: .center) })
+  let centeredName = "text/text-widget/ascii-centered-400-in-120x40"
+  samples.append(
+    bufferSample(centeredName, iterations: frameIterations) { buffer, _ in
+      centeredOverflow.render(in: textScreen, into: &buffer, environment: environment)
+    })
+
+  let listRows = Array(0..<200)
+  let asciiLabels = listRows.map { asciiText(row: $0, length: 160) }
+  let mixedLabels = listRows.map { mixedText(row: $0, columns: 160) }
+  for (kind, labels) in [("ascii", asciiLabels), ("mixed", mixedLabels)] {
+    let name = "text/list/\(kind)-200-rows-160-cols-in-120x40"
+    samples.append(
+      bufferSample(name, iterations: frameIterations) { buffer, iteration in
+        buffer.reset()
+        List(listRows, selectedRow: 100 + iteration % 2, label: { labels[$0] })
+          .render(in: textScreen, into: &buffer, environment: environment)
+      })
+  }
+
+  let asciiDocument = (0..<60).map { asciiText(row: $0, length: 300) }.joined(separator: "\n")
+  let mixedDocument = (0..<60).map { mixedText(row: $0, columns: 300) }.joined(separator: "\n")
+  for (kind, document) in [("ascii", asciiDocument), ("mixed", mixedDocument)] {
+    for wrap in [WrapMode.word, .character] {
+      let paragraph = Paragraph(document, wrap: wrap)
+      let name = "text/paragraph-\(wrap == .word ? "word" : "character")-wrap/\(kind)-120x40"
+      samples.append(
+        bufferSample(name, iterations: frameIterations) { buffer, _ in
+          buffer.reset()
+          paragraph.render(in: textScreen, into: &buffer, environment: environment)
+        })
+    }
+  }
+
+  let tableRows = (0..<200).map { Row(name: asciiText(row: $0, length: 90), value: $0 * 7) }
+  let table = Table(tableRows, selectedRow: 100) {
+    TableColumn("Name", value: \.name, width: .flex(2), alignment: .center)
+    TableColumn("Value", value: \.value, alignment: .trailing)
+  }
+  let tableName = "text/table/ascii-centered-overflow-120x40"
+  samples.append(
+    bufferSample(tableName, iterations: frameIterations) { buffer, _ in
+      buffer.reset()
+      table.render(in: textScreen, into: &buffer, environment: environment)
+    })
+
+  // End to end: full-screen text through Terminal.draw (render + diff) with alternating content.
+  for (kind, lines) in kinds {
+    let texts = lines.map { variant in Text(variant.map { Line($0) }) }
+    var terminal = try Terminal(
+      backend: TestBackend(width: textScreen.width, height: textScreen.height))
+    let name = "text/frame/\(kind)-full-screen-120x40"
+    samples.append(
+      try measure(name, iterations: frameIterations) { iteration in
+        try terminal.draw { frame in frame.render(texts[iteration % 2]) }.updates
+      })
+  }
+
+  return samples
+}
+
 private func ansiOutputBenchmark(
   name: String,
   iterations: Int,
@@ -929,7 +1094,7 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
 }
 
 let options = BenchmarkOptions(arguments: Array(CommandLine.arguments.dropFirst()))
-let validSuites = ["frames", "primitives", "collections", "output", "loop", "all"]
+let validSuites = ["frames", "primitives", "collections", "output", "text", "loop", "all"]
 guard validSuites.contains(options.suite) else {
   FileHandle.standardError.write(
     Data("unknown suite '\(options.suite)'; expected \(validSuites.joined(separator: ", "))\n".utf8)
@@ -949,6 +1114,9 @@ if options.suite == "collections" || options.suite == "all" {
 }
 if options.suite == "output" || options.suite == "all" {
   samples += try outputBenchmarks(iterations: options.iterations)
+}
+if options.suite == "text" || options.suite == "all" {
+  samples += try textBenchmarks(iterations: options.iterations)
 }
 if options.suite == "loop" || options.suite == "all" {
   samples += try await loopBenchmarks(iterations: options.iterations)

@@ -10,7 +10,7 @@ public enum TerminalWidth {
     _ character: Character,
     policy: TerminalWidthPolicy = .standard
   ) -> Int {
-    if character.isASCII, let value = character.asciiValue {
+    if let value = character.asciiValue {
       return value < 0x20 || value == 0x7F ? 0 : 1
     }
     let scalars = character.unicodeScalars
@@ -24,12 +24,26 @@ public enum TerminalWidth {
     _ string: String,
     policy: TerminalWidthPolicy = .standard
   ) -> Int {
-    if string.utf8.allSatisfy({ $0 < 0x80 }) {
-      return string.utf8.reduce(into: 0) { width, byte in
-        if byte >= 0x20, byte != 0x7F { width += 1 }
+    var asciiWidth = 0
+    for byte in string.utf8 {
+      guard byte < 0x80 else {
+        return width(of: Array(string.unicodeScalars), policy: policy)
       }
+      if byte >= 0x20, byte != 0x7F { asciiWidth += 1 }
     }
-    return width(of: Array(string.unicodeScalars), policy: policy)
+    return asciiWidth
+  }
+
+  /// Whether every byte of `string` is printable ASCII (U+0020...U+007E).
+  ///
+  /// Each such byte is a separate grapheme cluster of width 1 under both policies: no grapheme
+  /// break rule joins two printable ASCII scalars (only CR LF joins ASCII scalars), so drawing
+  /// code may treat the string as one cell per byte without grapheme segmentation.
+  internal static func isPrintableASCII(_ string: String) -> Bool {
+    let contiguous = string.utf8.withContiguousStorageIfAvailable { bytes in
+      bytes.allSatisfy { $0 &- 0x20 < 0x5F }
+    }
+    return contiguous ?? string.utf8.allSatisfy { $0 &- 0x20 < 0x5F }
   }
 
   private static func width(

@@ -996,7 +996,7 @@ public struct Table<Row>: Widget, StatefulWidget {
 
   /// Keeps the common key-path table path allocation-free while preserving
   /// the exact alignment and wide-glyph clipping semantics of `Line`.
-  private static func renderPlainLine(
+  static func renderPlainLine(
     _ content: String,
     style: Style,
     alignment: Alignment,
@@ -1054,8 +1054,9 @@ public struct Table<Row>: Widget, StatefulWidget {
       }
       guard characterWidth > 0 else { continue }
       guard position.x + characterWidth <= end else { return }
-      position = buffer.setString(
-        String(character),
+      position = buffer.setGrapheme(
+        character,
+        width: characterWidth,
         at: position,
         style: style,
         maxWidth: (end - position.x)

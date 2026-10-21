@@ -74,6 +74,25 @@ public struct Buffer: Hashable, Sendable {
     let endX = min(areaEnd, requestedEnd)
     var x = position.x
 
+    if TerminalWidth.isPrintableASCII(string) {
+      // Every printable ASCII byte is its own one-column grapheme, so the grapheme and width
+      // machinery below would produce exactly these cells.
+      var cell = Cell(symbol: " ", style: style, width: 1, isContinuation: false)
+      let symbols = Self.asciiSymbols
+      let rowStart = (position.y - area.y) * area.width - area.x
+      for byte in string.utf8 {
+        guard x < endX else { break }
+        let index = rowStart + x
+        if storage[index].width != 1 {
+          clearGlyph(at: Position(x: x, y: position.y))
+        }
+        cell.symbol = symbols[Int(byte)]
+        storage[index] = cell
+        x += 1
+      }
+      return Position(x: x, y: position.y)
+    }
+
     for character in string {
       let width = TerminalWidth.of(character)
       if width == 0 {
@@ -105,6 +124,59 @@ public struct Buffer: Hashable, Sendable {
       x += width
     }
     return Position(x: x, y: position.y)
+  }
+
+  /// Writes one grapheme whose terminal width the caller has already measured with
+  /// `TerminalWidth.of(character)`.
+  ///
+  /// Produces exactly the cells and the result of
+  /// `setString(String(character), at: position, style: style, maxWidth: maxWidth)`
+  /// without measuring the grapheme a second time.
+  @discardableResult
+  internal mutating func setGrapheme(
+    _ character: Character,
+    width: Int,
+    at position: Position,
+    style: Style,
+    maxWidth: Int
+  ) -> Position {
+    guard area.contains(position) else { return position }
+    if width == 0 {
+      appendZeroWidth(character, beforeX: position.x, y: position.y)
+      return position
+    }
+    let endX = min(area.x + area.width, position.x + maxWidth)
+    let x = position.x
+    guard x + width <= endX else { return position }
+    let rowStart = (position.y - area.y) * area.width - area.x
+    if width == 1, storage[rowStart + x].width == 1 {
+      // A single-cell glyph that is not part of a wide glyph clears only itself.
+      storage[rowStart + x] = Cell(
+        symbol: String(character), style: style, width: 1, isContinuation: false)
+      return Position(x: x + 1, y: position.y)
+    }
+    for occupiedX in x..<(x + width) {
+      clearGlyph(at: Position(x: occupiedX, y: position.y))
+    }
+    storage[rowStart + x] = Cell(
+      symbol: String(character),
+      style: style,
+      width: UInt8(clamping: width),
+      isContinuation: false
+    )
+    if width > 1 {
+      let continuation = Cell(symbol: "", style: style, width: 0, isContinuation: true)
+      for continuationX in (x + 1)..<(x + width) {
+        storage[rowStart + continuationX] = continuation
+      }
+    }
+    return Position(x: x + width, y: position.y)
+  }
+
+  /// One-character strings for every ASCII byte, so the printable-ASCII fast path never builds a
+  /// `Character` or a fresh `String` per cell.
+  private static let asciiSymbols: [String] = (0..<128).map {
+    String(Character(Unicode.Scalar(UInt8($0))))
   }
 
   public mutating func fill(_ area: Rect, with cell: Cell) {
