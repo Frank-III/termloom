@@ -115,6 +115,13 @@ public struct Terminal<BackendType: Backend> {
   private var current: Buffer
   private var previous: Buffer
   private var frameCount: UInt64 = 0
+  // Cursor state of a frame rendered into `current` by `renderWithoutPresenting` but not written.
+  private var pendingPresentation: PendingPresentation?
+
+  private struct PendingPresentation {
+    var cursorStyle: CursorStyle
+    var cursorPosition: Position?
+  }
 
   public init(backend: BackendType) throws {
     try self.init(backend: backend, viewport: .fullscreen)
@@ -139,6 +146,50 @@ public struct Terminal<BackendType: Backend> {
     _ render: (inout Frame) throws -> Void
   ) throws -> CompletedFrame {
     try autoresize()
+    let frame = try renderBackBuffer(environment: environment, render)
+    let updates = try present(cursorStyle: frame.cursorStyle, cursorPosition: frame.cursorPosition)
+    return CompletedFrame(
+      buffer: previous,
+      count: frameCount,
+      updates: updates,
+      interactions: frame.interactions
+    )
+  }
+
+  /// Whether `renderWithoutPresenting` renders exactly what `draw` would: `draw` would not have to
+  /// replace the diff buffers for a new terminal size first.
+  mutating func canRenderWithoutPresenting() throws -> Bool {
+    if case .fixed = viewport { return true }
+    return try backend.size() == current.area.size
+  }
+
+  /// Renders a frame into the back buffer exactly as `draw` would, but defers writing it.
+  ///
+  /// The deferred frame is written by `presentPendingFrame()`, or discarded when a later `draw`
+  /// supersedes it before anything else is written to the terminal. Either way the terminal ends up
+  /// showing the same cells as if every frame had been written.
+  mutating func renderWithoutPresenting(
+    environment: RenderEnvironment, _ render: (inout Frame) throws -> Void
+  ) throws -> InteractionMap {
+    let frame = try renderBackBuffer(environment: environment, render)
+    pendingPresentation = PendingPresentation(
+      cursorStyle: frame.cursorStyle, cursorPosition: frame.cursorPosition)
+    return frame.interactions
+  }
+
+  var hasPendingFrame: Bool { pendingPresentation != nil }
+
+  /// Writes the frame deferred by `renderWithoutPresenting`, if any.
+  mutating func presentPendingFrame() throws {
+    guard let pending = pendingPresentation else { return }
+    pendingPresentation = nil
+    _ = try present(cursorStyle: pending.cursorStyle, cursorPosition: pending.cursorPosition)
+  }
+
+  private mutating func renderBackBuffer(
+    environment: RenderEnvironment, _ render: (inout Frame) throws -> Void
+  ) throws -> Frame {
+    pendingPresentation = nil
     current.reset()
     // Move the back buffer into the frame instead of sharing it, so the first widget write does not
     // copy every cell before the buffer is moved back.
@@ -153,19 +204,18 @@ public struct Terminal<BackendType: Backend> {
       throw error
     }
     swap(&current, &frame.buffer)
+    return frame
+  }
+
+  private mutating func present(cursorStyle: CursorStyle, cursorPosition: Position?) throws -> Int {
     let updates = current.diff(from: previous)
     try backend.draw(updates)
-    try backend.setCursorStyle(frame.cursorStyle)
-    try backend.setCursor(frame.cursorPosition)
+    try backend.setCursorStyle(cursorStyle)
+    try backend.setCursor(cursorPosition)
     try backend.flush()
     frameCount &+= 1
     swap(&current, &previous)
-    return CompletedFrame(
-      buffer: previous,
-      count: frameCount,
-      updates: updates.count,
-      interactions: frame.interactions
-    )
+    return updates.count
   }
 
   /// Diff state captured before an application frame transaction.
@@ -185,6 +235,8 @@ public struct Terminal<BackendType: Backend> {
   }
 
   /// Restores the viewport, backend, front buffer, and frame count captured by `frameRollback()`.
+  ///
+  /// A deferred frame is discarded: the restored front buffer describes what is actually on screen.
   mutating func rollBack(to rollback: FrameRollback) {
     var restored = rollback.terminal
     if current.area == rollback.currentArea {
@@ -192,6 +244,7 @@ public struct Terminal<BackendType: Backend> {
     } else {
       restored.current = Buffer(area: rollback.currentArea)
     }
+    restored.pendingPresentation = nil
     self = restored
   }
 
@@ -201,6 +254,7 @@ public struct Terminal<BackendType: Backend> {
     } else {
       try backend.clear()
     }
+    pendingPresentation = nil
     current.reset()
     previous.reset()
   }
@@ -215,6 +269,7 @@ public struct Terminal<BackendType: Backend> {
     }
     try clearFixedArea(previousArea)
     viewport = .fixed(area)
+    pendingPresentation = nil
     current = Buffer(area: area)
     previous = Buffer(area: area)
   }
@@ -303,6 +358,7 @@ public struct Terminal<BackendType: Backend> {
     // the next diff.
     try backend.clear()
     let area = Rect(size: size)
+    pendingPresentation = nil
     current = Buffer(area: area)
     previous = Buffer(area: area)
   }

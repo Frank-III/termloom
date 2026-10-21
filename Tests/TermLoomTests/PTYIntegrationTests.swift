@@ -204,6 +204,71 @@
     }
   }
 
+  /// List state owned outside the widget tree and reconciled by every render.
+  private final class ListBurstModel {
+    static let rows = (0..<12).map { "Row \($0)" }
+    var state = ListState()
+    var handledEvents = 0
+    var renderedStates: [ListState] = []
+    var lastBuffer: Buffer?
+  }
+
+  private struct ListBurstWidget: Widget {
+    let model: ListBurstModel
+
+    func render(in area: Rect, into frame: inout Frame) {
+      frame.render(List(ListBurstModel.rows, marker: "> ") { $0 }, in: area, state: &model.state)
+      model.renderedStates.append(model.state)
+      model.lastBuffer = frame.buffer
+    }
+  }
+
+  @MainActor private final class ListBurstApplication: TerminalApplication {
+    let model = ListBurstModel()
+    var body: ListBurstWidget { ListBurstWidget(model: model) }
+
+    // Updates deliberately overshoot; only render-time reconciliation keeps the state in range.
+    func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+      switch event {
+      case .mouse(let mouse) where mouse.kind == .scrollDown:
+        model.state.offset += 3
+      case .mouse(let mouse) where mouse.kind == .scrollUp:
+        model.state.offset -= 1
+      case .key(let key) where key.key == .down:
+        model.state.selected = (model.state.selected ?? -1) + 1
+      case .key(let key) where key.key == .up:
+        model.state.selected = (model.state.selected ?? 0) - 1
+      case .key(let key) where key.key == .character("q"):
+        model.handledEvents += 1
+        return .quit
+      default:
+        return .ignore
+      }
+      model.handledEvents += 1
+      return .redraw
+    }
+  }
+
+  @MainActor private final class QuitMarkerApplication: TerminalApplication {
+    var draft = ""
+    var handledEvents = 0
+    var body: Paragraph { Paragraph("READY \(draft)") }
+
+    func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+      guard case .key(let key) = event, case .character(let character) = key.key else {
+        return .ignore
+      }
+      handledEvents += 1
+      if character == "q" {
+        // A frame presented after quitting would show this marker.
+        draft = "AFTER-QUIT"
+        return .quit
+      }
+      draft.append(character)
+      return .redraw
+    }
+  }
+
   @MainActor
   @Suite(.serialized) struct PTYIntegrationTests {
     @Test func fixedSessionUsesAbsoluteCoordinatesWithoutOwningTheScreen() throws {
@@ -1306,37 +1371,95 @@
     }
 
     @MainActor
-    @Test func applicationAppliesEventsFromOneReadBeforePresentingOneFrame() async throws {
-      var master: Int32 = -1
-      var slave: Int32 = -1
-      var window = winsize(ws_row: 8, ws_col: 20, ws_xpixel: 0, ws_ypixel: 0)
-      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
-      guard master >= 0, slave >= 0 else { return }
-      defer {
-        close(master)
-        close(slave)
-      }
-      _ = fcntl(master, F_SETFL, fcntl(master, F_GETFL) | O_NONBLOCK)
-      let report = Array("\u{1B}[1;1R".utf8)
-      #expect(report.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == report.count)
-
-      let session = try TerminalSession(
-        viewport: .inline(height: 1), inputDescriptor: slave,
-        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false))
+    @Test func applicationRendersEveryEventButWritesOneFrameForEventsFromOneRead() async throws {
       let application = CoalescingApplication()
-      let task = Task { try await application.run(in: session) }
-      try await Task.sleep(for: .milliseconds(30))
-      let burst = Array((String(repeating: "a", count: 40) + "q").utf8)
-      #expect(burst.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == burst.count)
-      try await task.value
-      try session.restore()
+      let burst = String(repeating: "a", count: 40) + "q"
+      let output = try await runInlineApplication(
+        application, inputs: [Array(burst.utf8)], batched: true
+      ) { application.keyCount }
 
       #expect(application.keyCount == 40)
-      // One initial frame plus one per read, instead of one frame per key.
-      #expect(application.presentedKeyCounts.count < 20)
-      #expect(application.presentedKeyCounts.first == 0)
-      // Quitting in the same read still presents the redraw requested before the quit key.
-      #expect(application.presentedKeyCounts.last == 40)
+      // The body is rendered before every event, exactly as when each key is read separately.
+      #expect(application.presentedKeyCounts == Array(0...40))
+      // Only observable frames are written: the initial one and the last one before quitting.
+      #expect(synchronizedFrameCount(output) < 20)
+      #expect(String(decoding: output, as: UTF8.self).contains("40"))
+    }
+
+    @MainActor
+    @Test func batchedListScrollingAndNavigationMatchOneByOneProcessing() async throws {
+      let scrollDown = Array("\u{1B}[<65;3;2M".utf8)
+      let scrollUp = Array("\u{1B}[<64;3;2M".utf8)
+      let down = Array("\u{1B}[B".utf8)
+      let up = Array("\u{1B}[A".utf8)
+      // Scroll far past the end, reverse, overshoot the selection past the last row, then reverse.
+      var inputs = Array(repeating: scrollDown, count: 7) + Array(repeating: scrollUp, count: 2)
+      inputs += Array(repeating: down, count: 16) + Array(repeating: up, count: 3)
+      inputs += [scrollUp, scrollDown, up, Array("q".utf8)]
+
+      let batched = ListBurstApplication()
+      let batchedOutput = try await runInlineApplication(
+        batched, inputs: inputs, batched: true
+      ) { batched.model.handledEvents }
+      let oneByOne = ListBurstApplication()
+      let oneByOneOutput = try await runInlineApplication(
+        oneByOne, inputs: inputs, batched: false
+      ) { oneByOne.model.handledEvents }
+
+      #expect(batched.model.handledEvents == inputs.count)
+      #expect(oneByOne.model.handledEvents == inputs.count)
+      // Every render, including render-time clamping of offset and selection, is identical.
+      #expect(batched.model.renderedStates == oneByOne.model.renderedStates)
+      #expect(batched.model.renderedStates.count == inputs.count)
+      #expect(batched.model.state == oneByOne.model.state)
+      #expect(batched.model.lastBuffer != nil)
+      #expect(batched.model.lastBuffer == oneByOne.model.lastBuffer)
+      // Clamping really happened: the selection was overshot past the last row and pulled back.
+      #expect(batched.model.state.selected == ListBurstModel.rows.count - 1 - 4)
+      #expect(batchedOutput.isEmpty == false)
+      #expect(synchronizedFrameCount(batchedOutput) < synchronizedFrameCount(oneByOneOutput))
+    }
+
+    @MainActor
+    @Test func quittingWritesExactlyTheOneByOneOutputWithoutAPostQuitFrame() async throws {
+      let inputs = [Array("x".utf8), Array("q".utf8)]
+      let batched = QuitMarkerApplication()
+      let batchedOutput = try await runInlineApplication(
+        batched, inputs: inputs, batched: true
+      ) { batched.handledEvents }
+      let oneByOne = QuitMarkerApplication()
+      let oneByOneOutput = try await runInlineApplication(
+        oneByOne, inputs: inputs, batched: false
+      ) { oneByOne.handledEvents }
+
+      #expect(batched.draft == "AFTER-QUIT")
+      #expect(batchedOutput == oneByOneOutput)
+      let text = String(decoding: batchedOutput, as: UTF8.self)
+      #expect(text.contains("READY"))
+      #expect(text.contains("x"))
+      #expect(!text.contains("QUIT"))
+      #expect(synchronizedFrameCount(batchedOutput) == 2)
+
+      // With several keys before the quit, the last pre-quit frame and everything after it match.
+      let keys = [Array("x".utf8), Array("y".utf8), Array("z".utf8), Array("q".utf8)]
+      let burst = QuitMarkerApplication()
+      let burstOutput = try await runInlineApplication(
+        burst, inputs: keys, batched: true
+      ) { burst.handledEvents }
+      let separate = QuitMarkerApplication()
+      let separateOutput = try await runInlineApplication(
+        separate, inputs: keys, batched: false
+      ) { separate.handledEvents }
+      let burstText = String(decoding: burstOutput, as: UTF8.self)
+      let separateText = String(decoding: separateOutput, as: UTF8.self)
+      #expect(burstText.contains("xyz"))
+      #expect(!burstText.contains("QUIT"))
+      #expect(!separateText.contains("QUIT"))
+      #expect(synchronizedFrameCount(burstOutput) == 2)
+      #expect(synchronizedFrameCount(separateOutput) == 4)
+      // Everything written after the final frame (the quit and session restore) is identical.
+      #expect(afterLastFrame(burstText) != nil)
+      #expect(afterLastFrame(burstText) == afterLastFrame(separateText))
     }
 
     @Test func queuedEventsCanBeTakenWithoutReadingTheTerminal() throws {
@@ -1356,21 +1479,84 @@
         output: FileHandle(fileDescriptor: slave, closeOnDealloc: false)
       )
       var input = session.makeInput()
-      #expect(input.takeQueuedEvent(if: { _ in true }) == nil)
+      #expect(!input.hasQueuedEvent)
+      #expect(input.takeQueuedEvent() == nil)
       let burst = Array("ab\tc\u{1B}".utf8)
       #expect(burst.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == burst.count)
       #expect(try input.readEvent(timeoutMilliseconds: 50) == .key(KeyEvent(.character("a"))))
-      #expect(input.takeQueuedEvent(if: { _ in true }) == .key(KeyEvent(.character("b"))))
-      #expect(input.takeQueuedEvent(if: { $0 != .key(KeyEvent(.tab)) }) == nil)
+      #expect(input.hasQueuedEvent)
+      #expect(input.takeQueuedEvent() == .key(KeyEvent(.character("b"))))
       #expect(try input.readEvent(timeoutMilliseconds: 0) == .key(KeyEvent(.tab)))
-      #expect(input.takeQueuedEvent(if: { _ in true }) == .key(KeyEvent(.character("c"))))
+      #expect(input.takeQueuedEvent() == .key(KeyEvent(.character("c"))))
       // The trailing Escape byte is still an incomplete sequence and is never flushed by draining.
-      #expect(input.takeQueuedEvent(if: { _ in true }) == nil)
+      #expect(!input.hasQueuedEvent)
+      #expect(input.takeQueuedEvent() == nil)
       let suffix = Array("[A".utf8)
       #expect(
         suffix.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == suffix.count)
       #expect(try input.readEvent(timeoutMilliseconds: 50) == .key(KeyEvent(.up)))
       try session.restore()
+    }
+
+    /// Runs an application in an inline PTY session and returns everything it wrote.
+    ///
+    /// Batched input is written with one `write`, so it is parsed from one read. Otherwise each
+    /// input is written only after the previous one has been handled and the loop is idle again.
+    @MainActor
+    private func runInlineApplication<Application: TerminalApplication>(
+      _ application: Application, inputs: [[UInt8]], batched: Bool,
+      handledEvents: @MainActor () -> Int
+    ) async throws -> [UInt8] {
+      var master: Int32 = -1
+      var slave: Int32 = -1
+      var window = winsize(ws_row: 8, ws_col: 20, ws_xpixel: 0, ws_ypixel: 0)
+      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
+      guard master >= 0, slave >= 0 else { return [] }
+      defer {
+        close(master)
+        close(slave)
+      }
+      _ = fcntl(master, F_SETFL, fcntl(master, F_GETFL) | O_NONBLOCK)
+      let capture = PTYOutputCapture(descriptor: master)
+      let report = Array("\u{1B}[1;1R".utf8)
+      #expect(report.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == report.count)
+
+      let session = try TerminalSession(
+        viewport: .inline(height: 4), inputDescriptor: slave,
+        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false),
+        backendConfiguration: .full)
+      let task = Task { try await application.run(in: session) }
+      try await Task.sleep(for: .milliseconds(50))
+      let clock = ContinuousClock()
+      if batched {
+        let burst = inputs.flatMap { $0 }
+        #expect(burst.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == burst.count)
+      } else {
+        for (index, bytes) in inputs.enumerated() {
+          #expect(bytes.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == bytes.count)
+          let deadline = clock.now + .seconds(5)
+          while handledEvents() <= index, clock.now < deadline {
+            try await Task.sleep(for: .milliseconds(1))
+          }
+          #expect(handledEvents() == index + 1)
+          // Let the loop present its frame and block for input again before the next write.
+          try await Task.sleep(for: .milliseconds(10))
+        }
+      }
+      try await task.value
+      try session.restore()
+      return capture.finish()
+    }
+
+    private func afterLastFrame(_ text: String) -> Substring? {
+      guard let start = text.range(of: "\u{1B}[?2026h", options: .backwards),
+        let end = text.range(of: "\u{1B}[?2026l", range: start.upperBound..<text.endIndex)
+      else { return nil }
+      return text[end.upperBound...]
+    }
+
+    private func synchronizedFrameCount(_ output: [UInt8]) -> Int {
+      String(decoding: output, as: UTF8.self).components(separatedBy: "\u{1B}[?2026h").count - 1
     }
 
     private func drain(_ descriptor: Int32) -> [UInt8] {

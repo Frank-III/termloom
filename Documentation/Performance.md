@@ -14,7 +14,13 @@ and a bare integer continues to set the iteration count.
 The Darwin-only `loop` suite runs the public `TerminalApplication.run` loop in a 120×40 pseudo-terminal with a
 dashboard body. `loop/steady-redraw` sends one key per frame and reports time, ANSI bytes, and frames per state
 change; `loop/burst-paste-1000b-200-events` writes a 1,000-byte bracketed paste plus 200 mouse-motion and key events
-at once and reports time until a frame reflects the last event, frames rendered (`framesPerIteration`), and bytes.
+at once and reports time until a frame reflects the last event, frames rendered (`framesPerIteration`), frames
+written to the terminal as synchronized-output blocks (`writtenFramesPerIteration`), and bytes.
+
+The application loop renders the body before every event whenever a redraw is pending, exactly as if each event had
+been read separately, so render-time state reconciliation is unchanged. Only writing a frame is deferred while more
+already-parsed input is queued; the deferred frame is written before the loop waits for input, before any other
+terminal output, and before quitting, unless the next frame replaces it first.
 
 ## Upstream methodology
 

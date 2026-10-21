@@ -25,7 +25,10 @@ struct BenchmarkSample: Codable {
   var outputBytesPerIteration: Double?
   var retainedBytesDelta: Int64?
   var peakResidentBytes: Int64?
+  /// Frames rendered by the application body (loop suite only).
   var framesPerIteration: Double?
+  /// Frames written to the terminal, counted as synchronized-output blocks (loop suite only).
+  var writtenFramesPerIteration: Double?
 }
 
 struct BenchmarkOptions {
@@ -468,7 +471,7 @@ private func outputBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
 // The `loop` suite drives the public `TerminalApplication.run(viewport:capturesMouse:)` path
 // through a pseudo-terminal. Standard input and output are temporarily redirected to the PTY
 // slave while a driver thread writes input to the master side and a drain thread counts the
-// bytes the application emits.
+// bytes and synchronized-output frames the application emits.
 
 private enum LoopBenchmarkError: Error, CustomStringConvertible {
   case pseudoTerminalUnavailable
@@ -532,6 +535,8 @@ private final class PseudoTerminalOutputDrain: @unchecked Sendable {
   private let lock = NSLock()
   private let finished = DispatchSemaphore(value: 0)
   private var byteCount = 0
+  private var frameCount = 0
+  private var frameMarkerMatch = 0
   private var lastReadUptime = DispatchTime.now().uptimeNanoseconds
   private var isStopping = false
 
@@ -540,6 +545,10 @@ private final class PseudoTerminalOutputDrain: @unchecked Sendable {
   }
 
   var bytes: Int { lock.withLock { byteCount } }
+  /// Frames written by the application: each begins a synchronized update (`CSI ? 2026 h`).
+  var frames: Int { lock.withLock { frameCount } }
+
+  private static let frameMarker = Array("\u{1B}[?2026h".utf8)
 
   func start() {
     Thread { [self] in drain() }.start()
@@ -563,6 +572,23 @@ private final class PseudoTerminalOutputDrain: @unchecked Sendable {
     _ = finished.wait(timeout: .now() + timeoutSeconds)
   }
 
+  /// Counts frame markers, including markers split across reads. Only the first marker byte is ESC,
+  /// so a mismatch can restart matching at that byte alone.
+  private func countFrameMarkers(in bytes: ArraySlice<UInt8>) {
+    let marker = Self.frameMarker
+    for byte in bytes {
+      if byte == marker[frameMarkerMatch] {
+        frameMarkerMatch += 1
+        if frameMarkerMatch == marker.count {
+          frameCount += 1
+          frameMarkerMatch = 0
+        }
+      } else {
+        frameMarkerMatch = byte == marker[0] ? 1 : 0
+      }
+    }
+  }
+
   private func drain() {
     var buffer = [UInt8](repeating: 0, count: 16_384)
     while true {
@@ -575,6 +601,7 @@ private final class PseudoTerminalOutputDrain: @unchecked Sendable {
           lock.withLock {
             byteCount += count
             lastReadUptime = now
+            countFrameMarkers(in: buffer[..<count])
           }
           continue
         }
@@ -621,9 +648,11 @@ private struct LoopResult: Sendable {
   var steadyStateChanges = 0
   var steadyFrames = 0
   var steadyBytes = 0
+  var steadyWrittenFrames = 0
   var burstSeconds = 0.0
   var burstFrames = 0
   var burstBytes = 0
+  var burstWrittenFrames = 0
   var failure: String?
 }
 
@@ -675,6 +704,7 @@ private final class LoopDriver: @unchecked Sendable {
     // a) Steady redraw: one state change per frame, sent only after the previous frame rendered.
     let steadyBefore = probe.snapshot
     let steadyBytesBefore = output.bytes
+    let steadyWrittenFramesBefore = output.frames
     let steadyStart = DispatchTime.now().uptimeNanoseconds
     for _ in 0..<workload.steadyFrames {
       let frames = probe.snapshot.frames
@@ -686,11 +716,13 @@ private final class LoopDriver: @unchecked Sendable {
     output.waitForQuiet()
     result.steadyFrames = probe.snapshot.frames - steadyBefore.frames
     result.steadyBytes = output.bytes - steadyBytesBefore
+    result.steadyWrittenFrames = output.frames - steadyWrittenFramesBefore
 
     // b) Burst: everything arrives in one write; wait until a frame reflects the final event.
     for _ in 0..<workload.bursts {
       let before = probe.snapshot
       let bytesBefore = output.bytes
+      let writtenFramesBefore = output.frames
       let start = DispatchTime.now().uptimeNanoseconds
       try send(workload.burstPayload)
       let target = before.updates + workload.burstEvents
@@ -699,6 +731,7 @@ private final class LoopDriver: @unchecked Sendable {
       output.waitForQuiet()
       result.burstFrames += probe.snapshot.frames - before.frames
       result.burstBytes += output.bytes - bytesBefore
+      result.burstWrittenFrames += output.frames - writtenFramesBefore
     }
   }
 
@@ -841,7 +874,8 @@ private func loopBenchmarks(iterations: Int) async throws -> [BenchmarkSample] {
         outputBytesPerIteration: Double(measured.steadyBytes) / Double(steadyCount),
         retainedBytesDelta: nil,
         peakResidentBytes: peakResident,
-        framesPerIteration: Double(measured.steadyFrames) / Double(steadyCount)),
+        framesPerIteration: Double(measured.steadyFrames) / Double(steadyCount),
+        writtenFramesPerIteration: Double(measured.steadyWrittenFrames) / Double(steadyCount)),
       BenchmarkSample(
         name: "loop/burst-paste-1000b-200-events",
         iterations: workload.bursts,
@@ -852,7 +886,8 @@ private func loopBenchmarks(iterations: Int) async throws -> [BenchmarkSample] {
         outputBytesPerIteration: Double(measured.burstBytes) / Double(workload.bursts),
         retainedBytesDelta: nil,
         peakResidentBytes: peakResident,
-        framesPerIteration: Double(measured.burstFrames) / Double(workload.bursts)),
+        framesPerIteration: Double(measured.burstFrames) / Double(workload.bursts),
+        writtenFramesPerIteration: Double(measured.burstWrittenFrames) / Double(workload.bursts)),
     ]
   #else
     return []
@@ -879,6 +914,9 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
     }
     if let frames = sample.framesPerIteration {
       metrics.append(String(format: "%.2f frames/iteration", frames))
+    }
+    if let written = sample.writtenFramesPerIteration {
+      metrics.append(String(format: "%.2f written frames/iteration", written))
     }
     if let retained = sample.retainedBytesDelta {
       metrics.append("\(retained) retained bytes")

@@ -100,6 +100,33 @@ import Testing
     }
   }
 
+  @Test func deferredFrameIsWrittenOnlyWhenPresentedOrSupersededByTheNextDraw() throws {
+    var terminal = try Terminal(backend: TestBackend(width: 4, height: 1))
+    _ = try terminal.draw { frame in frame.render(Paragraph("A")) }
+    #expect(try terminal.canRenderWithoutPresenting())
+    _ = try terminal.renderWithoutPresenting(environment: RenderEnvironment()) { frame in
+      frame.render(Paragraph("B"))
+    }
+    #expect(terminal.hasPendingFrame)
+
+    // The superseding frame diffs against "A", the last frame actually written.
+    let completed = try terminal.draw { frame in frame.render(Paragraph("C")) }
+    #expect(!terminal.hasPendingFrame)
+    #expect(completed.count == 2)
+    #expect(completed.updates == 1)
+    #expect(completed.buffer.lines() == ["C   "])
+
+    _ = try terminal.renderWithoutPresenting(environment: RenderEnvironment()) { frame in
+      frame.render(Paragraph("D"))
+    }
+    try terminal.presentPendingFrame()
+    #expect(!terminal.hasPendingFrame)
+    let unchanged = try terminal.draw { frame in frame.render(Paragraph("D")) }
+    #expect(unchanged.updates == 0)
+    #expect(unchanged.count == 4)
+    #expect(unchanged.buffer.lines() == ["D   "])
+  }
+
   @Test func frameRollbackRestoresTheDiffBaselineAndFrameCount() throws {
     var terminal = try Terminal(backend: TestBackend(width: 4, height: 1))
     _ = try terminal.draw { frame in frame.render(Paragraph("A")) }

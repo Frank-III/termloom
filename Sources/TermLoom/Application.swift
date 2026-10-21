@@ -247,10 +247,15 @@ private final class AsyncInputPump: @unchecked Sendable {
     }.value
   }
 
+  /// Whether an already-parsed event is waiting; the next event can be taken without blocking.
+  var hasQueuedEvent: Bool {
+    lock.withLock { input.hasQueuedEvent }
+  }
+
   /// Takes an event that was already read and parsed, without blocking or touching the terminal.
-  func takeQueuedEvent(if shouldTake: (TerminalEvent) -> Bool) -> TerminalEvent? {
+  func takeQueuedEvent() -> TerminalEvent? {
     lock.withLock {
-      input.takeQueuedEvent(if: shouldTake)
+      input.takeQueuedEvent()
     }
   }
 
@@ -259,26 +264,6 @@ private final class AsyncInputPump: @unchecked Sendable {
     lock.withLock {
       session.synchronizeInput(&input)
     }
-  }
-}
-
-/// Whether an event's routing depends on the most recently presented interaction map or focus.
-///
-/// Such events are not coalesced behind a pending redraw: the frame is presented first, exactly as
-/// it would be if the event had arrived in a later read.
-private func dependsOnPresentedFrame(_ event: TerminalEvent) -> Bool {
-  switch event {
-  case .key(let key):
-    guard key.kind != .release else { return false }
-    return key.key == .tab || key.key == .enter || key.key == .character(" ")
-  case .mouse(let mouse):
-    if case .down(.left) = mouse.kind { return true }
-    return false
-  case .resize:
-    return true
-  case .paste, .terminalFocus, .keyboardEnhancementFlags, .deviceAttributes,
-    .cursorPositionReport, .terminalModeReport, .action, .focusChanged, .endOfInput:
-    return false
   }
 }
 
@@ -325,11 +310,26 @@ extension TerminalApplication {
     }
     var refreshObservationTracking = true
     var periodicRedrawWasActive = false
-    // Set when an input batch quits after deferring a redraw that would previously have been
-    // presented before the quitting event; that frame is presented once before returning.
-    var presentsFinalFrame = false
 
-    while isRunning || presentsFinalFrame, !Task.isCancelled {
+    // Frames are rendered at exactly the same points as when every event is read separately:
+    // before each event whenever a redraw is pending. When more already-parsed input is queued,
+    // writing the frame is deferred. A deferred frame is written before any other terminal output,
+    // before the loop blocks for input, and before quitting; it is skipped only when the next frame
+    // supersedes it first. Application state therefore evolves identically, and the terminal shows
+    // the same cells at every point where it could be observed.
+    func presentPendingFrame() throws {
+      guard terminal.hasPendingFrame else { return }
+      let terminalBeforeFrame = terminal.frameRollback()
+      do {
+        try session.withFrameOutputTransaction { try terminal.presentPendingFrame() }
+      } catch {
+        terminal.rollBack(to: terminalBeforeFrame)
+        input.synchronize(with: session)
+        throw error
+      }
+    }
+
+    while isRunning, !Task.isCancelled {
       if needsRedraw {
         let refreshTracking = refreshObservationTracking
         refreshObservationTracking = false
@@ -339,6 +339,7 @@ extension TerminalApplication {
           takePendingHistoryInsertions(size: terminalSize))
         let pendingHistory = pendingDrain.insertions
         if pendingDrain.requiresReset {
+          try presentPendingFrame()
           try session.clearScrollbackAndResetViewport()
           inlineDocumentRuntime.reset()
           terminalHistoryDidReset()
@@ -368,37 +369,22 @@ extension TerminalApplication {
         historyInsertions += pendingHistory
         let preparedHistory = prepareHistoryInsertions(historyInsertions, width: terminalWidth)
         let renderedBody = presentation.2
+        let viewportHeightChanges =
+          presentation.0.map { session.inlineViewportHeightWouldChange($0) } ?? false
 
-        let updateViewportHistoryAndDraw = { () throws -> CompletedFrame in
-          if let height = presentation.0, try session.updateInlineViewportHeight(height) {
-            terminal = try Terminal(
-              backend: session.makeBackend(), viewport: session.configuredViewport)
-            input.synchronize(with: session)
-          }
-          for prepared in preparedHistory {
-            let insertion = prepared.insertion
-            if insertion.resetsScrollback {
-              try session.clearScrollbackAndResetViewport()
-              terminal = try Terminal(
-                backend: session.makeBackend(), viewport: session.configuredViewport)
-              input.synchronize(with: session)
-            }
-            guard prepared.height > 0 else { continue }
-            let paragraph = Paragraph(
-              insertion.text, wrap: insertion.wrap, trimLeadingWhitespace: false)
-            try terminal.insertBefore(
-              height: prepared.height, batchPosition: prepared.batchPosition
-            ) { buffer in
-              paragraph.render(
-                in: buffer.area, into: &buffer, environment: RenderEnvironment())
-            }
-            session.synchronizeViewportOrigin(terminal.backend.viewportOrigin)
-            input.synchronize(with: session)
-          }
+        // Only a plain redraw (no viewport, history, or size change) can defer its output or
+        // supersede a deferred frame; anything else writes the deferred frame first.
+        let hasQueuedInput = input.hasQueuedEvent
+        var isPlainRedraw = preparedHistory.isEmpty && !viewportHeightChanges
+        if isPlainRedraw, hasQueuedInput || terminal.hasPendingFrame {
+          isPlainRedraw = try terminal.canRenderWithoutPresenting()
+        }
+        let defersPresentation = isPlainRedraw && hasQueuedInput
 
-          let renderFrame = { () -> Result<CompletedFrame, any Error> in
+        if defersPresentation {
+          let renderFrame = { () -> Result<InteractionMap, any Error> in
             Result {
-              try terminal.draw(
+              try terminal.renderWithoutPresenting(
                 environment: RenderEnvironment(
                   focusedControl: interactionRouter.focus.focusedControl
                 )
@@ -407,28 +393,75 @@ extension TerminalApplication {
               }
             }
           }
-          let completedResult =
+          let renderedResult =
             tracksObservableState
             ? renderObservation.track(refresh: refreshTracking, renderFrame)
             : renderFrame()
-          return try completedResult.get()
-        }
-        let completed: CompletedFrame
-        do {
-          // Rollback state that does not share the back buffer, so drawing does not copy it.
-          let terminalBeforeFrame = terminal.frameRollback()
-          do {
-            completed = try session.withFrameOutputTransaction(updateViewportHistoryAndDraw)
-          } catch {
-            terminal.rollBack(to: terminalBeforeFrame)
-            inlineDocumentRuntime = inlineDocumentRuntimeBeforeFrame
-            input.synchronize(with: session)
-            throw error
+          interactions = try renderedResult.get()
+        } else {
+          // Viewport, history, and resize output follow the deferred frame exactly as they followed
+          // the frame written in its own transaction when events were read separately.
+          if !isPlainRedraw { try presentPendingFrame() }
+          let updateViewportHistoryAndDraw = { () throws -> CompletedFrame in
+            if let height = presentation.0, try session.updateInlineViewportHeight(height) {
+              terminal = try Terminal(
+                backend: session.makeBackend(), viewport: session.configuredViewport)
+              input.synchronize(with: session)
+            }
+            for prepared in preparedHistory {
+              let insertion = prepared.insertion
+              if insertion.resetsScrollback {
+                try session.clearScrollbackAndResetViewport()
+                terminal = try Terminal(
+                  backend: session.makeBackend(), viewport: session.configuredViewport)
+                input.synchronize(with: session)
+              }
+              guard prepared.height > 0 else { continue }
+              let paragraph = Paragraph(
+                insertion.text, wrap: insertion.wrap, trimLeadingWhitespace: false)
+              try terminal.insertBefore(
+                height: prepared.height, batchPosition: prepared.batchPosition
+              ) { buffer in
+                paragraph.render(
+                  in: buffer.area, into: &buffer, environment: RenderEnvironment())
+              }
+              session.synchronizeViewportOrigin(terminal.backend.viewportOrigin)
+              input.synchronize(with: session)
+            }
+
+            let renderFrame = { () -> Result<CompletedFrame, any Error> in
+              Result {
+                try terminal.draw(
+                  environment: RenderEnvironment(
+                    focusedControl: interactionRouter.focus.focusedControl
+                  )
+                ) { frame in
+                  frame.render(renderedBody)
+                }
+              }
+            }
+            let completedResult =
+              tracksObservableState
+              ? renderObservation.track(refresh: refreshTracking, renderFrame)
+              : renderFrame()
+            return try completedResult.get()
           }
+          let completed: CompletedFrame
+          do {
+            // Rollback state that does not share the back buffer, so drawing does not copy it.
+            let terminalBeforeFrame = terminal.frameRollback()
+            do {
+              completed = try session.withFrameOutputTransaction(updateViewportHistoryAndDraw)
+            } catch {
+              terminal.rollBack(to: terminalBeforeFrame)
+              inlineDocumentRuntime = inlineDocumentRuntimeBeforeFrame
+              input.synchronize(with: session)
+              throw error
+            }
+          }
+          interactions = completed.interactions
         }
-        interactions = completed.interactions
         needsRedraw = false
-        if presentsFinalFrame { break }
         periodicRedrawWasActive =
           (self as? any PeriodicallyRedrawingTerminalApplication)?.needsPeriodicRedraw ?? false
         if let routed = interactionRouter.reconcile(with: interactions) {
@@ -440,9 +473,11 @@ extension TerminalApplication {
             case .ignore:
               break
             case .clearViewport:
+              try presentPendingFrame()
               try terminal.clear()
               needsRedraw = true
             case .resetTerminalHistory:
+              try presentPendingFrame()
               try session.clearScrollbackAndResetViewport()
               inlineDocumentRuntime.reset()
               terminalHistoryDidReset()
@@ -451,6 +486,7 @@ extension TerminalApplication {
               input.synchronize(with: session)
               needsRedraw = true
             case .suspend:
+              try presentPendingFrame()
               try await session.withRestoredTerminal {
                 await performSuspendedAction()
               }
@@ -462,6 +498,7 @@ extension TerminalApplication {
               input.synchronize(with: session)
               needsRedraw = true
             case .quit:
+              try presentPendingFrame()
               isRunning = false
             }
           }
@@ -473,10 +510,20 @@ extension TerminalApplication {
         }
       }
 
-      let nextEvent = try await input.next(wakeup: invalidation.wakeupSource)
+      // An event that is already parsed is returned without polling, exactly as `readEvent` would,
+      // but without a round trip through a detached task. Yielding keeps the old suspension point,
+      // so other main-actor work can still interleave between queued events.
+      let nextEvent: TerminalEvent?
+      if let queued = input.takeQueuedEvent() {
+        await Task.yield()
+        nextEvent = queued
+      } else {
+        try presentPendingFrame()
+        nextEvent = try await input.next(wakeup: invalidation.wakeupSource)
+      }
       let observationInvalidated = invalidation.take()
       if observationInvalidated { refreshObservationTracking = true }
-      guard let firstEvent = nextEvent else {
+      guard let event = nextEvent else {
         let periodicRedraw =
           (self as? any PeriodicallyRedrawingTerminalApplication)?.needsPeriodicRedraw ?? false
         let trailingPeriodicRedraw = periodicRedrawWasActive && !periodicRedraw
@@ -487,87 +534,72 @@ extension TerminalApplication {
         continue
       }
       needsRedraw = needsRedraw || observationInvalidated
-      // Apply every event already parsed from the same read before presenting one frame. An event
-      // whose routing depends on the presented frame waits for a pending redraw instead.
-      var event = firstEvent
-      var deferredRedraw = false
-      while true {
-        // Terminal-replacing transitions present their frame before any further queued input.
-        var endsInputBatch = false
-        if case .resize(let size) = event {
-          let disposition = try session.reanchorAfterResize(size)
-          if disposition != .unchanged {
-            if disposition == .historyReset {
-              inlineDocumentRuntime.reset()
-              terminalHistoryDidReset()
-            }
-            terminal = try Terminal(
-              backend: session.makeBackend(), viewport: session.configuredViewport)
-            input.synchronize(with: session)
-            needsRedraw = true
-            endsInputBatch = true
-          }
-        }
-        let routed = interactionRouter.route(event, through: interactions)
-        needsRedraw = needsRedraw || routed.focusChanged
-        for routedEvent in routed.events {
-          if case .endOfInput = routedEvent {
-            isRunning = false
-            continue
-          }
-          let applicationUpdate = await update(routedEvent)
-          switch applicationUpdate {
-          case .redraw:
-            needsRedraw = true
-          case .ignore:
-            if case .resize = routedEvent {
-              needsRedraw = true
-            }
-          case .clearViewport:
-            try terminal.clear()
-            needsRedraw = true
-            endsInputBatch = true
-          case .resetTerminalHistory:
-            try session.clearScrollbackAndResetViewport()
+      if case .resize(let size) = event {
+        try presentPendingFrame()
+        let disposition = try session.reanchorAfterResize(size)
+        if disposition != .unchanged {
+          if disposition == .historyReset {
             inlineDocumentRuntime.reset()
             terminalHistoryDidReset()
-            terminal = try Terminal(
-              backend: session.makeBackend(), viewport: session.configuredViewport)
-            input.synchronize(with: session)
-            needsRedraw = true
-            endsInputBatch = true
-          case .suspend:
-            try await session.withRestoredTerminal {
-              await performSuspendedAction()
-            }
-            // A child process can reflow or replace the normal buffer while raw mode is suspended.
-            // Reestablish one canonical inline surface, then let source-backed applications replay.
-            try session.clearScrollbackAndResetViewport()
-            inlineDocumentRuntime.reset()
-            terminalHistoryDidReset()
-            terminal = try Terminal(
-              backend: session.makeBackend(), viewport: session.configuredViewport)
-            input.synchronize(with: session)
-            needsRedraw = true
-            endsInputBatch = true
-          case .quit:
-            isRunning = false
           }
+          terminal = try Terminal(
+            backend: session.makeBackend(), viewport: session.configuredViewport)
+          input.synchronize(with: session)
+          needsRedraw = true
         }
-        let trailingInvalidation = invalidation.take()
-        needsRedraw = needsRedraw || trailingInvalidation
-        if needsRedraw { refreshObservationTracking = true }
-        if !isRunning {
-          presentsFinalFrame = deferredRedraw && needsRedraw
-          break
-        }
-        guard !endsInputBatch, !Task.isCancelled else { break }
-        let redrawPending = needsRedraw
-        let queued = input.takeQueuedEvent { !redrawPending || !dependsOnPresentedFrame($0) }
-        guard let queued else { break }
-        event = queued
-        deferredRedraw = redrawPending
       }
+      let routed = interactionRouter.route(event, through: interactions)
+      needsRedraw = needsRedraw || routed.focusChanged
+      for routedEvent in routed.events {
+        if case .endOfInput = routedEvent {
+          try presentPendingFrame()
+          isRunning = false
+          continue
+        }
+        let applicationUpdate = await update(routedEvent)
+        switch applicationUpdate {
+        case .redraw:
+          needsRedraw = true
+        case .ignore:
+          if case .resize = routedEvent {
+            needsRedraw = true
+          }
+        case .clearViewport:
+          try presentPendingFrame()
+          try terminal.clear()
+          needsRedraw = true
+        case .resetTerminalHistory:
+          try presentPendingFrame()
+          try session.clearScrollbackAndResetViewport()
+          inlineDocumentRuntime.reset()
+          terminalHistoryDidReset()
+          terminal = try Terminal(
+            backend: session.makeBackend(), viewport: session.configuredViewport)
+          input.synchronize(with: session)
+          needsRedraw = true
+        case .suspend:
+          try presentPendingFrame()
+          try await session.withRestoredTerminal {
+            await performSuspendedAction()
+          }
+          // A child process can reflow or replace the normal buffer while raw mode is suspended.
+          // Reestablish one canonical inline surface, then let source-backed applications replay.
+          try session.clearScrollbackAndResetViewport()
+          inlineDocumentRuntime.reset()
+          terminalHistoryDidReset()
+          terminal = try Terminal(
+            backend: session.makeBackend(), viewport: session.configuredViewport)
+          input.synchronize(with: session)
+          needsRedraw = true
+        case .quit:
+          try presentPendingFrame()
+          isRunning = false
+        }
+      }
+      let trailingInvalidation = invalidation.take()
+      needsRedraw = needsRedraw || trailingInvalidation
+      if needsRedraw { refreshObservationTracking = true }
     }
+    try presentPendingFrame()
   }
 }

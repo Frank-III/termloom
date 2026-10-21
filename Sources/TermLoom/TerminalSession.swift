@@ -395,6 +395,17 @@ public final class TerminalSession {
     viewportOrigin = Position(x: area.x, y: area.y)
   }
 
+  /// Whether `updateInlineViewportHeight(_:)` would change the viewport (and write output).
+  func inlineViewportHeightWouldChange(_ requestedHeight: Int) -> Bool {
+    guard lifecycleState == .active, case .inline(let previousRequestedHeight) = viewport else {
+      return false
+    }
+    let screen = terminalWindowSize()
+    let previousHeight = min(max(1, previousRequestedHeight), max(1, screen.height))
+    let height = min(max(1, requestedHeight), max(1, screen.height))
+    return height != previousHeight
+  }
+
   /// Resize the retained inline viewport without reserving a fixed-height pane up front.
   ///
   /// The origin remains attached to the preceding terminal output. Growing beyond the physical
@@ -770,13 +781,13 @@ public struct TerminalInput {
     queuedEvents.append(contentsOf: parser.feed(initialData).map(localize))
   }
 
-  /// Returns the next already-parsed event without polling or reading the terminal, but only when
-  /// `shouldTake` accepts it. Incomplete escape sequences stay buffered in the parser.
-  mutating func takeQueuedEvent(if shouldTake: (TerminalEvent) -> Bool) -> TerminalEvent? {
-    guard queuedEventIndex < queuedEvents.count,
-      shouldTake(queuedEvents[queuedEventIndex])
-    else { return nil }
-    return dequeueEvent()
+  /// Whether an already-parsed event is waiting, so the next `readEvent` returns without polling.
+  var hasQueuedEvent: Bool { queuedEventIndex < queuedEvents.count }
+
+  /// Returns the next already-parsed event without polling or reading the terminal. Incomplete
+  /// escape sequences stay buffered in the parser.
+  mutating func takeQueuedEvent() -> TerminalEvent? {
+    dequeueEvent()
   }
 
   private mutating func dequeueEvent() -> TerminalEvent? {
