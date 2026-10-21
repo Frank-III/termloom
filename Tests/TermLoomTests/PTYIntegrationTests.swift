@@ -249,6 +249,71 @@
     }
   }
 
+  /// Application state that rendering reconciles: a list and a horizontally scrolling text field.
+  private final class MixedBurstModel {
+    struct Snapshot: Hashable {
+      var list: ListState
+      var field: TextFieldState
+    }
+
+    static let rows = (0..<12).map { "Row \($0)" }
+    var list = ListState()
+    var field = TextFieldState()
+    var handledEvents = 0
+    /// Each paste records the selection and offset it observed, as "paste into the selected row".
+    var pastes: [String] = []
+    var renderedStates: [Snapshot] = []
+    var lastBuffer: Buffer?
+  }
+
+  private struct MixedBurstWidget: Widget {
+    let model: MixedBurstModel
+
+    func render(in area: Rect, into frame: inout Frame) {
+      let listArea = Rect(x: area.x, y: area.y, width: area.width, height: 3)
+      let fieldArea = Rect(x: area.x, y: area.y + 3, width: 6, height: 1)
+      frame.render(
+        List(MixedBurstModel.rows, marker: "> ") { $0 }, in: listArea, state: &model.list)
+      frame.render(TextField(id: "field"), in: fieldArea, state: &model.field)
+      model.renderedStates.append(
+        MixedBurstModel.Snapshot(list: model.list, field: model.field))
+      model.lastBuffer = frame.buffer
+    }
+  }
+
+  /// Binds printable `j`/`k` to list navigation, sends other printable keys and left/right to the
+  /// text field, and reads render-clamped state when pasting. Updates deliberately overshoot.
+  @MainActor private final class MixedBurstApplication: TerminalApplication {
+    let model = MixedBurstModel()
+    var body: MixedBurstWidget { MixedBurstWidget(model: model) }
+
+    func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+      switch event {
+      case .mouse(let mouse) where mouse.kind == .scrollDown:
+        model.list.offset += 3
+      case .mouse(let mouse) where mouse.kind == .scrollUp:
+        model.list.offset -= 1
+      case .key(let key) where key.key == .down || key.key == .character("j"):
+        model.list.selected = (model.list.selected ?? -1) + 1
+      case .key(let key) where key.key == .up || key.key == .character("k"):
+        model.list.selected = (model.list.selected ?? 0) - 1
+      case .key(let key) where key.key == .character("q"):
+        model.handledEvents += 1
+        return .quit
+      case .key, .paste:
+        if case .paste(let text) = event {
+          model.pastes.append(
+            "\(text)@\(model.list.selected ?? -1)/\(model.list.offset)")
+        }
+        model.field.handle(event)
+      default:
+        return .ignore
+      }
+      model.handledEvents += 1
+      return .redraw
+    }
+  }
+
   @MainActor private final class QuitMarkerApplication: TerminalApplication {
     var draft = ""
     var handledEvents = 0
@@ -1418,6 +1483,84 @@
       #expect(batched.model.state.selected == ListBurstModel.rows.count - 1 - 4)
       #expect(batchedOutput.isEmpty == false)
       #expect(synchronizedFrameCount(batchedOutput) < synchronizedFrameCount(oneByOneOutput))
+    }
+
+    // Rendering reconciles application-owned state (list clamping, text-field scrolling, focus),
+    // and any `update` may read that state, whatever the event kind. These bursts would diverge if
+    // the render before a paste or a printable key were skipped.
+    @MainActor
+    @Test func batchedPasteThenScrollingMatchesOneByOneProcessing() async throws {
+      var inputs = Array(repeating: Self.arrowDown, count: 16)
+      inputs += [Self.paste("P1")] + Array(repeating: Self.scrollDown, count: 5)
+      inputs += [Self.paste("P2")] + Array(repeating: Self.scrollUp, count: 2)
+      inputs += [Self.paste("P3"), Self.paste("P4")]
+      let model = try await assertBatchedMatchesOneByOne(inputs)
+      // Every paste observed the clamped selection, not the overshoot of 15.
+      #expect(model.pastes.count == 4)
+      #expect(model.pastes.allSatisfy { $0.contains("@11/") })
+    }
+
+    @MainActor
+    @Test func batchedTypingThenArrowKeysMatchesOneByOneProcessing() async throws {
+      var inputs = "abcdefghilmnop".map { Array(String($0).utf8) }
+      inputs += Array(repeating: Self.arrowLeft, count: 11)
+      inputs += ["x", "y", "z"].map { Array($0.utf8) }
+      inputs += Array(repeating: Self.arrowDown, count: 14)
+      inputs += Array(repeating: Self.arrowUp, count: 2)
+      inputs += [Self.arrowRight, Array("w".utf8)]
+      let model = try await assertBatchedMatchesOneByOne(inputs)
+      #expect(model.field.text == "abcxyzdwefghilmnop")
+      #expect(model.list.selected == 9)
+    }
+
+    @MainActor
+    @Test func batchedPrintableNavigationKeysMatchOneByOneProcessing() async throws {
+      // `j`/`k` are application bindings: printable keys that move a render-clamped selection.
+      var inputs = Array(repeating: Array("j".utf8), count: 16)
+      inputs += Array(repeating: Array("k".utf8), count: 3)
+      inputs += [Self.paste("P"), Array("a".utf8), Array("j".utf8)]
+      let model = try await assertBatchedMatchesOneByOne(inputs)
+      // Skipping the renders between `j` presses would leave 15 after them, 12 after the `k`
+      // presses (the paste would see it), and 13 → 11 at the end instead of 9.
+      #expect(model.list.selected == 9)
+      #expect(model.pastes == ["P@8/8"])
+    }
+
+    private static let scrollDown = Array("\u{1B}[<65;3;2M".utf8)
+    private static let scrollUp = Array("\u{1B}[<64;3;2M".utf8)
+    private static let arrowDown = Array("\u{1B}[B".utf8)
+    private static let arrowUp = Array("\u{1B}[A".utf8)
+    private static let arrowLeft = Array("\u{1B}[D".utf8)
+    private static let arrowRight = Array("\u{1B}[C".utf8)
+
+    private static func paste(_ text: String) -> [UInt8] {
+      Array("\u{1B}[200~\(text)\u{1B}[201~".utf8)
+    }
+
+    /// Runs `inputs` (each producing one event) followed by `q`, batched and one by one, and
+    /// expects identical render-by-render state, final state, and final rendered buffer.
+    @MainActor
+    private func assertBatchedMatchesOneByOne(_ inputs: [[UInt8]]) async throws -> MixedBurstModel {
+      let inputs = inputs + [Array("q".utf8)]
+      let batched = MixedBurstApplication()
+      let batchedOutput = try await runInlineApplication(
+        batched, inputs: inputs, batched: true
+      ) { batched.model.handledEvents }
+      let oneByOne = MixedBurstApplication()
+      let oneByOneOutput = try await runInlineApplication(
+        oneByOne, inputs: inputs, batched: false
+      ) { oneByOne.model.handledEvents }
+
+      #expect(batched.model.handledEvents == inputs.count)
+      #expect(oneByOne.model.handledEvents == inputs.count)
+      #expect(batched.model.renderedStates == oneByOne.model.renderedStates)
+      #expect(batched.model.list == oneByOne.model.list)
+      #expect(batched.model.field == oneByOne.model.field)
+      #expect(batched.model.pastes == oneByOne.model.pastes)
+      #expect(batched.model.lastBuffer != nil)
+      #expect(batched.model.lastBuffer == oneByOne.model.lastBuffer)
+      #expect(synchronizedFrameCount(batchedOutput) < synchronizedFrameCount(oneByOneOutput))
+      return batched.model
     }
 
     @MainActor
