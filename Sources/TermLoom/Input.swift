@@ -224,9 +224,14 @@ public struct InputParser: Sendable {
     return events
   }
 
+  /// Whether the buffered input is exactly the lone Escape byte that `flushEscape()` resolves.
+  var hasPendingLoneEscape: Bool {
+    bytes.count - readIndex == 1 && bytes[readIndex] == 0x1B
+  }
+
   /// Resolves a lone Escape byte after the caller's escape-sequence timeout expires.
   public mutating func flushEscape() -> TerminalEvent? {
-    guard bytes.count - readIndex == 1, bytes[readIndex] == 0x1B else { return nil }
+    guard hasPendingLoneEscape else { return nil }
     readIndex += 1
     compact()
     return .key(KeyEvent(.escape))

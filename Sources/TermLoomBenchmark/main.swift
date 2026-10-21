@@ -29,6 +29,17 @@ struct BenchmarkSample: Codable {
   var framesPerIteration: Double?
   /// Frames written to the terminal, counted as synchronized-output blocks (loop suite only).
   var writtenFramesPerIteration: Double?
+  /// Process CPU time per wall-clock second (idle loop measurements only).
+  var cpuMicrosecondsPerSecond: Double?
+  /// Voluntary context switches per second: each ended blocking wait is one (idle loop only).
+  var voluntaryContextSwitchesPerSecond: Double?
+  var involuntaryContextSwitchesPerSecond: Double?
+  /// Frames rendered by the body per second (idle loop measurements only).
+  var framesPerSecond: Double?
+  /// Synchronized-output blocks written per second (idle loop measurements only).
+  var writtenFramesPerSecond: Double?
+  /// The slowest iteration (resize latency only).
+  var maximumLatencyMilliseconds: Double?
 }
 
 struct BenchmarkOptions {
@@ -1302,6 +1313,622 @@ private func loopBenchmarks(iterations: Int) async throws -> [BenchmarkSample] {
   #endif
 }
 
+// MARK: - Idle application loop
+
+// The idle measurements run in a child process that makes a fresh pseudo-terminal its controlling
+// terminal, exactly like an application started from a shell: resizing the terminal then sends
+// SIGWINCH to the application. Wakeups are measured as process CPU time and voluntary context
+// switches (each blocking wait that ends is one) while nothing is animating; frames are counted by
+// the body (`frames`) and as synchronized updates on the terminal (`written frames`).
+
+private let idleLoopChildArgument = "--idle-loop-child"
+private let idleWindowSeconds = 2.0
+private let resizeIterations = 20
+
+private struct ResourceUsage {
+  var cpuSeconds = 0.0
+  var voluntaryContextSwitches = 0
+  var involuntaryContextSwitches = 0
+
+  static func now() -> ResourceUsage {
+    #if canImport(Darwin)
+      var usage = rusage()
+      guard getrusage(RUSAGE_SELF, &usage) == 0 else { return ResourceUsage() }
+      let user = Double(usage.ru_utime.tv_sec) + Double(usage.ru_utime.tv_usec) / 1e6
+      let system = Double(usage.ru_stime.tv_sec) + Double(usage.ru_stime.tv_usec) / 1e6
+      return ResourceUsage(
+        cpuSeconds: user + system,
+        voluntaryContextSwitches: Int(usage.ru_nvcsw),
+        involuntaryContextSwitches: Int(usage.ru_nivcsw))
+    #else
+      return ResourceUsage()
+    #endif
+  }
+}
+
+/// What happened during one measured wall-clock window.
+private struct LoopWindow: Sendable {
+  var seconds = 0.0
+  var cpuSeconds = 0.0
+  var voluntaryContextSwitches = 0
+  var involuntaryContextSwitches = 0
+  var frames = 0
+  var writtenFrames = 0
+  var bytes = 0
+}
+
+/// Drains the PTY master without ever waking on a timer, counting synchronized-update begin and
+/// end markers. Each end marker is the moment a complete frame reached the terminal.
+private final class FrameEndMonitor: @unchecked Sendable {
+  private let descriptor: Int32
+  private var stopDescriptors: [Int32] = [-1, -1]
+  private let lock = NSLock()
+  private let frameEnded = DispatchSemaphore(value: 0)
+  private let finished = DispatchSemaphore(value: 0)
+  private var byteCount = 0
+  private var beginCount = 0
+  private var endCount = 0
+  private var lastEndUptime: UInt64 = 0
+  private var lastReadUptime = DispatchTime.now().uptimeNanoseconds
+  private var prefixMatch = 0
+
+  // `CSI ? 2026 h` begins and `CSI ? 2026 l` ends a synchronized update.
+  private static let markerPrefix = Array("\u{1B}[?2026".utf8)
+
+  init(descriptor: Int32) {
+    self.descriptor = descriptor
+    _ = pipe(&stopDescriptors)
+  }
+
+  var bytes: Int { lock.withLock { byteCount } }
+  var frameBegins: Int { lock.withLock { beginCount } }
+  var frameEnds: Int { lock.withLock { endCount } }
+
+  func start() {
+    Thread { [self] in drain() }.start()
+  }
+
+  /// Waits for the frame end after `count` ends, returning when it arrived (uptime nanoseconds).
+  func waitForFrameEnd(after count: Int, timeoutSeconds: Double = 5) -> UInt64? {
+    let deadline = DispatchTime.now() + timeoutSeconds
+    while true {
+      let state = lock.withLock { (endCount, lastEndUptime) }
+      if state.0 > count { return state.1 }
+      if frameEnded.wait(timeout: deadline) == .timedOut {
+        let late = lock.withLock { (endCount, lastEndUptime) }
+        return late.0 > count ? late.1 : nil
+      }
+    }
+  }
+
+  /// Waits until no output has arrived for `milliseconds` (polls; never used inside a window).
+  func waitForQuiet(milliseconds: UInt64 = 100, timeoutSeconds: Double = 5) {
+    let quiet = milliseconds * 1_000_000
+    let deadline = DispatchTime.now() + timeoutSeconds
+    while DispatchTime.now() < deadline {
+      let last = lock.withLock { lastReadUptime }
+      let now = DispatchTime.now().uptimeNanoseconds
+      if now >= last, now - last >= quiet { return }
+      usleep(2_000)
+    }
+  }
+
+  func stop() {
+    var byte: UInt8 = 1
+    _ = write(stopDescriptors[1], &byte, 1)
+    _ = finished.wait(timeout: .now() + 2)
+    close(stopDescriptors[0])
+    close(stopDescriptors[1])
+  }
+
+  private func countMarkers(in bytes: ArraySlice<UInt8>, at uptime: UInt64) {
+    let prefix = Self.markerPrefix
+    for byte in bytes {
+      if prefixMatch == prefix.count {
+        prefixMatch = 0
+        if byte == UInt8(ascii: "h") {
+          beginCount += 1
+          continue
+        }
+        if byte == UInt8(ascii: "l") {
+          endCount += 1
+          lastEndUptime = uptime
+          frameEnded.signal()
+          continue
+        }
+      }
+      if byte == prefix[prefixMatch] {
+        prefixMatch += 1
+      } else {
+        prefixMatch = byte == prefix[0] ? 1 : 0
+      }
+    }
+  }
+
+  private func drain() {
+    var buffer = [UInt8](repeating: 0, count: 16_384)
+    while true {
+      var descriptors = [
+        pollfd(fd: descriptor, events: Int16(POLLIN), revents: 0),
+        pollfd(fd: stopDescriptors[0], events: Int16(POLLIN), revents: 0),
+      ]
+      let ready = poll(&descriptors, 2, -1)
+      if ready < 0 {
+        if errno == EINTR { continue }
+        break
+      }
+      if descriptors[1].revents != 0 { break }
+      guard descriptors[0].revents != 0 else { continue }
+      let count = read(descriptor, &buffer, buffer.count)
+      if count > 0 {
+        let now = DispatchTime.now().uptimeNanoseconds
+        lock.withLock {
+          byteCount += count
+          lastReadUptime = now
+          countMarkers(in: buffer[..<count], at: now)
+        }
+        continue
+      }
+      if count == 0 || (errno != EAGAIN && errno != EINTR) { break }
+    }
+    finished.signal()
+  }
+}
+
+@MainActor private final class IdleBenchmarkApplication: TerminalApplication {
+  let probe: LoopProbe
+
+  init(probe: LoopProbe) {
+    self.probe = probe
+  }
+
+  var body: LoopDashboard {
+    LoopDashboard(selectedRow: 0, status: "idle", probe: probe)
+  }
+
+  func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+    probe.recordUpdate()
+    if case .key(let key) = event, key.key == .character("q") { return .quit }
+    return .ignore
+  }
+}
+
+@MainActor @Observable private final class TickerModel {
+  var tick = 0
+}
+
+/// Animates through Observation: a main-actor task advances the model at a fixed rate.
+@MainActor private final class TickerBenchmarkApplication: TerminalApplication {
+  let probe: LoopProbe
+  let model = TickerModel()
+
+  init(probe: LoopProbe) {
+    self.probe = probe
+  }
+
+  var body: LoopDashboard {
+    LoopDashboard(
+      selectedRow: model.tick % rows.count, status: "tick \(model.tick)", probe: probe)
+  }
+
+  func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+    probe.recordUpdate()
+    if case .key(let key) = event, key.key == .character("q") { return .quit }
+    return .ignore
+  }
+}
+
+/// Animates through `PeriodicallyRedrawingTerminalApplication` with a plain stored flag.
+@MainActor
+private final class PeriodicBenchmarkApplication: TerminalApplication,
+  PeriodicallyRedrawingTerminalApplication
+{
+  let probe: LoopProbe
+  var needsPeriodicRedraw: Bool
+  var frame = 0
+
+  init(probe: LoopProbe, needsPeriodicRedraw: Bool) {
+    self.probe = probe
+    self.needsPeriodicRedraw = needsPeriodicRedraw
+  }
+
+  var body: LoopDashboard {
+    frame += 1
+    return LoopDashboard(
+      selectedRow: frame % rows.count, status: "frame \(frame)", probe: probe)
+  }
+
+  func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+    probe.recordUpdate()
+    if case .key(let key) = event, key.key == .character("q") { return .quit }
+    return .ignore
+  }
+}
+
+/// Like Postcat's explicit mode: an observable model whose flag drives periodic redraws, with
+/// automatic Observation redraws disabled.
+@MainActor @Observable
+private final class ObservablePeriodicBenchmarkApplication: TerminalApplication,
+  PeriodicallyRedrawingTerminalApplication
+{
+  let probe: LoopProbe
+  var loading = false
+  @ObservationIgnored var frame = 0
+
+  init(probe: LoopProbe) {
+    self.probe = probe
+  }
+
+  var needsPeriodicRedraw: Bool { loading }
+  var automaticallyTracksObservableState: Bool { false }
+
+  var body: LoopDashboard {
+    frame += 1
+    return LoopDashboard(
+      selectedRow: frame % rows.count, status: "frame \(frame)", probe: probe)
+  }
+
+  func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+    probe.recordUpdate()
+    if case .key(let key) = event, key.key == .character("q") { return .quit }
+    return .ignore
+  }
+}
+
+#if canImport(Darwin)
+  /// Runs `measure` on a driver thread while `application` runs on the main actor, then quits.
+  private final class IdleScenarioDriver: @unchecked Sendable {
+    let master: Int32
+    let slave: Int32
+    let probe = LoopProbe()
+    let monitor: FrameEndMonitor
+    let controllingTerminal: Bool
+    private let finished = DispatchSemaphore(value: 0)
+    private let lock = NSLock()
+    private var failure: String?
+
+    init(master: Int32, slave: Int32, monitor: FrameEndMonitor, controllingTerminal: Bool) {
+      self.master = master
+      self.slave = slave
+      self.monitor = monitor
+      self.controllingTerminal = controllingTerminal
+    }
+
+    @MainActor
+    func run<Application: TerminalApplication>(
+      _ application: Application, measure: @escaping @Sendable (IdleScenarioDriver) throws -> Void
+    ) async throws {
+      Thread { [self] in
+        do {
+          try measure(self)
+        } catch {
+          lock.withLock { failure = String(describing: error) }
+        }
+        send(Array("q".utf8))
+        finished.signal()
+      }.start()
+      try await application.run(viewport: .fullscreen, capturesMouse: false)
+      let finished = self.finished
+      let result = await Task.detached { blockingWait(finished, seconds: 30) }.value
+      guard result == .success else {
+        throw LoopBenchmarkError.driverDidNotFinish
+      }
+      if let failure = lock.withLock({ failure }) { throw LoopBenchmarkError.timedOut(failure) }
+      monitor.waitForQuiet(milliseconds: 50)
+    }
+
+    /// Waits for the first frame and for output to settle.
+    func waitUntilIdle() throws {
+      try probe.waitForFrame("the initial frame") { $0.frames >= 1 }
+      monitor.waitForQuiet()
+    }
+
+    /// Measures one window with a single blocking sleep on this thread.
+    func window(seconds: Double = idleWindowSeconds) -> LoopWindow {
+      let usageBefore = ResourceUsage.now()
+      let framesBefore = probe.snapshot.frames
+      let writtenBefore = monitor.frameBegins
+      let bytesBefore = monitor.bytes
+      let start = DispatchTime.now().uptimeNanoseconds
+      Thread.sleep(forTimeInterval: seconds)
+      let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start) / 1e9
+      let usageAfter = ResourceUsage.now()
+      return LoopWindow(
+        seconds: elapsed,
+        cpuSeconds: usageAfter.cpuSeconds - usageBefore.cpuSeconds,
+        voluntaryContextSwitches: usageAfter.voluntaryContextSwitches
+          - usageBefore.voluntaryContextSwitches,
+        involuntaryContextSwitches: usageAfter.involuntaryContextSwitches
+          - usageBefore.involuntaryContextSwitches,
+        frames: probe.snapshot.frames - framesBefore,
+        writtenFrames: monitor.frameBegins - writtenBefore,
+        bytes: monitor.bytes - bytesBefore)
+    }
+
+    /// Resizes the terminal and returns the time until the redrawn frame was written.
+    func resize(
+      columns: UInt16, rows: UInt16
+    ) throws -> (seconds: Double, frames: Int, written: Int) {
+      let framesBefore = probe.snapshot.frames
+      let endsBefore = monitor.frameEnds
+      let writtenBefore = monitor.frameBegins
+      var window = winsize(ws_row: rows, ws_col: columns, ws_xpixel: 0, ws_ypixel: 0)
+      let start = DispatchTime.now().uptimeNanoseconds
+      guard ioctl(slave, UInt(TIOCSWINSZ), &window) == 0 else {
+        throw LoopBenchmarkError.timedOut("TIOCSWINSZ")
+      }
+      // With a controlling terminal the kernel sends SIGWINCH to the foreground process group.
+      if !controllingTerminal { kill(getpid(), SIGWINCH) }
+      guard let ended = monitor.waitForFrameEnd(after: endsBefore) else {
+        throw LoopBenchmarkError.timedOut("the redrawn frame after a resize")
+      }
+      try probe.waitForFrame("the resize frame") { $0.frames > framesBefore }
+      monitor.waitForQuiet(milliseconds: 30)
+      return (
+        Double(ended > start ? ended - start : 0) / 1e9, probe.snapshot.frames - framesBefore,
+        monitor.frameBegins - writtenBefore
+      )
+    }
+
+    func send(_ bytes: [UInt8]) {
+      var offset = 0
+      while offset < bytes.count {
+        let count = bytes[offset...].withUnsafeBytes { buffer in
+          write(master, buffer.baseAddress, buffer.count)
+        }
+        if count < 0 {
+          if errno == EINTR || errno == EAGAIN { continue }
+          return
+        }
+        offset += count
+      }
+    }
+  }
+
+  private final class IdleScenarioResults: @unchecked Sendable {
+    private let lock = NSLock()
+    private var windows: [String: LoopWindow] = [:]
+    private var latencies: [Double] = []
+    private var resizeFrames = 0
+    private var resizeWritten = 0
+
+    func record(_ name: String, _ window: LoopWindow) {
+      lock.withLock { windows[name] = window }
+    }
+
+    func recordResize(seconds: Double, frames: Int, written: Int) {
+      lock.withLock {
+        latencies.append(seconds)
+        resizeFrames += frames
+        resizeWritten += written
+      }
+    }
+
+    var snapshot: (windows: [String: LoopWindow], latencies: [Double], frames: Int, written: Int) {
+      lock.withLock { (windows, latencies, resizeFrames, resizeWritten) }
+    }
+  }
+
+  private func windowSample(_ name: String, _ window: LoopWindow) -> BenchmarkSample {
+    let seconds = max(window.seconds, .leastNonzeroMagnitude)
+    return BenchmarkSample(
+      name: name,
+      iterations: 1,
+      seconds: window.seconds,
+      // Process CPU nanoseconds per wall-clock second of the window.
+      nanosecondsPerIteration: window.cpuSeconds * 1e9 / seconds,
+      iterationsPerSecond: 1 / seconds,
+      cellUpdatesPerIteration: nil,
+      outputBytesPerIteration: Double(window.bytes),
+      retainedBytesDelta: nil,
+      peakResidentBytes: peakResidentBytes(),
+      framesPerIteration: Double(window.frames),
+      writtenFramesPerIteration: Double(window.writtenFrames),
+      cpuMicrosecondsPerSecond: window.cpuSeconds * 1e6 / seconds,
+      voluntaryContextSwitchesPerSecond: Double(window.voluntaryContextSwitches) / seconds,
+      involuntaryContextSwitchesPerSecond: Double(window.involuntaryContextSwitches) / seconds,
+      framesPerSecond: Double(window.frames) / seconds,
+      writtenFramesPerSecond: Double(window.writtenFrames) / seconds)
+  }
+
+  /// Runs in the child process: owns a controlling pseudo-terminal and runs every idle scenario.
+  @MainActor
+  private func idleLoopChildBenchmarks() async throws -> [BenchmarkSample] {
+    // Closing the master side hangs up the controlling terminal; the results are printed after.
+    signal(SIGHUP, SIG_IGN)
+    let becameSessionLeader = setsid() >= 0
+    var master: Int32 = -1
+    var slave: Int32 = -1
+    var window = winsize(ws_row: 40, ws_col: 120, ws_xpixel: 0, ws_ypixel: 0)
+    guard openpty(&master, &slave, nil, nil, &window) == 0 else {
+      throw LoopBenchmarkError.pseudoTerminalUnavailable
+    }
+    var controllingTerminal = false
+    if becameSessionLeader, ioctl(slave, UInt(TIOCSCTTY), 0) == 0 {
+      controllingTerminal = tcgetpgrp(slave) == getpgrp()
+    }
+    if !controllingTerminal {
+      FileHandle.standardError.write(
+        Data(
+          "warning: no controlling terminal; resizes are signalled with kill(SIGWINCH)\n".utf8))
+    }
+    setenv("TERM", "xterm-256color", 1)
+    fflush(nil)
+    let savedInput = dup(STDIN_FILENO)
+    let savedOutput = dup(STDOUT_FILENO)
+    func restoreStandardStreams() {
+      fflush(nil)
+      if savedInput >= 0 {
+        dup2(savedInput, STDIN_FILENO)
+        close(savedInput)
+      }
+      if savedOutput >= 0 {
+        dup2(savedOutput, STDOUT_FILENO)
+        close(savedOutput)
+      }
+    }
+    guard savedInput >= 0, savedOutput >= 0,
+      dup2(slave, STDIN_FILENO) >= 0, dup2(slave, STDOUT_FILENO) >= 0
+    else {
+      restoreStandardStreams()
+      throw LoopBenchmarkError.redirectionFailed
+    }
+
+    let monitor = FrameEndMonitor(descriptor: master)
+    monitor.start()
+    let results = IdleScenarioResults()
+    func makeDriver() -> IdleScenarioDriver {
+      IdleScenarioDriver(
+        master: master, slave: slave, monitor: monitor, controllingTerminal: controllingTerminal)
+    }
+
+    do {
+      // 1. Nothing animating, then resizes of the same idle application.
+      let idle = makeDriver()
+      try await idle.run(IdleBenchmarkApplication(probe: idle.probe)) { driver in
+        try driver.waitUntilIdle()
+        results.record("idle", driver.window())
+        for index in 0..<resizeIterations {
+          let size: (UInt16, UInt16) = index.isMultiple(of: 2) ? (100, 30) : (120, 40)
+          let resized = try driver.resize(columns: size.0, rows: size.1)
+          results.recordResize(
+            seconds: resized.seconds, frames: resized.frames, written: resized.written)
+        }
+      }
+
+      // 2. Observation-driven animation at about 30 ticks per second.
+      let ticker = makeDriver()
+      let tickerApplication = TickerBenchmarkApplication(probe: ticker.probe)
+      let model = tickerApplication.model
+      let tickTask = Task { @MainActor in
+        while !Task.isCancelled {
+          try? await Task.sleep(for: .milliseconds(33))
+          model.tick += 1
+        }
+      }
+      try await ticker.run(tickerApplication) { driver in
+        try driver.probe.waitForFrame("the initial frame") { $0.frames >= 1 }
+        Thread.sleep(forTimeInterval: 0.2)
+        results.record("ticker", driver.window())
+      }
+      tickTask.cancel()
+
+      // 3. Periodic redraws through a plain stored flag (polled at the input interval).
+      let periodic = makeDriver()
+      try await periodic.run(
+        PeriodicBenchmarkApplication(probe: periodic.probe, needsPeriodicRedraw: true)
+      ) { driver in
+        try driver.probe.waitForFrame("the initial frame") { $0.frames >= 1 }
+        Thread.sleep(forTimeInterval: 0.2)
+        results.record("periodic", driver.window())
+      }
+
+      // 4. A plain periodic flag that is off: the flag cannot be observed, so it is still polled.
+      let periodicOff = makeDriver()
+      try await periodicOff.run(
+        PeriodicBenchmarkApplication(probe: periodicOff.probe, needsPeriodicRedraw: false)
+      ) { driver in
+        try driver.waitUntilIdle()
+        results.record("periodic-off", driver.window())
+      }
+
+      // 5. An observable periodic flag: idle while off, animating while on.
+      let observable = makeDriver()
+      let observableApplication = ObservablePeriodicBenchmarkApplication(probe: observable.probe)
+      try await observable.run(observableApplication) { driver in
+        try driver.waitUntilIdle()
+        results.record("observable-periodic-off", driver.window())
+        Task { @MainActor in observableApplication.loading = true }
+        Thread.sleep(forTimeInterval: 0.2)
+        results.record("observable-periodic-on", driver.window())
+        Task { @MainActor in observableApplication.loading = false }
+        driver.monitor.waitForQuiet()
+      }
+    } catch {
+      monitor.stop()
+      restoreStandardStreams()
+      close(master)
+      close(slave)
+      throw error
+    }
+    monitor.stop()
+    restoreStandardStreams()
+
+    let measured = results.snapshot
+    var samples: [BenchmarkSample] = []
+    let windowNames = [
+      ("idle", "loop/idle-2s"),
+      ("periodic-off", "loop/idle-2s-unobservable-periodic-flag-off"),
+      ("observable-periodic-off", "loop/idle-2s-observable-periodic-flag-off"),
+      ("ticker", "loop/animating-observation-30hz-2s"),
+      ("periodic", "loop/animating-periodic-flag-2s"),
+      ("observable-periodic-on", "loop/animating-observable-periodic-flag-2s"),
+    ]
+    for (key, name) in windowNames {
+      if let window = measured.windows[key] { samples.append(windowSample(name, window)) }
+    }
+    let latencies = measured.latencies
+    if !latencies.isEmpty {
+      let total = latencies.reduce(0, +)
+      let count = Double(latencies.count)
+      samples.append(
+        BenchmarkSample(
+          name: controllingTerminal ? "loop/resize-latency" : "loop/resize-latency-kill-sigwinch",
+          iterations: latencies.count,
+          seconds: total,
+          nanosecondsPerIteration: total * 1e9 / count,
+          iterationsPerSecond: count / max(total, .leastNonzeroMagnitude),
+          cellUpdatesPerIteration: nil,
+          outputBytesPerIteration: nil,
+          retainedBytesDelta: nil,
+          peakResidentBytes: peakResidentBytes(),
+          framesPerIteration: Double(measured.frames) / count,
+          writtenFramesPerIteration: Double(measured.written) / count,
+          maximumLatencyMilliseconds: (latencies.max() ?? 0) * 1e3))
+    }
+    close(master)
+    close(slave)
+    return samples
+  }
+
+  /// Runs the idle scenarios in a child process and collects its JSON samples.
+  private func idleLoopBenchmarks() throws -> [BenchmarkSample] {
+    var output: [Int32] = [-1, -1]
+    guard pipe(&output) == 0 else { throw LoopBenchmarkError.redirectionFailed }
+    var actions: posix_spawn_file_actions_t?
+    posix_spawn_file_actions_init(&actions)
+    defer { posix_spawn_file_actions_destroy(&actions) }
+    posix_spawn_file_actions_adddup2(&actions, output[1], STDOUT_FILENO)
+    posix_spawn_file_actions_addclose(&actions, output[0])
+    posix_spawn_file_actions_addclose(&actions, output[1])
+
+    let executable = Bundle.main.executablePath ?? CommandLine.arguments[0]
+    let arguments = [executable, idleLoopChildArgument]
+    let environment = ProcessInfo.processInfo.environment.map { "\($0.key)=\($0.value)" }
+    let argv: [UnsafeMutablePointer<CChar>?] = arguments.map { strdup($0) } + [nil]
+    let envp: [UnsafeMutablePointer<CChar>?] = environment.map { strdup($0) } + [nil]
+    defer {
+      for pointer in argv { free(pointer) }
+      for pointer in envp { free(pointer) }
+    }
+    var child: pid_t = 0
+    let spawned = posix_spawn(&child, executable, &actions, nil, argv, envp)
+    close(output[1])
+    guard spawned == 0 else {
+      close(output[0])
+      throw LoopBenchmarkError.timedOut("spawning the idle benchmark child (\(spawned))")
+    }
+    let data = FileHandle(fileDescriptor: output[0], closeOnDealloc: true)
+      .readDataToEndOfFile()
+    var status: Int32 = 0
+    _ = waitpid(child, &status, 0)
+    guard let samples = try? JSONDecoder().decode([BenchmarkSample].self, from: data) else {
+      throw LoopBenchmarkError.timedOut("the idle benchmark child (status \(status))")
+    }
+    return samples
+  }
+#endif
+
 private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
   if asJSON {
     let encoder = JSONEncoder()
@@ -1326,6 +1953,24 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
     if let written = sample.writtenFramesPerIteration {
       metrics.append(String(format: "%.2f written frames/iteration", written))
     }
+    if let cpu = sample.cpuMicrosecondsPerSecond {
+      metrics.append(String(format: "%.0f CPU µs/s", cpu))
+    }
+    if let switches = sample.voluntaryContextSwitchesPerSecond {
+      metrics.append(String(format: "%.1f voluntary context switches/s", switches))
+    }
+    if let switches = sample.involuntaryContextSwitchesPerSecond {
+      metrics.append(String(format: "%.1f involuntary context switches/s", switches))
+    }
+    if let frames = sample.framesPerSecond {
+      metrics.append(String(format: "%.1f frames/s", frames))
+    }
+    if let written = sample.writtenFramesPerSecond {
+      metrics.append(String(format: "%.1f written frames/s", written))
+    }
+    if let latency = sample.maximumLatencyMilliseconds {
+      metrics.append(String(format: "%.2f ms max latency", latency))
+    }
     if let retained = sample.retainedBytesDelta {
       metrics.append("\(retained) retained bytes")
     }
@@ -1336,8 +1981,20 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
   }
 }
 
+#if canImport(Darwin)
+  if CommandLine.arguments.dropFirst().first == idleLoopChildArgument {
+    do {
+      try printSamples(try await idleLoopChildBenchmarks(), asJSON: true)
+      exit(0)
+    } catch {
+      FileHandle.standardError.write(Data("idle benchmark child failed: \(error)\n".utf8))
+      exit(1)
+    }
+  }
+#endif
+
 let options = BenchmarkOptions(arguments: Array(CommandLine.arguments.dropFirst()))
-let validSuites = ["frames", "primitives", "collections", "output", "text", "loop", "all"]
+let validSuites = ["frames", "primitives", "collections", "output", "text", "loop", "idle", "all"]
 guard validSuites.contains(options.suite) else {
   FileHandle.standardError.write(
     Data("unknown suite '\(options.suite)'; expected \(validSuites.joined(separator: ", "))\n".utf8)
@@ -1364,4 +2021,16 @@ if options.suite == "text" || options.suite == "all" {
 if options.suite == "loop" || options.suite == "all" {
   samples += try await loopBenchmarks(iterations: options.iterations)
 }
+#if canImport(Darwin)
+  if options.suite == "loop" || options.suite == "idle" || options.suite == "all" {
+    samples += try idleLoopBenchmarks()
+  }
+#endif
 try printSamples(samples, asJSON: options.emitsJSON)
+
+/// Blocks the calling thread on `semaphore`; call it only from a detached task.
+private func blockingWait(
+  _ semaphore: DispatchSemaphore, seconds: Double
+) -> DispatchTimeoutResult {
+  semaphore.wait(timeout: .now() + seconds)
+}

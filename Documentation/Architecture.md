@@ -116,6 +116,13 @@ construction and diffing still dominate. Timers or external sources that are not
 `PeriodicallyRedrawingTerminalApplication`; redraws occur only while its flag is active, plus one trailing frame
 when work becomes idle.
 
+When nothing can change the frame, the loop blocks without a timeout. Input, Observation invalidations,
+SIGWINCH/SIGCONT (through Dispatch signal sources, which leave signal dispositions untouched), and task
+cancellation all write to the same wakeup pipe the input wait polls, and every wakeup re-checks the window size.
+The 50 ms input interval is used only while periodic redraws are active or owe their trailing frame, while a
+lone Escape byte awaits its timeout, for periodic applications whose flag is not `@Observable`, and when the
+session's terminal is not the process's foreground controlling terminal (so resizes cannot be signalled).
+
 `InputParser` accepts arbitrary byte chunks rather than assuming one `read` equals one key. It
 retains incomplete CSI sequences, distinguishes a standalone Escape using a timeout, parses xterm
 modifiers and SGR mouse reports, and accumulates bracketed paste until its terminator arrives. The

@@ -202,6 +202,8 @@ func normalizePendingHistoryResets(
 ///
 /// The application loop polls at the terminal input interval and redraws while this value is true. Use it
 /// for streaming, timers, progress, and external event sources; idle applications remain event-driven.
+/// While the value is false, an `@Observable` conformer wakes the loop through the observable
+/// state the flag reads; other conformers have the flag re-checked at the terminal input interval.
 @MainActor
 public protocol PeriodicallyRedrawingTerminalApplication: AnyObject {
   var needsPeriodicRedraw: Bool { get }
@@ -231,6 +233,45 @@ public protocol TerminalApplication: AnyObject {
   func performSuspendedAction() async
 }
 
+/// Internal seams for exercising the application loop's idle behavior in tests.
+struct ApplicationLoopConfiguration {
+  /// Overrides whether resize signals reach this process. By default the loop asks the session,
+  /// which is false for pseudo-terminals that are not the process's controlling terminal.
+  var receivesResizeSignals: Bool?
+  var statistics: ApplicationLoopStatistics?
+}
+
+/// Counts how often the application loop waits for input, and how.
+final class ApplicationLoopStatistics: @unchecked Sendable {
+  struct Snapshot: Hashable {
+    /// Waits that block until input, a resize signal, or an explicit wakeup.
+    var indefiniteWaits = 0
+    /// Waits bounded by the polling interval.
+    var timedWaits = 0
+    /// Completed waits: each one is a loop wakeup.
+    var wakeups = 0
+  }
+
+  private let lock = NSLock()
+  private var state = Snapshot()
+
+  var snapshot: Snapshot { lock.withLock { state } }
+
+  func recordWait(indefinite: Bool) {
+    lock.withLock {
+      if indefinite {
+        state.indefiniteWaits += 1
+      } else {
+        state.timedWaits += 1
+      }
+    }
+  }
+
+  func recordWakeup() {
+    lock.withLock { state.wakeups += 1 }
+  }
+}
+
 private final class AsyncInputPump: @unchecked Sendable {
   private let lock = NSLock()
   private var input: TerminalInput
@@ -239,10 +280,12 @@ private final class AsyncInputPump: @unchecked Sendable {
     self.input = input
   }
 
-  func next(wakeup: TerminalWakeup? = nil) async throws -> TerminalEvent? {
+  /// Reads the next event on a detached thread. A `nil` wait blocks until input arrives or
+  /// `wakeup` fires.
+  func next(waitMilliseconds: Int32?, wakeup: TerminalWakeup?) async throws -> TerminalEvent? {
     try await Task.detached { [self] in
       try lock.withLock {
-        try input.readEvent(wakeup: wakeup)
+        try input.readEvent(waitMilliseconds: waitMilliseconds, wakeup: wakeup)
       }
     }.value
   }
@@ -292,6 +335,24 @@ extension TerminalApplication {
   /// This is an internal integration seam: the caller remains responsible for restoring the session.
   @MainActor
   func run(in session: TerminalSession) async throws {
+    try await run(in: session, configuration: ApplicationLoopConfiguration())
+  }
+
+  // The loop blocks until something can change what it shows: input, a resize signal, an
+  // Observation change, cancellation, or (only while needed) the polling interval. Each source
+  // writes to one wakeup pipe that the input wait also polls:
+  // - Observation changes read by the presentation or widget rendering invalidate the frame.
+  // - SIGWINCH and SIGCONT wake the wait; the reader then re-checks the window size.
+  // - Task cancellation wakes the wait so the loop can exit.
+  // - Observable `PeriodicallyRedrawingTerminalApplication` flags wake the loop when they may
+  //   have changed, so it can start polling.
+  // The loop still waits at most the polling interval while periodic redraws are active or owe
+  // their trailing frame, for periodic applications whose flag is not observable, when resizes
+  // cannot be signalled, and while a lone Escape byte awaits its timeout.
+  @MainActor
+  func run(
+    in session: TerminalSession, configuration: ApplicationLoopConfiguration
+  ) async throws {
     var terminal = try Terminal(
       backend: session.makeBackend(), viewport: session.configuredViewport)
     let input = AsyncInputPump(session.makeInput())
@@ -310,6 +371,32 @@ extension TerminalApplication {
     }
     var refreshObservationTracking = true
     var periodicRedrawWasActive = false
+    let wakeup = invalidation.wakeupSource
+    let signalWakeup = TerminalSignalWakeup(wakeup: wakeup)
+    defer { signalWakeup.cancel() }
+    let periodicApplication = self as? any PeriodicallyRedrawingTerminalApplication
+    // Only a wakeup, never an invalidation: the flag is re-read exactly where the polling timeout
+    // used to re-read it, so frames are rendered at the same points.
+    let periodicFlagObservation: ObservationInvalidationTracker?
+    if periodicApplication != nil, self is any Observation.Observable {
+      periodicFlagObservation = ObservationInvalidationTracker { wakeup.signal() }
+    } else {
+      periodicFlagObservation = nil
+    }
+
+    // How long the next input wait may block; `nil` waits for input or a wakeup.
+    func inputWaitMilliseconds() -> Int32? {
+      let pollingInterval = TerminalInput.pollingIntervalMilliseconds
+      guard configuration.receivesResizeSignals ?? session.receivesResizeSignals else {
+        return pollingInterval
+      }
+      guard let periodicApplication else { return nil }
+      guard let periodicFlagObservation, !periodicRedrawWasActive else { return pollingInterval }
+      let isActive = periodicFlagObservation.track(refresh: false) {
+        periodicApplication.needsPeriodicRedraw
+      }
+      return isActive ? pollingInterval : nil
+    }
 
     // Frames are rendered at exactly the same points as when every event is read separately:
     // before each event whenever a redraw is pending. When more already-parsed input is queued,
@@ -462,8 +549,7 @@ extension TerminalApplication {
           interactions = completed.interactions
         }
         needsRedraw = false
-        periodicRedrawWasActive =
-          (self as? any PeriodicallyRedrawingTerminalApplication)?.needsPeriodicRedraw ?? false
+        periodicRedrawWasActive = periodicApplication?.needsPeriodicRedraw ?? false
         if let routed = interactionRouter.reconcile(with: interactions) {
           for event in routed.events {
             let applicationUpdate = await update(event)
@@ -519,13 +605,19 @@ extension TerminalApplication {
         nextEvent = queued
       } else {
         try presentPendingFrame()
-        nextEvent = try await input.next(wakeup: invalidation.wakeupSource)
+        let waitMilliseconds = inputWaitMilliseconds()
+        configuration.statistics?.recordWait(indefinite: waitMilliseconds == nil)
+        nextEvent = try await withTaskCancellationHandler {
+          try await input.next(waitMilliseconds: waitMilliseconds, wakeup: wakeup)
+        } onCancel: {
+          wakeup.signal()
+        }
+        configuration.statistics?.recordWakeup()
       }
       let observationInvalidated = invalidation.take()
       if observationInvalidated { refreshObservationTracking = true }
       guard let event = nextEvent else {
-        let periodicRedraw =
-          (self as? any PeriodicallyRedrawingTerminalApplication)?.needsPeriodicRedraw ?? false
+        let periodicRedraw = periodicApplication?.needsPeriodicRedraw ?? false
         let trailingPeriodicRedraw = periodicRedrawWasActive && !periodicRedraw
         needsRedraw =
           needsRedraw || observationInvalidated || periodicRedraw || trailingPeriodicRedraw

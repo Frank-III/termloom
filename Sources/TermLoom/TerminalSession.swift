@@ -252,6 +252,15 @@ public final class TerminalSession {
 
   public var configuredViewport: Viewport { viewport }
 
+  /// Whether the kernel sends this process SIGWINCH when the session's terminal is resized: the
+  /// output is this process's controlling terminal and its process group is in the foreground.
+  /// Otherwise (for example a pseudo-terminal opened by a test or an embedding host) the window
+  /// size can only be noticed by polling.
+  var receivesResizeSignals: Bool {
+    let foregroundGroup = tcgetpgrp(output.fileDescriptor)
+    return foregroundGroup >= 0 && foregroundGroup == getpgrp()
+  }
+
   public var supportsInlineHistory: Bool {
     if case .inline = viewport { return true }
     return false
@@ -761,6 +770,34 @@ final class TerminalWakeup: @unchecked Sendable {
   }
 }
 
+/// Signals a `TerminalWakeup` when the process receives SIGWINCH (the terminal was resized) or
+/// SIGCONT (the process continued after a stop, during which a resize may have been missed).
+///
+/// Dispatch signal sources observe signals without changing their disposition, so a host's own
+/// handlers keep working and child processes started while the terminal is suspended inherit the
+/// default SIGWINCH action. The wakeup only interrupts the input wait; the reader re-checks the
+/// window size after every wake, so a coalesced or early signal cannot lose a resize.
+final class TerminalSignalWakeup {
+  private let sources: [any DispatchSourceSignal]
+
+  init(wakeup: TerminalWakeup, signals: [Int32] = [SIGWINCH, SIGCONT]) {
+    sources = signals.map { signalNumber in
+      let source = DispatchSource.makeSignalSource(signal: signalNumber, queue: .global())
+      source.setEventHandler { wakeup.signal() }
+      source.resume()
+      return source
+    }
+  }
+
+  func cancel() {
+    for source in sources where !source.isCancelled { source.cancel() }
+  }
+
+  deinit {
+    cancel()
+  }
+}
+
 public struct TerminalInput {
   private var parser = InputParser()
   // Parsed events not yet returned, consumed from `queuedEventIndex` so dequeuing is O(1).
@@ -813,6 +850,10 @@ public struct TerminalInput {
     return event
   }
 
+  /// The default `readEvent` timeout. It is also the escape-sequence timeout: a lone Escape byte
+  /// becomes an Escape key once this long passes without further input.
+  static let pollingIntervalMilliseconds: Int32 = 50
+
   public mutating func readEvent(timeoutMilliseconds: Int32 = 50) throws -> TerminalEvent? {
     try readEvent(timeoutMilliseconds: timeoutMilliseconds, wakeup: nil)
   }
@@ -821,23 +862,43 @@ public struct TerminalInput {
     timeoutMilliseconds: Int32 = 50,
     wakeup: TerminalWakeup?
   ) throws -> TerminalEvent? {
+    try readEvent(waitMilliseconds: timeoutMilliseconds, wakeup: wakeup)
+  }
+
+  /// Reads the next event, waiting for input, `wakeup`, or the timeout.
+  ///
+  /// A `nil` wait blocks until input arrives or `wakeup` fires, except that a buffered lone Escape
+  /// byte still resolves after the polling interval, exactly as with the default timeout. A wakeup
+  /// that interrupts the wait re-checks the window size, so a resize signal is reported at once.
+  mutating func readEvent(
+    waitMilliseconds: Int32?,
+    wakeup: TerminalWakeup?
+  ) throws -> TerminalEvent? {
     if let event = dequeueEvent() {
       return event
     }
 
-    if let size = terminalSize() {
-      defer { lastSize = size }
-      if let lastSize, size != lastSize {
-        return .resize(size)
-      }
+    if let resize = takeResize() {
+      return resize
     }
 
+    var timeout = Self.pollingIntervalMilliseconds
+    if let waitMilliseconds {
+      timeout = waitMilliseconds
+    } else if !parser.hasPendingLoneEscape {
+      timeout = -1
+    }
     var descriptors = [pollfd(fd: inputDescriptor, events: Int16(POLLIN), revents: 0)]
     if let wakeup, wakeup.readDescriptor >= 0 {
       descriptors.append(pollfd(fd: wakeup.readDescriptor, events: Int16(POLLIN), revents: 0))
     }
-    let result = systemPoll(&descriptors, timeout: timeoutMilliseconds)
-    guard result >= 0 else { throw TerminalSessionError.cannotReadInput }
+    let result = systemPoll(&descriptors, timeout: timeout)
+    if result < 0 {
+      // A signal handler installed by the host (or by Dispatch on platforms where signal sources
+      // use handlers) interrupted the wait; treat it like a wakeup.
+      guard errno == EINTR else { throw TerminalSessionError.cannotReadInput }
+      return takeResize()
+    }
     let input = descriptors[0]
     let wakeupFired =
       descriptors.count > 1 && descriptors[1].revents & Int16(POLLIN) != 0
@@ -848,7 +909,7 @@ public struct TerminalInput {
     {
       return .endOfInput
     }
-    guard input.revents & Int16(POLLIN) != 0 else { return nil }
+    guard input.revents & Int16(POLLIN) != 0 else { return takeResize() }
 
     var buffer = [UInt8](repeating: 0, count: 4096)
     let count = systemRead(inputDescriptor, into: &buffer)
@@ -865,6 +926,14 @@ public struct TerminalInput {
       y: (max(0, mouse.position.y - coordinateOrigin.y))
     )
     return .mouse(mouse)
+  }
+
+  /// Reports a window size that differs from the last observed one, and records it.
+  private mutating func takeResize() -> TerminalEvent? {
+    guard let size = terminalSize() else { return nil }
+    defer { lastSize = size }
+    guard let lastSize, size != lastSize else { return nil }
+    return .resize(size)
   }
 
   private func terminalSize() -> Size? {
