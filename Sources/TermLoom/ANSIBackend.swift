@@ -93,6 +93,8 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   private var cursorAddressing: CursorAddressing
   private var historyBatchOrigin: Position?
   private var historyBatchRowCount = 0
+  /// Byte storage reused across `draw` calls so steady-state frames do not reallocate it.
+  private var outputBuffer: [UInt8] = []
   public var configuration: ANSIBackendConfiguration
 
   public var capabilities: BackendCapabilities {
@@ -189,31 +191,60 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   public mutating func draw(_ updates: [CellUpdate]) throws {
     guard !updates.isEmpty else { return }
     var bytes: [UInt8] = []
+    swap(&bytes, &outputBuffer)
+    defer {
+      if bytes.capacity <= Self.maximumRetainedOutputCapacity {
+        bytes.removeAll(keepingCapacity: true)
+        swap(&bytes, &outputBuffer)
+      }
+    }
+    bytes.removeAll(keepingCapacity: true)
     bytes.reserveCapacity(updates.count * 16)
+    appendDraw(updates, to: &bytes)
+    try outputWriter(Data(bytes))
+  }
+
+  /// The largest output buffer `draw` keeps for reuse; larger buffers are released after the frame.
+  private static let maximumRetainedOutputCapacity = 1 << 20
+
+  /// Serializes `updates` exactly as `draw` writes them.
+  ///
+  /// The first style of the frame is established with a full reset-and-set sequence because the
+  /// terminal's rendition before the frame is unknown. Later style changes emit only the changed
+  /// attributes and colors when that is shorter (see `appendSGRTransition`). The frame ends with
+  /// `CSI 0 m`, so the terminal is left in the default rendition as before.
+  internal func appendDraw(_ updates: [CellUpdate], to bytes: inout [UInt8]) {
     var activeStyle: Style?
+    var activeState: ANSIGraphicState?
     var expectedPosition: Position?
 
     if configuration.supportsSynchronizedOutput {
-      bytes.append(contentsOf: "\u{1B}[?2026h".utf8)
+      bytes.appendANSI("\u{1B}[?2026h")
     }
     for update in updates where !update.cell.isContinuation {
       if expectedPosition != update.position {
-        bytes.append(contentsOf: cursor(position: update.position).utf8)
+        appendCursor(update.position, to: &bytes)
       }
-      if activeStyle != update.cell.style {
-        bytes.append(contentsOf: style(update.cell.style).utf8)
-        activeStyle = update.cell.style
+      let style = update.cell.style
+      if activeStyle != style {
+        let state = graphicState(for: style)
+        if let activeState {
+          bytes.appendSGRTransition(from: activeState, to: state)
+        } else {
+          bytes.appendFullSGR(state)
+        }
+        activeState = state
+        activeStyle = style
       }
       bytes.append(contentsOf: update.cell.symbol.utf8)
       expectedPosition = update.position.offset(
         by: Offset(x: max(1, Int(update.cell.width)), y: 0)
       )
     }
-    bytes.append(contentsOf: "\u{1B}[0m".utf8)
+    bytes.appendANSI("\u{1B}[0m")
     if configuration.supportsSynchronizedOutput {
-      bytes.append(contentsOf: "\u{1B}[?2026l".utf8)
+      bytes.appendANSI("\u{1B}[?2026l")
     }
-    try outputWriter(Data(bytes))
   }
 
   public mutating func clear() throws {
@@ -435,19 +466,46 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   }
 
   private func cursor(position: Position) -> String {
+    var bytes: [UInt8] = []
+    appendCursor(position, to: &bytes)
+    return String(decoding: bytes, as: UTF8.self)
+  }
+
+  private func appendCursor(_ position: Position, to bytes: inout [UInt8]) {
     switch cursorAddressing {
     case .absolute:
-      return "\u{1B}[\(oneBasedANSI(position.y));\(oneBasedANSI(position.x))H"
+      bytes.appendANSI("\u{1B}[")
+      bytes.appendANSIDecimal(oneBasedANSI(position.y))
+      bytes.append(0x3B)
+      bytes.appendANSIDecimal(oneBasedANSI(position.x))
+      bytes.append(0x48)
     case .savedOrigin:
-      let vertical = position.y == 0 ? "" : "\u{1B}[\(position.y)B"
-      return "\u{1B}8\(vertical)\u{1B}[\(oneBasedANSI(position.x))G"
-
+      bytes.appendANSI("\u{1B}8")
+      if position.y != 0 {
+        bytes.appendANSI("\u{1B}[")
+        bytes.appendANSIDecimal(position.y)
+        bytes.append(0x42)
+      }
+      bytes.appendANSI("\u{1B}[")
+      bytes.appendANSIDecimal(oneBasedANSI(position.x))
+      bytes.append(0x47)
     case .savedBottom(let viewportHeight):
       let rowsUp = max(0, viewportHeight - 1 - position.y)
-      let vertical = rowsUp == 0 ? "" : "\u{1B}[\(rowsUp)A"
-      return "\u{1B}8\(vertical)\u{1B}[\(oneBasedANSI(position.x))G"
+      bytes.appendANSI("\u{1B}8")
+      if rowsUp != 0 {
+        bytes.appendANSI("\u{1B}[")
+        bytes.appendANSIDecimal(rowsUp)
+        bytes.append(0x41)
+      }
+      bytes.appendANSI("\u{1B}[")
+      bytes.appendANSIDecimal(oneBasedANSI(position.x))
+      bytes.append(0x47)
     case .absoluteOrigin(let origin):
-      return "\u{1B}[\(oneBasedANSI(origin.y, position.y));\(oneBasedANSI(origin.x, position.x))H"
+      bytes.appendANSI("\u{1B}[")
+      bytes.appendANSIDecimal(oneBasedANSI(origin.y, position.y))
+      bytes.append(0x3B)
+      bytes.appendANSIDecimal(oneBasedANSI(origin.x, position.x))
+      bytes.append(0x48)
     }
   }
 
@@ -464,53 +522,52 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     }
     guard let lastMeaningful else { return }
 
+    // History rows keep the full reset-and-set form for every style change.
     var activeStyle: Style?
     for cell in cells[...lastMeaningful] where !cell.isContinuation {
       if activeStyle != cell.style {
-        bytes.append(contentsOf: style(cell.style).utf8)
+        bytes.appendFullSGR(graphicState(for: cell.style))
         activeStyle = cell.style
       }
       bytes.append(contentsOf: cell.symbol.utf8)
     }
-    bytes.append(contentsOf: "\u{1B}[0m".utf8)
+    bytes.appendANSI("\u{1B}[0m")
   }
 
-  private func style(_ style: Style) -> String {
-    var codes = ["0"]
-    if style.modifiers.contains(.bold) { codes.append("1") }
-    if style.modifiers.contains(.dim) { codes.append("2") }
-    if style.modifiers.contains(.italic) { codes.append("3") }
-    if style.modifiers.contains(.underlined) { codes.append("4") }
-    if style.modifiers.contains(.reversed) { codes.append("7") }
-    if style.modifiers.contains(.hidden) { codes.append("8") }
-    if style.modifiers.contains(.crossedOut) { codes.append("9") }
+  /// The SGR state that `style` establishes under this backend's configuration.
+  internal func graphicState(for style: Style) -> ANSIGraphicState {
+    var state = ANSIGraphicState(
+      attributes: UInt8(truncatingIfNeeded: style.modifiers.rawValue),
+      foreground: .unset,
+      background: .unset,
+      underlineColor: .unset
+    )
+    state.attributes &= ANSIGraphicState.attributeMask
     if let foreground = style.foreground {
-      codes.append(contentsOf: color(foreground, foreground: true))
+      state.foreground = colorCode(foreground, foreground: true)
     }
     if let background = style.background {
-      codes.append(contentsOf: color(background, foreground: false))
+      state.background = colorCode(background, foreground: false)
     }
     if configuration.supportsUnderlineColor, let underlineColor = style.underlineColor {
-      codes.append(contentsOf: underlineColorCodes(underlineColor))
+      state.underlineColor = underlineColorCode(underlineColor)
     }
-    return "\u{1B}[\(codes.joined(separator: ";"))m"
+    return state
   }
 
-  private func underlineColorCodes(_ color: Color) -> [String] {
-    if case .reset = color { return ["59"] }
-    let index: UInt8
+  private func underlineColorCode(_ color: Color) -> ANSIColorCode {
+    if case .reset = color { return .explicitDefault }
     switch configuration.colorProfile {
     case .trueColor:
       if case .rgb(let red, let green, let blue) = color {
-        return ["58", "2", String(red), String(green), String(blue)]
+        return .rgb(red, green, blue)
       }
-      index = indexedColor(color)
+      return .indexed(indexedColor(color))
     case .indexed256:
-      index = indexedColor(color)
+      return .indexed(indexedColor(color))
     case .ansi16:
-      index = nearestANSI16Index(rgbColor(color))
+      return .indexed(nearestANSI16Index(rgbColor(color)))
     }
-    return ["58", "5", String(index)]
   }
 
   private func indexedColor(_ color: Color) -> UInt8 {
@@ -537,57 +594,43 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     }
   }
 
-  private func color(_ color: Color, foreground: Bool) -> [String] {
-    if case .reset = color { return [String(foreground ? 39 : 49)] }
+  private func colorCode(_ color: Color, foreground: Bool) -> ANSIColorCode {
+    if case .reset = color { return .explicitDefault }
     switch configuration.colorProfile {
     case .trueColor:
       break
     case .indexed256:
-      switch color {
-      case .rgb:
-        return [foreground ? "38" : "48", "5", String(indexedColor(color))]
-      default:
-        break
-      }
+      if case .rgb = color { return .indexed(indexedColor(color)) }
     case .ansi16:
-      return ansi16Color(nearestANSI16Index(rgbColor(color)), foreground: foreground)
+      return .basic(ansi16Code(nearestANSI16Index(rgbColor(color)), foreground: foreground))
     }
     let offset = foreground ? 30 : 40
     switch color {
-    case .reset: return [String(foreground ? 39 : 49)]
-    case .black: return [String(offset)]
-    case .red: return [String(offset + 1)]
-    case .green: return [String(offset + 2)]
-    case .yellow: return [String(offset + 3)]
-    case .blue: return [String(offset + 4)]
-    case .magenta: return [String(offset + 5)]
-    case .cyan: return [String(offset + 6)]
-    case .gray: return [String(offset + 7)]
-    case .darkGray: return [String(offset + 60)]
-    case .lightRed: return [String(offset + 61)]
-    case .lightGreen: return [String(offset + 62)]
-    case .lightYellow: return [String(offset + 63)]
-    case .lightBlue: return [String(offset + 64)]
-    case .lightMagenta: return [String(offset + 65)]
-    case .lightCyan: return [String(offset + 66)]
-    case .white: return [String(offset + 67)]
-    case .indexed(let value):
-      return [foreground ? "38" : "48", "5", String(value)]
-    case .rgb(let red, let green, let blue):
-      return [
-        foreground ? "38" : "48",
-        "2",
-        String(red),
-        String(green),
-        String(blue),
-      ]
+    case .reset: return .explicitDefault
+    case .black: return .basic(offset)
+    case .red: return .basic(offset + 1)
+    case .green: return .basic(offset + 2)
+    case .yellow: return .basic(offset + 3)
+    case .blue: return .basic(offset + 4)
+    case .magenta: return .basic(offset + 5)
+    case .cyan: return .basic(offset + 6)
+    case .gray: return .basic(offset + 7)
+    case .darkGray: return .basic(offset + 60)
+    case .lightRed: return .basic(offset + 61)
+    case .lightGreen: return .basic(offset + 62)
+    case .lightYellow: return .basic(offset + 63)
+    case .lightBlue: return .basic(offset + 64)
+    case .lightMagenta: return .basic(offset + 65)
+    case .lightCyan: return .basic(offset + 66)
+    case .white: return .basic(offset + 67)
+    case .indexed(let value): return .indexed(value)
+    case .rgb(let red, let green, let blue): return .rgb(red, green, blue)
     }
   }
 
-  private func ansi16Color(_ index: UInt8, foreground: Bool) -> [String] {
+  private func ansi16Code(_ index: UInt8, foreground: Bool) -> Int {
     let base = foreground ? 30 : 40
-    let code = index < 8 ? base + Int(index) : base + 60 + Int(index - 8)
-    return [String(code)]
+    return index < 8 ? base + Int(index) : base + 60 + Int(index - 8)
   }
 
   private func rgbColor(_ color: Color) -> (UInt8, UInt8, UInt8) {
@@ -617,8 +660,10 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     if index < 16 { return ansi16Palette[Int(index)] }
     if index < 232 {
       let offset = Int(index) - 16
-      let levels: [UInt8] = [0, 95, 135, 175, 215, 255]
-      return (levels[offset / 36], levels[(offset / 6) % 6], levels[offset % 6])
+      let red = xtermCubeLevel(offset / 36)
+      let green = xtermCubeLevel((offset / 6) % 6)
+      let blue = xtermCubeLevel(offset % 6)
+      return (red, green, blue)
     }
     let level = UInt8(8 + 10 * (Int(index) - 232))
     return (level, level, level)
@@ -638,12 +683,23 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
     return best
   }
 
+  private func xtermCubeLevel(_ step: Int) -> UInt8 {
+    step == 0 ? 0 : UInt8(truncatingIfNeeded: 55 + 40 * step)
+  }
+
   private func nearestANSI16Index(_ rgb: (UInt8, UInt8, UInt8)) -> UInt8 {
-    UInt8(
-      ansi16Palette.indices.min { lhs, rhs in
-        colorDistance(rgb, ansi16Palette[lhs]) < colorDistance(rgb, ansi16Palette[rhs])
-      } ?? 0
-    )
+    // The first palette entry at the minimum distance wins, as with `min(by:)`.
+    let palette = ansi16Palette
+    var best = 0
+    var bestDistance = colorDistance(rgb, palette[0])
+    for index in 1..<palette.count {
+      let distance = colorDistance(rgb, palette[index])
+      if distance < bestDistance {
+        bestDistance = distance
+        best = index
+      }
+    }
+    return UInt8(best)
   }
 
   private func colorDistance(
@@ -657,21 +713,26 @@ public struct ANSIBackend: Backend, LineAppendingBackend, InlineHistoryBackend, 
   }
 
   private var ansi16Palette: [(UInt8, UInt8, UInt8)] {
-    [
-      (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
-      (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192),
-      (128, 128, 128), (255, 0, 0), (0, 255, 0), (255, 255, 0),
-      (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
-    ]
+    ansiPalette16
   }
 }
+
+private let ansiPalette16: [(UInt8, UInt8, UInt8)] = [
+  (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
+  (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192),
+  (128, 128, 128), (255, 0, 0), (0, 255, 0), (255, 255, 0),
+  (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255),
+]
 
 private func saturatingANSIAdd(_ lhs: Int, _ rhs: Int) -> Int {
   let result = lhs.addingReportingOverflow(rhs)
   return result.overflow ? Int.max : max(0, result.partialValue)
 }
 
-private func oneBasedANSI(_ components: Int...) -> Int {
-  let zeroBased = components.reduce(0, saturatingANSIAdd)
-  return saturatingANSIAdd(zeroBased, 1)
+private func oneBasedANSI(_ component: Int) -> Int {
+  saturatingANSIAdd(saturatingANSIAdd(0, component), 1)
+}
+
+private func oneBasedANSI(_ first: Int, _ second: Int) -> Int {
+  saturatingANSIAdd(saturatingANSIAdd(saturatingANSIAdd(0, first), second), 1)
 }

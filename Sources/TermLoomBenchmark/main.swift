@@ -607,9 +607,187 @@ private func ansiOutputBenchmark(
   return sample
 }
 
+// Style-heavy output scenarios. Each frame alternates between two phases so every cell changes
+// (text, and for the styled patterns also its style) and the diff covers the whole screen.
+private enum OutputPattern: CaseIterable {
+  /// Only the text changes; every cell keeps one bold green-on-black style.
+  case constantStyle
+  /// Truecolor foreground and background change on every cell.
+  case trueColorEveryCell
+  /// 256-color palette foreground and background change on every cell.
+  case indexedEveryCell
+  /// Runs of four cells share a style: named, palette and truecolor colors, some bold.
+  case styleEvery4Cells
+  /// Modifiers (bold, dim, italic, underline, reverse, hidden, strike) toggle on every cell.
+  case attributeToggles
+  /// A dashboard: bold header, dim border, zebra rows, a highlighted row, colored value columns.
+  case dashboardMixed
+
+  var name: String {
+    switch self {
+    case .constantStyle: "text-churn-constant-style"
+    case .trueColorEveryCell: "truecolor-every-cell"
+    case .indexedEveryCell: "indexed-every-cell"
+    case .styleEvery4Cells: "style-every-4-cells"
+    case .attributeToggles: "attribute-toggles"
+    case .dashboardMixed: "dashboard-mixed"
+    }
+  }
+
+  func cell(column: Int, row: Int, phase: Int) -> Cell {
+    let letter = Character(Unicode.Scalar(UInt8(97 + (column + row + phase) % 26)))
+    return Cell(symbol: String(letter), style: style(column: column, row: row, phase: phase))
+  }
+
+  func style(column: Int, row: Int, phase: Int) -> Style {
+    switch self {
+    case .constantStyle:
+      return Style(foreground: .lightGreen, background: .black, modifiers: [.bold])
+    case .trueColorEveryCell:
+      return Style(
+        foreground: .rgb(UInt8((column * 2 + phase) % 256), UInt8(row * 6 % 256), 128),
+        background: .rgb(20, UInt8(phase * 40), UInt8((column + row) % 256)))
+    case .indexedEveryCell:
+      return Style(
+        foreground: .indexed(UInt8((column + row * 7 + phase) % 256)),
+        background: .indexed(UInt8((column * 3 + row) % 256)))
+    case .styleEvery4Cells:
+      switch (column / 4 + row + phase) % 3 {
+      case 0: return Style(foreground: .red, background: .indexed(236))
+      case 1: return Style(foreground: .green, background: .indexed(237), modifiers: [.bold])
+      default: return Style(foreground: .rgb(200, 120, 40), background: .indexed(238))
+      }
+    case .attributeToggles:
+      let bits = UInt16((column + row + phase) % 128)
+      return Style(foreground: .cyan, modifiers: Modifier(rawValue: bits))
+    case .dashboardMixed:
+      return dashboardStyle(column: column, row: row, selectedRow: 3 + phase * 4)
+    }
+  }
+
+  private func dashboardStyle(column: Int, row: Int, selectedRow: Int) -> Style {
+    if row == 0 { return Style(foreground: .white, background: .blue, modifiers: [.bold]) }
+    if column == 0 || column == 119 { return Style(foreground: .darkGray, modifiers: [.dim]) }
+    var style = Style(foreground: .gray)
+    if column >= 80 {
+      style.foreground = .indexed(214)
+    } else if column >= 40 {
+      style.foreground = .rgb(120, 200, 120)
+    }
+    if row == selectedRow {
+      style.background = .rgb(60, 60, 90)
+      style = style.adding(.italic)
+    } else if row.isMultiple(of: 2) {
+      style.background = .indexed(236)
+    }
+    if column >= 80, column < 90 { style = style.adding(.bold) }
+    return style
+  }
+
+  func updates(width: Int, height: Int, phase: Int) -> [CellUpdate] {
+    var updates: [CellUpdate] = []
+    updates.reserveCapacity(width * height)
+    for row in 0..<height {
+      for column in 0..<width {
+        updates.append(
+          CellUpdate(
+            position: Position(x: column, y: row),
+            cell: cell(column: column, row: row, phase: phase)))
+      }
+    }
+    return updates
+  }
+}
+
+private struct OutputPatternGrid: Widget {
+  var pattern: OutputPattern
+  var phase: Int
+
+  func render(in area: Rect, into frame: inout Frame) {
+    for row in 0..<area.height {
+      for column in 0..<area.width {
+        frame.buffer.setCell(
+          pattern.cell(column: column, row: row, phase: phase),
+          at: Position(x: area.x + column, y: area.y + row))
+      }
+    }
+  }
+}
+
+/// Measures `ANSIBackend.draw` alone: the full-screen updates are built once per phase, so the
+/// sample covers only escape-sequence building and the write to `/dev/null`. Output bytes are
+/// counted separately by drawing both phases once into a temporary file.
+private func ansiEmitBenchmark(
+  name: String,
+  iterations: Int,
+  configuration: ANSIBackendConfiguration,
+  pattern: OutputPattern
+) throws -> BenchmarkSample {
+  let size = Size(width: 120, height: 40)
+  let phases = [0, 1].map { pattern.updates(width: size.width, height: size.height, phase: $0) }
+
+  let url = FileManager.default.temporaryDirectory
+    .appendingPathComponent("termloom-benchmark-\(UUID().uuidString).ansi")
+  _ = FileManager.default.createFile(atPath: url.path, contents: nil)
+  defer { try? FileManager.default.removeItem(at: url) }
+  let counted = try FileHandle(forWritingTo: url)
+  defer { try? counted.close() }
+  var countingBackend = ANSIBackend(
+    output: counted, fallbackSize: size, configuration: configuration)
+  for updates in phases { try countingBackend.draw(updates) }
+  try counted.synchronize()
+  let byteCount = try counted.offset()
+
+  guard let discard = FileHandle(forWritingAtPath: "/dev/null") else {
+    throw CocoaError(.fileNoSuchFile)
+  }
+  defer { try? discard.close() }
+  var backend = ANSIBackend(output: discard, fallbackSize: size, configuration: configuration)
+  var sample = try measure(name, iterations: iterations) { iteration in
+    let updates = phases[iteration % 2]
+    try backend.draw(updates)
+    return updates.count
+  }
+  sample.outputBytesPerIteration = Double(byteCount) / Double(phases.count)
+  return sample
+}
+
 private func outputBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
   let outputIterations = min(iterations, 1_000)
-  return [
+  let emitIterations = min(iterations, 500)
+  var samples = try fixedOutputBenchmarks(iterations: outputIterations)
+  // Whole frames through `Terminal.draw` (render, diff, emit) with style-heavy content.
+  for pattern in OutputPattern.allCases {
+    samples.append(
+      try ansiOutputBenchmark(
+        name: "ansi/\(pattern.name)", iterations: outputIterations
+      ) { iteration, frame in
+        frame.render(OutputPatternGrid(pattern: pattern, phase: iteration % 2))
+      })
+  }
+  // The ANSI emitter alone, for every pattern and for color-profile quantization.
+  for pattern in OutputPattern.allCases {
+    samples.append(
+      try ansiEmitBenchmark(
+        name: "ansi/emit/\(pattern.name)", iterations: emitIterations,
+        configuration: .full, pattern: pattern))
+  }
+  samples.append(
+    try ansiEmitBenchmark(
+      name: "ansi/emit/truecolor-on-256-profile", iterations: emitIterations,
+      configuration: ANSIBackendConfiguration(colorProfile: .indexed256),
+      pattern: .trueColorEveryCell))
+  samples.append(
+    try ansiEmitBenchmark(
+      name: "ansi/emit/truecolor-on-16-profile", iterations: emitIterations,
+      configuration: ANSIBackendConfiguration(
+        colorProfile: .ansi16, supportsUnderlineColor: false, supportsSynchronizedOutput: false),
+      pattern: .trueColorEveryCell))
+  return samples
+}
+
+private func fixedOutputBenchmarks(iterations outputIterations: Int) throws -> [BenchmarkSample] {
+  [
     try ansiOutputBenchmark(
       name: "ansi/static", iterations: outputIterations
     ) { _, frame in
