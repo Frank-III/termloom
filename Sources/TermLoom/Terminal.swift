@@ -140,9 +140,19 @@ public struct Terminal<BackendType: Backend> {
   ) throws -> CompletedFrame {
     try autoresize()
     current.reset()
-    var frame = Frame(buffer: current, environment: environment)
-    try render(&frame)
-    current = frame.buffer
+    // Move the back buffer into the frame instead of sharing it, so the first widget write does not
+    // copy every cell before the buffer is moved back.
+    let area = current.area
+    var frame = Frame(buffer: Buffer(area: .zero), environment: environment)
+    swap(&frame.buffer, &current)
+    do {
+      try render(&frame)
+    } catch {
+      swap(&current, &frame.buffer)
+      if current.area != area { current = Buffer(area: area) }
+      throw error
+    }
+    swap(&current, &frame.buffer)
     let updates = current.diff(from: previous)
     try backend.draw(updates)
     try backend.setCursorStyle(frame.cursorStyle)
@@ -156,6 +166,33 @@ public struct Terminal<BackendType: Backend> {
       updates: updates.count,
       interactions: frame.interactions
     )
+  }
+
+  /// Diff state captured before an application frame transaction.
+  ///
+  /// Unlike a plain copy of the terminal, the rollback does not retain the back buffer, so the next
+  /// `draw` can reset and render into it without a copy-on-write of every cell. The back buffer's
+  /// contents are always reset before rendering; only its area is part of the terminal state.
+  struct FrameRollback {
+    let terminal: Terminal
+    let currentArea: Rect
+  }
+
+  func frameRollback() -> FrameRollback {
+    var terminal = self
+    terminal.current = Buffer(area: .zero)
+    return FrameRollback(terminal: terminal, currentArea: current.area)
+  }
+
+  /// Restores the viewport, backend, front buffer, and frame count captured by `frameRollback()`.
+  mutating func rollBack(to rollback: FrameRollback) {
+    var restored = rollback.terminal
+    if current.area == rollback.currentArea {
+      swap(&restored.current, &current)
+    } else {
+      restored.current = Buffer(area: rollback.currentArea)
+    }
+    self = restored
   }
 
   public mutating func clear() throws {

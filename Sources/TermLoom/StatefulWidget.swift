@@ -20,9 +20,11 @@ extension StatefulWidget {
     environment: RenderEnvironment = RenderEnvironment(),
     state: inout State
   ) {
-    var frame = Frame(buffer: buffer, environment: environment)
+    // Move the caller's storage into the frame and back so rendering does not copy every cell.
+    var frame = Frame(buffer: Buffer(area: .zero), environment: environment)
+    swap(&frame.buffer, &buffer)
     frame.render(self, in: area, state: &state)
-    buffer = frame.buffer
+    swap(&frame.buffer, &buffer)
   }
 }
 

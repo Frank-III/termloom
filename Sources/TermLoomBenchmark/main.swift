@@ -25,6 +25,7 @@ struct BenchmarkSample: Codable {
   var outputBytesPerIteration: Double?
   var retainedBytesDelta: Int64?
   var peakResidentBytes: Int64?
+  var framesPerIteration: Double?
 }
 
 struct BenchmarkOptions {
@@ -462,6 +463,402 @@ private func outputBenchmarks(iterations: Int) throws -> [BenchmarkSample] {
   ]
 }
 
+// MARK: - Application run loop
+
+// The `loop` suite drives the public `TerminalApplication.run(viewport:capturesMouse:)` path
+// through a pseudo-terminal. Standard input and output are temporarily redirected to the PTY
+// slave while a driver thread writes input to the master side and a drain thread counts the
+// bytes the application emits.
+
+private enum LoopBenchmarkError: Error, CustomStringConvertible {
+  case pseudoTerminalUnavailable
+  case redirectionFailed
+  case writeFailed
+  case timedOut(String)
+  case driverDidNotFinish
+
+  var description: String {
+    switch self {
+    case .pseudoTerminalUnavailable: "openpty failed"
+    case .redirectionFailed: "could not redirect standard input and output to the pseudo-terminal"
+    case .writeFailed: "could not write input to the pseudo-terminal"
+    case .timedOut(let stage): "timed out waiting for \(stage)"
+    case .driverDidNotFinish: "the loop benchmark driver did not finish"
+    }
+  }
+}
+
+/// Frame and update counters shared by the main-actor application and the driver thread.
+private final class LoopProbe: @unchecked Sendable {
+  struct Snapshot {
+    var frames = 0
+    var updates = 0
+    var updatesAtLastFrame = 0
+  }
+
+  private let lock = NSLock()
+  private let rendered = DispatchSemaphore(value: 0)
+  private var state = Snapshot()
+
+  var snapshot: Snapshot { lock.withLock { state } }
+
+  func recordUpdate() {
+    lock.withLock { state.updates += 1 }
+  }
+
+  func recordFrame() {
+    lock.withLock {
+      state.frames += 1
+      state.updatesAtLastFrame = state.updates
+    }
+    rendered.signal()
+  }
+
+  func waitForFrame(
+    _ stage: String, timeoutSeconds: Double = 10, until condition: (Snapshot) -> Bool
+  ) throws {
+    let deadline = DispatchTime.now() + timeoutSeconds
+    while !condition(snapshot) {
+      if rendered.wait(timeout: deadline) == .timedOut, !condition(snapshot) {
+        throw LoopBenchmarkError.timedOut(stage)
+      }
+    }
+  }
+}
+
+/// Continuously drains the PTY master so terminal output can never block the application.
+private final class PseudoTerminalOutputDrain: @unchecked Sendable {
+  private let descriptor: Int32
+  private let lock = NSLock()
+  private let finished = DispatchSemaphore(value: 0)
+  private var byteCount = 0
+  private var lastReadUptime = DispatchTime.now().uptimeNanoseconds
+  private var isStopping = false
+
+  init(descriptor: Int32) {
+    self.descriptor = descriptor
+  }
+
+  var bytes: Int { lock.withLock { byteCount } }
+
+  func start() {
+    Thread { [self] in drain() }.start()
+  }
+
+  /// Waits until no output has arrived for `milliseconds`, so trailing frame output is attributed
+  /// to the workload that produced it.
+  func waitForQuiet(milliseconds: UInt64 = 25, timeoutSeconds: Double = 5) {
+    let quiet = milliseconds * 1_000_000
+    let deadline = DispatchTime.now() + timeoutSeconds
+    while DispatchTime.now() < deadline {
+      let last = lock.withLock { lastReadUptime }
+      let now = DispatchTime.now().uptimeNanoseconds
+      if now >= last, now - last >= quiet { return }
+      usleep(2_000)
+    }
+  }
+
+  func stop(timeoutSeconds: Double = 2) {
+    lock.withLock { isStopping = true }
+    _ = finished.wait(timeout: .now() + timeoutSeconds)
+  }
+
+  private func drain() {
+    var buffer = [UInt8](repeating: 0, count: 16_384)
+    while true {
+      var descriptors = pollfd(fd: descriptor, events: Int16(POLLIN), revents: 0)
+      let ready = poll(&descriptors, 1, 10)
+      if ready > 0 {
+        let count = read(descriptor, &buffer, buffer.count)
+        if count > 0 {
+          let now = DispatchTime.now().uptimeNanoseconds
+          lock.withLock {
+            byteCount += count
+            lastReadUptime = now
+          }
+          continue
+        }
+        if count == 0 || (errno != EAGAIN && errno != EINTR) { break }
+      } else if ready < 0, errno != EINTR {
+        break
+      }
+      if lock.withLock({ isStopping }) { break }
+    }
+    finished.signal()
+  }
+}
+
+private struct LoopWorkload: Sendable {
+  var steadyFrames: Int
+  var bursts: Int
+  var burstPayload: [UInt8]
+  var burstEvents: Int
+
+  init(iterations: Int) {
+    steadyFrames = min(iterations, 1_000)
+    bursts = max(1, min(iterations / 100, 20))
+    // One 1,000-byte bracketed paste followed by 200 alternating SGR mouse-motion and key events,
+    // delivered with a single write.
+    var payload = Array("\u{1B}[200~".utf8)
+    payload += (0..<1_000).map { UInt8(ascii: "a") + UInt8($0 % 26) }
+    payload += Array("\u{1B}[201~".utf8)
+    var events = 1
+    for index in 0..<200 {
+      if index.isMultiple(of: 2) {
+        payload += Array("\u{1B}[<35;\(index % 120 + 1);\(index % 40 + 1)M".utf8)
+      } else {
+        payload.append(UInt8(ascii: "j"))
+      }
+      events += 1
+    }
+    burstPayload = payload
+    burstEvents = events
+  }
+}
+
+private struct LoopResult: Sendable {
+  var steadySeconds = 0.0
+  var steadyStateChanges = 0
+  var steadyFrames = 0
+  var steadyBytes = 0
+  var burstSeconds = 0.0
+  var burstFrames = 0
+  var burstBytes = 0
+  var failure: String?
+}
+
+/// Writes input to the PTY master from a dedicated thread and measures the application's response.
+private final class LoopDriver: @unchecked Sendable {
+  private let master: Int32
+  private let probe: LoopProbe
+  private let output: PseudoTerminalOutputDrain
+  private let workload: LoopWorkload
+  private let finished = DispatchSemaphore(value: 0)
+  private let lock = NSLock()
+  private var result = LoopResult()
+
+  init(
+    master: Int32, probe: LoopProbe, output: PseudoTerminalOutputDrain, workload: LoopWorkload
+  ) {
+    self.master = master
+    self.probe = probe
+    self.output = output
+    self.workload = workload
+  }
+
+  func start() {
+    Thread { [self] in drive() }.start()
+  }
+
+  func waitForResult(timeoutSeconds: Double = 30) -> LoopResult? {
+    guard finished.wait(timeout: .now() + timeoutSeconds) == .success else { return nil }
+    return lock.withLock { result }
+  }
+
+  private func drive() {
+    var measured = LoopResult()
+    do {
+      try measure(into: &measured)
+    } catch {
+      measured.failure = String(describing: error)
+    }
+    // Always ask the application to quit, including after a failed measurement.
+    try? send(Array("q".utf8))
+    lock.withLock { result = measured }
+    finished.signal()
+  }
+
+  private func measure(into result: inout LoopResult) throws {
+    try probe.waitForFrame("the initial frame") { $0.frames >= 1 }
+    output.waitForQuiet()
+
+    // a) Steady redraw: one state change per frame, sent only after the previous frame rendered.
+    let steadyBefore = probe.snapshot
+    let steadyBytesBefore = output.bytes
+    let steadyStart = DispatchTime.now().uptimeNanoseconds
+    for _ in 0..<workload.steadyFrames {
+      let frames = probe.snapshot.frames
+      try send(Array("j".utf8))
+      try probe.waitForFrame("a steady-state frame") { $0.frames > frames }
+    }
+    result.steadySeconds = Self.seconds(since: steadyStart)
+    result.steadyStateChanges = workload.steadyFrames
+    output.waitForQuiet()
+    result.steadyFrames = probe.snapshot.frames - steadyBefore.frames
+    result.steadyBytes = output.bytes - steadyBytesBefore
+
+    // b) Burst: everything arrives in one write; wait until a frame reflects the final event.
+    for _ in 0..<workload.bursts {
+      let before = probe.snapshot
+      let bytesBefore = output.bytes
+      let start = DispatchTime.now().uptimeNanoseconds
+      try send(workload.burstPayload)
+      let target = before.updates + workload.burstEvents
+      try probe.waitForFrame("the burst to become idle") { $0.updatesAtLastFrame >= target }
+      result.burstSeconds += Self.seconds(since: start)
+      output.waitForQuiet()
+      result.burstFrames += probe.snapshot.frames - before.frames
+      result.burstBytes += output.bytes - bytesBefore
+    }
+  }
+
+  private func send(_ bytes: [UInt8]) throws {
+    var offset = 0
+    while offset < bytes.count {
+      let count = bytes[offset...].withUnsafeBytes { buffer in
+        write(master, buffer.baseAddress, buffer.count)
+      }
+      if count < 0 {
+        if errno == EINTR || errno == EAGAIN { continue }
+        throw LoopBenchmarkError.writeFailed
+      }
+      offset += count
+    }
+  }
+
+  private static func seconds(since start: UInt64) -> Double {
+    Double(DispatchTime.now().uptimeNanoseconds - start) / 1e9
+  }
+}
+
+private struct LoopDashboard: Widget {
+  var selectedRow: Int
+  var status: String
+  var probe: LoopProbe
+
+  func render(in area: Rect, into frame: inout Frame) {
+    let sections = Layout(.vertical, constraints: [.flex(1), .length(1)]).split(area)
+    frame.render(dashboard(selectedRow: selectedRow), in: sections[0])
+    frame.render(Paragraph(status), in: sections[1])
+    probe.recordFrame()
+  }
+}
+
+@MainActor private final class LoopBenchmarkApplication: TerminalApplication {
+  let probe: LoopProbe
+  var selectedRow = 0
+  var pointer = Position(x: 0, y: 0)
+  var pastedCharacters = 0
+  var events = 0
+
+  init(probe: LoopProbe) {
+    self.probe = probe
+  }
+
+  var body: LoopDashboard {
+    let status = "events \(events) pointer \(pointer.x),\(pointer.y) pasted \(pastedCharacters)"
+    return LoopDashboard(selectedRow: selectedRow, status: status, probe: probe)
+  }
+
+  func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+    probe.recordUpdate()
+    events += 1
+    switch event {
+    case .key(let key) where key.key == .character("q"):
+      return .quit
+    case .key:
+      selectedRow = (selectedRow + 1) % rows.count
+      return .redraw
+    case .mouse(let mouse):
+      pointer = mouse.position
+      return .redraw
+    case .paste(let text):
+      pastedCharacters += text.count
+      return .redraw
+    default:
+      return .ignore
+    }
+  }
+}
+
+@MainActor
+private func loopBenchmarks(iterations: Int) async throws -> [BenchmarkSample] {
+  #if canImport(Darwin)
+    let workload = LoopWorkload(iterations: iterations)
+    var master: Int32 = -1
+    var slave: Int32 = -1
+    var window = winsize(ws_row: 40, ws_col: 120, ws_xpixel: 0, ws_ypixel: 0)
+    guard openpty(&master, &slave, nil, nil, &window) == 0 else {
+      throw LoopBenchmarkError.pseudoTerminalUnavailable
+    }
+    // Keep the detected backend configuration stable across hosts.
+    setenv("TERM", "xterm-256color", 1)
+    fflush(nil)
+    let savedInput = dup(STDIN_FILENO)
+    let savedOutput = dup(STDOUT_FILENO)
+    func restoreStandardStreams() {
+      if savedInput >= 0 {
+        dup2(savedInput, STDIN_FILENO)
+        close(savedInput)
+      }
+      if savedOutput >= 0 {
+        dup2(savedOutput, STDOUT_FILENO)
+        close(savedOutput)
+      }
+      close(slave)
+    }
+    guard savedInput >= 0, savedOutput >= 0,
+      dup2(slave, STDIN_FILENO) >= 0, dup2(slave, STDOUT_FILENO) >= 0
+    else {
+      restoreStandardStreams()
+      close(master)
+      throw LoopBenchmarkError.redirectionFailed
+    }
+
+    let output = PseudoTerminalOutputDrain(descriptor: master)
+    output.start()
+    let probe = LoopProbe()
+    let driver = LoopDriver(master: master, probe: probe, output: output, workload: workload)
+    driver.start()
+    let application = LoopBenchmarkApplication(probe: probe)
+    var runError: (any Error)?
+    do {
+      try await application.run(viewport: .fullscreen, capturesMouse: true)
+    } catch {
+      runError = error
+    }
+    let measured = driver.waitForResult()
+    restoreStandardStreams()
+    output.stop()
+    close(master)
+
+    if let runError { throw runError }
+    guard let measured else { throw LoopBenchmarkError.driverDidNotFinish }
+    if let failure = measured.failure { throw LoopBenchmarkError.timedOut(failure) }
+
+    let peakResident = peakResidentBytes()
+    let steadyCount = max(1, measured.steadyStateChanges)
+    let steadySeconds = max(measured.steadySeconds, .leastNonzeroMagnitude)
+    let burstSeconds = max(measured.burstSeconds, .leastNonzeroMagnitude)
+    return [
+      BenchmarkSample(
+        name: "loop/steady-redraw",
+        iterations: steadyCount,
+        seconds: measured.steadySeconds,
+        nanosecondsPerIteration: measured.steadySeconds * 1e9 / Double(steadyCount),
+        iterationsPerSecond: Double(steadyCount) / steadySeconds,
+        cellUpdatesPerIteration: nil,
+        outputBytesPerIteration: Double(measured.steadyBytes) / Double(steadyCount),
+        retainedBytesDelta: nil,
+        peakResidentBytes: peakResident,
+        framesPerIteration: Double(measured.steadyFrames) / Double(steadyCount)),
+      BenchmarkSample(
+        name: "loop/burst-paste-1000b-200-events",
+        iterations: workload.bursts,
+        seconds: measured.burstSeconds,
+        nanosecondsPerIteration: measured.burstSeconds * 1e9 / Double(workload.bursts),
+        iterationsPerSecond: Double(workload.bursts) / burstSeconds,
+        cellUpdatesPerIteration: nil,
+        outputBytesPerIteration: Double(measured.burstBytes) / Double(workload.bursts),
+        retainedBytesDelta: nil,
+        peakResidentBytes: peakResident,
+        framesPerIteration: Double(measured.burstFrames) / Double(workload.bursts)),
+    ]
+  #else
+    return []
+  #endif
+}
+
 private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
   if asJSON {
     let encoder = JSONEncoder()
@@ -480,6 +877,9 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
     if let bytes = sample.outputBytesPerIteration {
       metrics.append(String(format: "%.2f output bytes/iteration", bytes))
     }
+    if let frames = sample.framesPerIteration {
+      metrics.append(String(format: "%.2f frames/iteration", frames))
+    }
     if let retained = sample.retainedBytesDelta {
       metrics.append("\(retained) retained bytes")
     }
@@ -491,7 +891,7 @@ private func printSamples(_ samples: [BenchmarkSample], asJSON: Bool) throws {
 }
 
 let options = BenchmarkOptions(arguments: Array(CommandLine.arguments.dropFirst()))
-let validSuites = ["frames", "primitives", "collections", "output", "all"]
+let validSuites = ["frames", "primitives", "collections", "output", "loop", "all"]
 guard validSuites.contains(options.suite) else {
   FileHandle.standardError.write(
     Data("unknown suite '\(options.suite)'; expected \(validSuites.joined(separator: ", "))\n".utf8)
@@ -511,5 +911,8 @@ if options.suite == "collections" || options.suite == "all" {
 }
 if options.suite == "output" || options.suite == "all" {
   samples += try outputBenchmarks(iterations: options.iterations)
+}
+if options.suite == "loop" || options.suite == "all" {
+  samples += try await loopBenchmarks(iterations: options.iterations)
 }
 try printSamples(samples, asJSON: options.emitsJSON)

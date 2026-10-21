@@ -8,8 +8,13 @@ swift run -c release termloom-benchmark -- --suite all --iterations 1000
 swift run -c release termloom-benchmark -- --suite all --iterations 1000 --json > benchmark.json
 ```
 
-Available suites are `frames`, `primitives`, `collections`, `output`, and `all`. The default remains `frames`, and a
-bare integer continues to set the iteration count.
+Available suites are `frames`, `primitives`, `collections`, `output`, `loop`, and `all`. The default remains `frames`,
+and a bare integer continues to set the iteration count.
+
+The Darwin-only `loop` suite runs the public `TerminalApplication.run` loop in a 120×40 pseudo-terminal with a
+dashboard body. `loop/steady-redraw` sends one key per frame and reports time, ANSI bytes, and frames per state
+change; `loop/burst-paste-1000b-200-events` writes a 1,000-byte bracketed paste plus 200 mouse-motion and key events
+at once and reports time until a frame reflects the last event, frames rendered (`framesPerIteration`), and bytes.
 
 ## Upstream methodology
 

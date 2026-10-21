@@ -187,6 +187,23 @@
     }
   }
 
+  @MainActor private final class CoalescingApplication: TerminalApplication {
+    var keyCount = 0
+    var presentedKeyCounts: [Int] = []
+
+    var body: Paragraph {
+      presentedKeyCounts.append(keyCount)
+      return Paragraph("KEYS \(keyCount)")
+    }
+
+    func update(_ event: TerminalEvent) async -> ApplicationUpdate {
+      guard case .key(let key) = event else { return .ignore }
+      if key.key == .character("q") { return .quit }
+      keyCount += 1
+      return .redraw
+    }
+  }
+
   @MainActor
   @Suite(.serialized) struct PTYIntegrationTests {
     @Test func fixedSessionUsesAbsoluteCoordinatesWithoutOwningTheScreen() throws {
@@ -1286,6 +1303,74 @@
       let output = String(decoding: drain(master), as: UTF8.self)
       #expect(output.components(separatedBy: "\u{1B}[>1u").count - 1 == 1)
       #expect(output.components(separatedBy: "\u{1B}[<u").count - 1 == 1)
+    }
+
+    @MainActor
+    @Test func applicationAppliesEventsFromOneReadBeforePresentingOneFrame() async throws {
+      var master: Int32 = -1
+      var slave: Int32 = -1
+      var window = winsize(ws_row: 8, ws_col: 20, ws_xpixel: 0, ws_ypixel: 0)
+      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
+      guard master >= 0, slave >= 0 else { return }
+      defer {
+        close(master)
+        close(slave)
+      }
+      _ = fcntl(master, F_SETFL, fcntl(master, F_GETFL) | O_NONBLOCK)
+      let report = Array("\u{1B}[1;1R".utf8)
+      #expect(report.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == report.count)
+
+      let session = try TerminalSession(
+        viewport: .inline(height: 1), inputDescriptor: slave,
+        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false))
+      let application = CoalescingApplication()
+      let task = Task { try await application.run(in: session) }
+      try await Task.sleep(for: .milliseconds(30))
+      let burst = Array((String(repeating: "a", count: 40) + "q").utf8)
+      #expect(burst.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == burst.count)
+      try await task.value
+      try session.restore()
+
+      #expect(application.keyCount == 40)
+      // One initial frame plus one per read, instead of one frame per key.
+      #expect(application.presentedKeyCounts.count < 20)
+      #expect(application.presentedKeyCounts.first == 0)
+      // Quitting in the same read still presents the redraw requested before the quit key.
+      #expect(application.presentedKeyCounts.last == 40)
+    }
+
+    @Test func queuedEventsCanBeTakenWithoutReadingTheTerminal() throws {
+      var master: Int32 = -1
+      var slave: Int32 = -1
+      var window = winsize(ws_row: 8, ws_col: 20, ws_xpixel: 0, ws_ypixel: 0)
+      #expect(openpty(&master, &slave, nil, nil, &window) == 0)
+      guard master >= 0, slave >= 0 else { return }
+      defer {
+        close(master)
+        close(slave)
+      }
+
+      let session = try TerminalSession(
+        viewport: .fixed(Rect(x: 0, y: 0, width: 20, height: 8)),
+        inputDescriptor: slave,
+        output: FileHandle(fileDescriptor: slave, closeOnDealloc: false)
+      )
+      var input = session.makeInput()
+      #expect(input.takeQueuedEvent(if: { _ in true }) == nil)
+      let burst = Array("ab\tc\u{1B}".utf8)
+      #expect(burst.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == burst.count)
+      #expect(try input.readEvent(timeoutMilliseconds: 50) == .key(KeyEvent(.character("a"))))
+      #expect(input.takeQueuedEvent(if: { _ in true }) == .key(KeyEvent(.character("b"))))
+      #expect(input.takeQueuedEvent(if: { $0 != .key(KeyEvent(.tab)) }) == nil)
+      #expect(try input.readEvent(timeoutMilliseconds: 0) == .key(KeyEvent(.tab)))
+      #expect(input.takeQueuedEvent(if: { _ in true }) == .key(KeyEvent(.character("c"))))
+      // The trailing Escape byte is still an incomplete sequence and is never flushed by draining.
+      #expect(input.takeQueuedEvent(if: { _ in true }) == nil)
+      let suffix = Array("[A".utf8)
+      #expect(
+        suffix.withUnsafeBytes { write(master, $0.baseAddress, $0.count) } == suffix.count)
+      #expect(try input.readEvent(timeoutMilliseconds: 50) == .key(KeyEvent(.up)))
+      try session.restore()
     }
 
     private func drain(_ descriptor: Int32) -> [UInt8] {

@@ -100,6 +100,39 @@ import Testing
     }
   }
 
+  @Test func frameRollbackRestoresTheDiffBaselineAndFrameCount() throws {
+    var terminal = try Terminal(backend: TestBackend(width: 4, height: 1))
+    _ = try terminal.draw { frame in frame.render(Paragraph("A")) }
+    let rollback = terminal.frameRollback()
+    #expect(try terminal.draw { frame in frame.render(Paragraph("B")) }.updates == 1)
+
+    terminal.rollBack(to: rollback)
+
+    // The rolled-back frame never reached the screen, so retrying it diffs against "A" again.
+    let retried = try terminal.draw { frame in frame.render(Paragraph("B")) }
+    #expect(retried.updates == 1)
+    #expect(retried.count == 2)
+    #expect(retried.buffer.lines() == ["B   "])
+  }
+
+  @Test func throwingRenderLeavesTheTerminalReadyForTheNextFrame() throws {
+    struct RenderFailure: Error {}
+    var terminal = try Terminal(backend: TestBackend(width: 4, height: 1))
+    _ = try terminal.draw { frame in frame.render(Paragraph("A")) }
+
+    #expect(throws: RenderFailure.self) {
+      try terminal.draw { frame in
+        frame.render(Paragraph("B"))
+        throw RenderFailure()
+      }
+    }
+
+    let completed = try terminal.draw { frame in frame.render(Paragraph("C")) }
+    #expect(completed.updates == 1)
+    #expect(completed.count == 2)
+    #expect(completed.buffer.lines() == ["C   "])
+  }
+
   @Test func nonFixedViewportRejectsExplicitFixedResize() throws {
     var terminal = try Terminal(backend: TestBackend(width: 4, height: 2))
 

@@ -740,7 +740,9 @@ final class TerminalWakeup: @unchecked Sendable {
 
 public struct TerminalInput {
   private var parser = InputParser()
+  // Parsed events not yet returned, consumed from `queuedEventIndex` so dequeuing is O(1).
   private var queuedEvents: [TerminalEvent] = []
+  private var queuedEventIndex = 0
   private var lastSize: Size?
   private let inputDescriptor: Int32
   private let outputDescriptor: Int32
@@ -768,6 +770,26 @@ public struct TerminalInput {
     queuedEvents.append(contentsOf: parser.feed(initialData).map(localize))
   }
 
+  /// Returns the next already-parsed event without polling or reading the terminal, but only when
+  /// `shouldTake` accepts it. Incomplete escape sequences stay buffered in the parser.
+  mutating func takeQueuedEvent(if shouldTake: (TerminalEvent) -> Bool) -> TerminalEvent? {
+    guard queuedEventIndex < queuedEvents.count,
+      shouldTake(queuedEvents[queuedEventIndex])
+    else { return nil }
+    return dequeueEvent()
+  }
+
+  private mutating func dequeueEvent() -> TerminalEvent? {
+    guard queuedEventIndex < queuedEvents.count else { return nil }
+    let event = queuedEvents[queuedEventIndex]
+    queuedEventIndex += 1
+    if queuedEventIndex == queuedEvents.count {
+      queuedEvents.removeAll(keepingCapacity: true)
+      queuedEventIndex = 0
+    }
+    return event
+  }
+
   public mutating func readEvent(timeoutMilliseconds: Int32 = 50) throws -> TerminalEvent? {
     try readEvent(timeoutMilliseconds: timeoutMilliseconds, wakeup: nil)
   }
@@ -776,8 +798,8 @@ public struct TerminalInput {
     timeoutMilliseconds: Int32 = 50,
     wakeup: TerminalWakeup?
   ) throws -> TerminalEvent? {
-    if !queuedEvents.isEmpty {
-      return queuedEvents.removeFirst()
+    if let event = dequeueEvent() {
+      return event
     }
 
     if let size = terminalSize() {
@@ -809,8 +831,8 @@ public struct TerminalInput {
     let count = systemRead(inputDescriptor, into: &buffer)
     guard count >= 0 else { throw TerminalSessionError.cannotReadInput }
     guard count > 0 else { return parser.flushEscape().map(localize) ?? .endOfInput }
-    queuedEvents = parser.feed(Data(buffer.prefix(count))).map(localize)
-    return queuedEvents.isEmpty ? nil : queuedEvents.removeFirst()
+    queuedEvents.append(contentsOf: parser.feed(Data(buffer.prefix(count))).map(localize))
+    return dequeueEvent()
   }
 
   private func localize(_ event: TerminalEvent) -> TerminalEvent {
